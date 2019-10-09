@@ -31,10 +31,10 @@ class RealmHelper(context: Context) {
         var result: List<Song>? = if (tags.isNotEmpty()) {
             if (tagsFlag == Or)
                 getAllSongs().filter {
-                    it.tags.split(",").intersect(tags.asIterable()).isNotEmpty()
+                    it.tags.split(SPACE_IN_LINK).intersect(tags.asIterable()).isNotEmpty()
                 }
             else
-                getAllSongs().filter { it.tags.split(",").toMutableList().containsAll(tags) }
+                getAllSongs().filter { it.tags.split(SPACE_IN_LINK).toMutableList().containsAll(tags) }
         } else getAllSongs()
 
         result = result?.filter { it.name.contains(searchName) }

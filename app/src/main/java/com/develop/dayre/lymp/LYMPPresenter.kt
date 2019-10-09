@@ -6,11 +6,14 @@ interface ILYMPPresenter {
     var model : ILYMPModel
     var view : ILYMPView
 
+    fun newSearch(tags : String)
     fun nextPress()
     fun prevPress()
     fun playPress()
     fun shufflePress()
     fun repeatPress()
+    fun clearTagPress()
+
     fun onTrackInListPress(nTrack : Int)
     fun onTrackInListLongPress(nTrack : Int)
     fun tagInSearchPress(tag : String)
@@ -18,7 +21,6 @@ interface ILYMPPresenter {
     fun ratingInSearchPress(rating : Int)
     fun ratingInEditPress(rating : Int)
     fun currentSongEdit(song : Song)
-
 
     fun testPress()
 }
@@ -51,12 +53,20 @@ class LYMPPresenter(override var model: ILYMPModel, override var view: ILYMPView
         model.prevSong()
     }
 
+    override fun clearTagPress() {
+        Log.i(tag,"clearTagPress")
+        model.clearTag()
+    }
     override fun playPress() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun shufflePress() {
         model.changeShuffle()
+    }
+
+    override fun newSearch(tags : String) {
+       model.newSearch(tags)
     }
 
     override fun repeatPress() {

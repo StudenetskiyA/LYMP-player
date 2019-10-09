@@ -32,9 +32,8 @@
                 android:id="@+id/track_info_added_at"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="left"
                 android:lines="1"
-                android:text="@{test.getCurrentSong().added}"
+                android:text="@{String.format(@string/added_at, test.getCurrentSong().added)}"
                 android:textAlignment="center"
                 android:textSize="@dimen/tags_font_size" />
 
@@ -42,9 +41,8 @@
                 android:id="@+id/track_info_listened_times"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="left"
                 android:lines="1"
-                android:text="@{Double.toString(test.getCurrentSong().listenedTimes)}"
+                android:text="@{String.format(@string/listened_times, test.getCurrentSong().listenedTimes)}"
                 android:textAlignment="center"
                 android:textSize="@dimen/tags_font_size" />
 
@@ -68,7 +66,8 @@
                 android:layout_gravity="left"
                 android:numStars="@{test.getCurrentSong().rating}"
                 android:rating="1"
-                android:stepSize="1" />
+                android:stepSize="1"
+                android:visibility="gone"/>
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -100,10 +99,19 @@
                     android:src="@drawable/delete" />
 
                 <ImageButton
-                    android:id="@+id/rename"
+                    android:id="@+id/clear_tag"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_toLeftOf="@id/delete"
+                    android:layout_alignParentEnd="true"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/delete" />
+
+                <ImageButton
+                    android:id="@+id/rename"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toLeftOf="@id/clear_tag"
                     android:background="@android:color/transparent"
                     android:src="@drawable/rename" />
             </RelativeLayout>
@@ -113,13 +121,15 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
                 android:text="@{Integer.toString(test.takeTestCounter())}"
-                android:textSize="25sp" />
+                android:textSize="25sp"
+                android:visibility="gone"/>
 
             <Button
                 android:id="@+id/testbutton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Test" />
+                android:text="@string/testText"
+                android:visibility="gone"/>
             <Button
                 android:id="@+id/prevbutton"
                 android:layout_width="match_parent"
@@ -145,6 +155,14 @@
                 android:textAlignment="center"
                 android:textSize="@dimen/tags_font_size" />
 
+            <TextView
+                android:id="@+id/search_track_tags"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="3dp"
+                android:layout_marginRight="3dp"
+                android:textSize="@dimen/tags_font_size" />
+
             <ListView
                 android:id="@+id/current_list"
                 android:layout_width="match_parent"
@@ -154,7 +172,8 @@
                 android:clickable="true"
                 android:dividerHeight="0dp"
                 android:focusable="true"
-                android:gravity="center" />
+                android:gravity="center"
+                android:visibility="gone"/>
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 

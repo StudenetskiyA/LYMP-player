@@ -5,9 +5,10 @@ import android.util.Log
 import androidx.databinding.BaseObservable
 import androidx.databinding.Bindable
 
-enum class RepeatState {All, One, Stop}
-enum class PlayState {Play , Stop, Pause}
-enum class SortState {ByName, ByDate, ByCount}
+enum class RepeatState { All, One, Stop }
+enum class PlayState { Play, Stop, Pause }
+enum class SortState { ByName, ByAdded, ByListened }
+enum class TagsFlag { Or, And }
 
 interface ILYMPObserver {
     //Надо подумать, что именно передавать.
@@ -33,27 +34,33 @@ interface ILYMPObservable {
 interface ILYMPModel {
     fun initialize()
 
+    fun newSearch(tags: String)
+
     fun saveSongToDB(song: Song)
     fun nextSong()
     fun prevSong()
     fun changeShuffle()
+    fun clearTag()
 
     fun testAction()
-    fun takeTestCounter() : Int
-    fun getCurrentSong() : Song?
-    fun getCurrentSongsList() : ArrayList<Song>
-    fun getAllTags() : String
-    fun getShuffleStatus() :Boolean
+    fun takeTestCounter(): Int
+    fun getCurrentSong(): Song?
+    fun getCurrentSongsList(): ArrayList<Song>
+    fun getAllTags(): String
+    fun getShuffleStatus(): Boolean
+    fun getCurrentSearchTags(): String
 }
 
-class LYMPModel(context: Context) : ILYMPModel, ILYMPObservable, BaseObservable(){
-    override var observersList =  ArrayList<ILYMPObserver>()
+class LYMPModel(context: Context) : ILYMPModel, ILYMPObservable, BaseObservable() {
+    override var observersList = ArrayList<ILYMPObserver>()
     private val tag = "$APP_TAG/model"
     private var currentSongsList = ArrayList<Song>()
     private var currentSongsShuffledListNumber = ArrayList<Int>()
-    private var helper : RealmHelper = RealmHelper(context)
+    private var helper: RealmHelper = RealmHelper(context)
+    private var searchTags = ";"
 
-    private var shuffleStatus : Boolean = false
+
+    private var shuffleStatus: Boolean = false
         @Bindable set(value) {
             field = value
             notifyObservers()
@@ -64,51 +71,86 @@ class LYMPModel(context: Context) : ILYMPModel, ILYMPObservable, BaseObservable(
             field = value
             notifyObservers()
         }
-    private var currentSongPositionInList : Int  = 0
+    private var currentSongPositionInList: Int = 0
         @Bindable set(value) {
             field = value
             notifyObservers()
         }
 
     //Методы для обсерверов
+    override fun getCurrentSearchTags(): String {
+        return searchTags
+    }
+
     override fun notifyObservers() {
         notifyChange()
         for (obs in observersList) {
             obs.update()
         }
     }
-    override fun getShuffleStatus() : Boolean {
+
+    override fun getShuffleStatus(): Boolean {
         return shuffleStatus
     }
+
     override fun getAllTags(): String {
-       return "rock; pop; techno; jazz; "
+        return "rock; pop; techno; jazz; superjazz; technojazz"
     }
+
     override fun getCurrentSongsList(): ArrayList<Song> {
         return currentSongsList
     }
 
     override fun getCurrentSong(): Song? {
-        return if (currentSongPositionInList<currentSongsList.size && currentSongPositionInList>=0)
+        return if (currentSongPositionInList < currentSongsList.size && currentSongPositionInList >= 0)
             currentSongsList[currentSongPositionInList]
         else null
     }
 
-    override fun takeTestCounter() : Int {
+    override fun takeTestCounter(): Int {
         return testCounter
     }
-    //
+
+    override fun clearTag() {
+        val song = getCurrentSong()?.copy()
+        song?.tags = ";"
+        if (song!=null) helper.writeSong(song)
+        notifyObservers()
+        createCurrentList()
+    }
+    override fun newSearch(tags: String) {
+        searchTags = tags
+        createCurrentList()
+    }
+
     override fun saveSongToDB(song: Song) {
         helper.writeSong(song)
         Log.i(tag, "Song with name ${song.name} and tags ${song.tags} saved to DB")
     }
+
     override fun nextSong() {
-        currentSongPositionInList = getNextPositionInList(currentSongsShuffledListNumber,currentSongPositionInList,shuffleStatus)
-        Log.i(tag, "Next track name ${currentSongsList[currentSongPositionInList].name}")
+        if (currentSongsList.isNotEmpty()) {
+            currentSongPositionInList = getNextPositionInList(
+                currentSongsShuffledListNumber,
+                currentSongPositionInList,
+                shuffleStatus
+            )
+            Log.i(tag, "Next track ${currentSongsList[currentSongPositionInList].name} / " +
+                    "${currentSongsList[currentSongPositionInList].tags}")
+        }
     }
+
     override fun prevSong() {
-        currentSongPositionInList = getPrevPositionInList(currentSongsShuffledListNumber,currentSongPositionInList,shuffleStatus)
-        Log.i(tag, "Next track name ${currentSongsList[currentSongPositionInList].name}")
+        if (currentSongsList.isNotEmpty()) {
+            currentSongPositionInList = getPrevPositionInList(
+                currentSongsShuffledListNumber,
+                currentSongPositionInList,
+                shuffleStatus
+            )
+            Log.i(tag, "Next track name ${currentSongsList[currentSongPositionInList].name}")
+        }
     }
+
     override fun changeShuffle() {
         shuffleStatus = !shuffleStatus
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
@@ -118,25 +160,25 @@ class LYMPModel(context: Context) : ILYMPModel, ILYMPObservable, BaseObservable(
 
 
     override fun testAction() {
-        Log.i(tag,"testAction")
+        Log.i(tag, "testAction")
         testCounter++
         getCurrentSong()?.name = "new name"
     }
 
     override fun initialize() {
-
+        Log.i(tag, "initialization")
     }
 
     init {
-        currentSongsList = helper.getAllSongs()
-        currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
-
-//        currentSongsList.add(Song("1 name",100))
-//        currentSongsList.add(Song("2 name",120))
-//        currentSongsList.add(Song("3 name",130))
-//        currentSongsList.add(Song("4 name",140))
-//        currentSongsList.add(Song("5 name",150))
+        createCurrentList()
     }
 
+    private fun createCurrentList() {
+        //currentSongsList = helper.getAllSongs()
+        currentSongsList =
+            ArrayList(helper.getSongsFromDBToCurrentSongsList(getListFromString(searchTags)))
+        currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
+        currentSongPositionInList = 0
+    }
 
 }
