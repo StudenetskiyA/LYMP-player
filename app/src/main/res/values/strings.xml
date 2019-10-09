@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">LYMP</string>
+    <string name="nextButtonName">Next</string>
+    <string name="shuffleButtonName">Shuffle</string>
+    <string name="noShuffleButtonName">No shuffle</string>
 </resources>

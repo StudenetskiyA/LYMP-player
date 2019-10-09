@@ -41,6 +41,14 @@ class MainActivity : AppCompatActivity(), ILYMPView, ILYMPObserver {
             Log.i(tag, "next button pressed")
             presenter.nextPress()
         }
+        prevbutton.setOnClickListener {
+            Log.i(tag, "next button pressed")
+            presenter.prevPress()
+        }
+        shufflebutton.setOnClickListener {
+            Log.i(tag, "shuffle button pressed")
+            presenter.shufflePress()
+        }
     }
 
     override fun createView() {

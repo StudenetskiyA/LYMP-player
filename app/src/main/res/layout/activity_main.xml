@@ -121,10 +121,20 @@
                 android:layout_height="wrap_content"
                 android:text="Test" />
             <Button
+                android:id="@+id/prevbutton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Prev" />
+            <Button
                 android:id="@+id/nextbutton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Next" />
+                android:text="@string/nextButtonName" />
+            <Button
+                android:id="@+id/shufflebutton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@{test.getShuffleStatus() ? @string/shuffleButtonName : @string/noShuffleButtonName}" />
             <TextView
                 android:id="@+id/tracks_found"
                 android:layout_width="fill_parent"
