@@ -10,10 +10,12 @@ open class Song(
     var name : String = "no name",
     var lenght : Int = 0,
     var rating : Int = 0,
-    var tags : String = ""
+    var tags : String = "",
+    var added : String = "01.01.1000 00:00",
+    var listenedTimes : Double = 0.0
 )  : RealmModel {
 
     override fun toString(): String {
-        return "$name / ${this.lenght} / $rating / $tags"
+        return "$name / ${this.lenght} / $rating / $tags / $added / $listenedTimes"
     }
 }

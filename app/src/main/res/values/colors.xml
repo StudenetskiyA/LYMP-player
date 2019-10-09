@@ -3,4 +3,9 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+    <color name="select_list_item">#F23456</color>
+    <color name="top_bar">#ff33b5e5</color>
+    <color name="unselectLink">#000000</color>
+    <color name="blue">#FF33B5E5</color>
+    <color name="selectLink">#ffa71a</color>
 </resources>

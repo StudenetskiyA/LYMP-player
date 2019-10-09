@@ -17,6 +17,8 @@ interface ILYMPPresenter {
     fun tagInEditPress(tag : String)
     fun ratingInSearchPress(rating : Int)
     fun ratingInEditPress(rating : Int)
+    fun currentSongEdit(song : Song)
+
 
     fun testPress()
 }
@@ -33,6 +35,10 @@ class LYMPPresenter(override var model: ILYMPModel, override var view: ILYMPView
     override fun testPress(){
         Log.i(tag,"testPress")
         model.testAction()
+    }
+
+    override fun currentSongEdit(song : Song) {
+       model.saveSongToDB(song)
     }
 
     override fun nextPress() {
