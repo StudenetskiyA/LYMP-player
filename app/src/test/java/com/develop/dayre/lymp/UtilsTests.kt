@@ -1,5 +1,7 @@
 package com.develop.dayre.lymp
 
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThat
 import org.junit.Test
 
 class UtilsTests {
@@ -13,6 +15,8 @@ class UtilsTests {
     }
 
     @Test
+    //Здесь сейчас нет assert, надо смотреть глазами - мы не знаем, как пошафлится лист
+    //Можно, конечно, сделать симуляцию шафла с предсказуемым результатом, но пока не вижу смысла.
     fun getNextPositionInListTest() {
         val originalList = listOf(0,1,2,3,4,5)
         val shuffleList = getShuffledListOfInt(originalList.size)
@@ -33,5 +37,13 @@ class UtilsTests {
         println("$tag , next ${getPrevPositionInList(shuffleList,2,true)}")
         println("$tag , next ${getPrevPositionInList(shuffleList,5,true)}")
         println("$tag , next ${getPrevPositionInList(shuffleList,0,true)}")
+    }
+
+    @Test
+    fun getListFromStringTest() {
+        val result = getListFromString("rock; pop; techno; jazz; ")
+        val expected = listOf("rock","pop","techno","jazz")
+       // for (r in result) println ("$tag , $r")
+        assertEquals(result, expected)
     }
 }

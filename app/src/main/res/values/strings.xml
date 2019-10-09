@@ -3,4 +3,9 @@
     <string name="nextButtonName">Next</string>
     <string name="shuffleButtonName">Shuffle</string>
     <string name="noShuffleButtonName">No shuffle</string>
+    <string name="testText">Test</string>
+    <string name="added_at">Добавлен </string>
+    <string name="listened_times">Прослушан раз </string>
+    <string name="tracks_found">Найдено треков </string>
+
 </resources>

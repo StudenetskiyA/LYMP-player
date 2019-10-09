@@ -15,6 +15,10 @@ open class Song(
     var listenedTimes : Double = 0.0
 )  : RealmModel {
 
+    fun copy() : Song {
+        return Song(this.name,this.lenght,this.rating,this.tags,this.added,this.listenedTimes)
+    }
+
     override fun toString(): String {
         return "$name / ${this.lenght} / $rating / $tags / $added / $listenedTimes"
     }

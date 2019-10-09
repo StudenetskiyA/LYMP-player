@@ -11,6 +11,10 @@ fun getSpaceIndices(s: String, c: Char): Array<Int> {
     return indices.toTypedArray()
 }
 
+fun getListFromString(text:String) : List<String> {
+    return text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }
+}
+
 fun getShuffledListOfInt (size: Int) : ArrayList<Int> {
     val result = ArrayList<Int>()
     for (i in 0 until size) {

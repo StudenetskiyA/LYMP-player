@@ -55,7 +55,7 @@ class RealmTests {
     fun getSongByNameTest() {
         //Сотрет базу, закомментируй, когда в ней что-то появится, требующее хранения.
         //Или используй другую базу.
-        helper.clearDataBase()
+        //helper.clearDataBase()
         helper.writeSong(data)
         val result = helper.getSongByName(data.name)
 
