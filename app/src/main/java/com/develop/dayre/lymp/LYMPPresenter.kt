@@ -2,6 +2,11 @@ package com.develop.dayre.lymp
 
 import android.util.Log
 
+interface IObservable {
+    fun notifyObservers()
+    
+}
+
 interface ILYMPPresenter {
     var model : ILYMPModel
     var view : ILYMPView
@@ -42,7 +47,8 @@ class LYMPPresenter(override var model: ILYMPModel, override var view: ILYMPView
     }
 
     override fun nextPress() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        Log.i(tag,"nextPress")
+        model.nextSong()
     }
 
     override fun prevPress() {

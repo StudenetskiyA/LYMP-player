@@ -16,6 +16,18 @@ class RealmHelper(context : Context) {
         }
     }
 
+    fun getAllSongs () : ArrayList<Song> {
+        val result = ArrayList<Song>()
+
+        val resultRealm = realm.where(Song::class.java).findAll()
+
+        for (r in resultRealm) {
+            result.add(r)
+        }
+
+        return result
+    }
+
     fun getSongByName (songName : String) : Song? {
         return if (realm.where(Song::class.java).equalTo("name", songName).count()>0)
             realm.where(Song::class.java).equalTo("name", songName).findFirst()

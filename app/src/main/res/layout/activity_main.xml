@@ -120,7 +120,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Test" />
-
+            <Button
+                android:id="@+id/nextbutton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Next" />
             <TextView
                 android:id="@+id/tracks_found"
                 android:layout_width="fill_parent"

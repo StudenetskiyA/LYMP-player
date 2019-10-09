@@ -17,7 +17,11 @@ import com.develop.dayre.lymp.databinding.ActivityMainBinding
 const val APP_TAG = "lymp"
 const val SPACE_IN_LINK = ';'
 
-class MainActivity : AppCompatActivity(), ILYMPView {
+class MainActivity : AppCompatActivity(), ILYMPView, ILYMPObserver {
+    override fun update() {
+        buildLinkField()
+    }
+
     private val tag = "$APP_TAG/view"
 
     private lateinit var presenter : ILYMPPresenter
@@ -33,6 +37,10 @@ class MainActivity : AppCompatActivity(), ILYMPView {
             Log.i(tag, "test button pressed")
             presenter.testPress()
         }
+        nextbutton.setOnClickListener {
+            Log.i(tag, "next button pressed")
+            presenter.nextPress()
+        }
     }
 
     override fun createView() {
@@ -47,12 +55,15 @@ class MainActivity : AppCompatActivity(), ILYMPView {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        model = LYMPModel()
+        //Потом будем передавать контекст сервиса, а не активити.
+        model = LYMPModel(this)
+        model.addObserver(this)
         presenter = LYMPPresenter(model, this)
     }
 
 
     //Формирует кликабельный и выделенный текст из model.getAllTag()
+    //Надо вызывать после изменений.
     private fun buildLinkField() {
         val definition = model.getAllTags().trim { it <= ' ' }
         current_track_tags.movementMethod = LinkMovementMethod.getInstance()
