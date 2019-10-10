@@ -15,6 +15,17 @@ open class Song(
     var listenedTimes : Double = 0.0
 )  : RealmModel {
 
+    fun getTagsList() : ArrayList<String> {
+        return ArrayList(getListFromString(tags))
+    }
+
+    fun setTagsFromList(list : ArrayList<String>) {
+        var result = "$SPACE_IN_LINK"
+        for (i in list)
+            result = result + i + SPACE_IN_LINK
+        tags = result
+    }
+
     fun copy() : Song {
         return Song(this.name,this.lenght,this.rating,this.tags,this.added,this.listenedTimes)
     }

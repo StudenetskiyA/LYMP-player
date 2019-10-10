@@ -1,0 +1,13 @@
+R_DEF: Internal format may change without notice
+local
+attr? lineMargin
+attr? tagMargin
+attr? textPaddingBottom
+attr? textPaddingLeft
+attr? textPaddingRight
+attr? textPaddingTop
+id tv_tag_item_contain
+id tv_tag_item_delete
+layout tagview_item
+string app_name
+styleable TagView lineMargin tagMargin textPaddingLeft textPaddingRight textPaddingTop textPaddingBottom

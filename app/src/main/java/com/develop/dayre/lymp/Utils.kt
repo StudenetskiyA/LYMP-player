@@ -11,6 +11,13 @@ fun getSpaceIndices(s: String, c: Char): Array<Int> {
     return indices.toTypedArray()
 }
 
+fun getStringFromList(list : ArrayList<String>) : String{
+    var result = "$SPACE_IN_LINK"
+    for (i in list)
+        result = result + i + SPACE_IN_LINK
+    return result
+}
+
 fun getListFromString(text:String) : List<String> {
     return text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }
 }

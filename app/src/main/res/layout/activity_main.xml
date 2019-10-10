@@ -7,13 +7,47 @@
             type="com.develop.dayre.lymp.LYMPModel" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity">
+        tools:context=".MainActivity"
+        android:orientation="vertical">
 
+        <RelativeLayout
+            android:id="@+id/footer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:gravity="bottom"
+            android:orientation="vertical" >
+
+            <Button
+                android:id="@+id/testbutton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/testText"
+                android:visibility="gone"/>
+            <Button
+                android:id="@+id/prevbutton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Prev"
+                android:layout_alignParentStart="true"/>
+            <Button
+                android:id="@+id/nextbutton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/nextButtonName"
+                android:layout_toLeftOf="@id/shufflebutton"/>
+            <Button
+                android:id="@+id/shufflebutton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{test.getShuffleStatus() ? @string/shuffleButtonName : @string/noShuffleButtonName}"
+                android:layout_alignParentEnd="true"/>
+        </RelativeLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -51,14 +85,25 @@
                 android:layout_height="1dp"
                 android:background="@android:color/black" />
 
-            <TextView
-                android:id="@+id/current_track_tags"
-                android:layout_width="fill_parent"
+            <LinearLayout
+                android:id="@+id/edit_tag"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="vertical">
+            <com.develop.dayre.tagfield.TagView
+                android:id="@+id/current_track_tags"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                app:lineMargin="5dp"
+                app:tagMargin="3dp"
                 android:layout_marginLeft="3dp"
                 android:layout_marginRight="3dp"
-                android:textSize="@dimen/tags_font_size" />
-
+                app:textPaddingBottom="3dp"
+                app:textPaddingLeft="10dp"
+                app:textPaddingRight="10dp"
+                app:textPaddingTop="3dp">
+            </com.develop.dayre.tagfield.TagView>
             <RatingBar
                 android:id="@+id/ratingBar"
                 android:layout_width="wrap_content"
@@ -103,7 +148,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_toLeftOf="@id/delete"
-                    android:layout_alignParentEnd="true"
                     android:background="@android:color/transparent"
                     android:src="@drawable/delete" />
 
@@ -115,6 +159,7 @@
                     android:background="@android:color/transparent"
                     android:src="@drawable/rename" />
             </RelativeLayout>
+            </LinearLayout>
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -128,27 +173,6 @@
                 android:textSize="25sp"
                 android:visibility="gone"/>
 
-            <Button
-                android:id="@+id/testbutton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/testText"
-                android:visibility="gone"/>
-            <Button
-                android:id="@+id/prevbutton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Prev" />
-            <Button
-                android:id="@+id/nextbutton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/nextButtonName" />
-            <Button
-                android:id="@+id/shufflebutton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@{test.getShuffleStatus() ? @string/shuffleButtonName : @string/noShuffleButtonName}" />
             <TextView
                 android:id="@+id/tracks_found"
                 android:layout_width="fill_parent"
@@ -160,18 +184,34 @@
                 android:textSize="@dimen/tags_font_size"/>
 
             <TextView
-                android:id="@+id/search_track_tags"
+                android:id="@+id/search_track_tags_old"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="3dp"
                 android:layout_marginRight="3dp"
-                android:textSize="@dimen/tags_font_size"/>
+                android:textSize="@dimen/tags_font_size"
+                android:visibility="gone"/>
+
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@android:color/black"/>
 
+            <com.develop.dayre.tagfield.TagView
+                android:id="@+id/search_track_tags"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                app:lineMargin="5dp"
+                app:tagMargin="3dp"
+                android:layout_marginLeft="3dp"
+                android:layout_marginRight="3dp"
+                app:textPaddingBottom="3dp"
+                app:textPaddingLeft="10dp"
+                app:textPaddingRight="10dp"
+                app:textPaddingTop="3dp">
+            </com.develop.dayre.tagfield.TagView>
 
             <ListView
                 android:id="@+id/current_list"
@@ -186,7 +226,7 @@
                 android:layout_height="1dp"
                 android:background="@android:color/black" />
         </LinearLayout>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </RelativeLayout>
 
 
 </layout>
