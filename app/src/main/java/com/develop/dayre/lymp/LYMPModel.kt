@@ -126,6 +126,7 @@ class LYMPModel(context: Context) : ILYMPModel, ILYMPObservable, BaseObservable(
     override fun saveSongToDB(song: Song) {
         helper.writeSong(song)
         Log.i(tag, "Song with name ${song.name} and tags ${song.tags} saved to DB")
+        notifyObservers()
     }
 
     override fun nextSong() {
@@ -137,6 +138,7 @@ class LYMPModel(context: Context) : ILYMPModel, ILYMPObservable, BaseObservable(
             )
             Log.i(tag, "Next track ${currentSongsList[currentSongPositionInList].name} / " +
                     "${currentSongsList[currentSongPositionInList].tags}")
+            notifyObservers()
         }
     }
 
@@ -148,6 +150,7 @@ class LYMPModel(context: Context) : ILYMPModel, ILYMPObservable, BaseObservable(
                 shuffleStatus
             )
             Log.i(tag, "Next track name ${currentSongsList[currentSongPositionInList].name}")
+            notifyObservers()
         }
     }
 
@@ -174,7 +177,6 @@ class LYMPModel(context: Context) : ILYMPModel, ILYMPObservable, BaseObservable(
     }
 
     private fun createCurrentList() {
-        //currentSongsList = helper.getAllSongs()
         currentSongsList =
             ArrayList(helper.getSongsFromDBToCurrentSongsList(getListFromString(searchTags)))
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
