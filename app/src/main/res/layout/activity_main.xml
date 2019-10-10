@@ -2,6 +2,7 @@
 <layout>
 
     <data>
+
         <variable
             name="test"
             type="com.develop.dayre.lymp.LYMPModel" />
@@ -12,8 +13,8 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        tools:context=".MainActivity">
 
         <RelativeLayout
             android:id="@+id/footer"
@@ -21,46 +22,51 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:gravity="bottom"
-            android:orientation="vertical" >
+            android:orientation="vertical">
 
             <Button
                 android:id="@+id/testbutton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/testText"
-                android:visibility="gone"/>
+                android:visibility="gone" />
+
             <Button
                 android:id="@+id/prevbutton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Prev"
-                android:layout_alignParentStart="true"/>
+                android:layout_alignParentStart="true"
+                android:text="Prev" />
+
             <Button
                 android:id="@+id/nextbutton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/nextButtonName"
-                android:layout_toLeftOf="@id/shufflebutton"/>
+                android:layout_toLeftOf="@id/shufflebutton"
+                android:text="@string/nextButtonName" />
+
             <Button
                 android:id="@+id/shufflebutton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{test.getShuffleStatus() ? @string/shuffleButtonName : @string/noShuffleButtonName}"
-                android:layout_alignParentEnd="true"/>
+                android:layout_alignParentEnd="true"
+                android:text="@{test.getShuffleStatus() ? @string/shuffleButtonName : @string/noShuffleButtonName}" />
         </RelativeLayout>
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/current_song"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:text="@{test.getCurrentSong().name}"
+            android:textSize="@dimen/tags_font_size" />
 
-            <TextView
-                android:id="@+id/current_song"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:text="@{test.getCurrentSong().name}"
-                android:textSize="@dimen/tags_font_size" />
+        <LinearLayout
+            android:id="@+id/edit_tag"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/current_song"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/track_info_added_at"
@@ -80,30 +86,20 @@
                 android:textAlignment="center"
                 android:textSize="@dimen/tags_font_size" />
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@android:color/black" />
-
-            <LinearLayout
-                android:id="@+id/edit_tag"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
             <com.develop.dayre.tagfield.TagView
                 android:id="@+id/current_track_tags"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="3dp"
                 android:layout_marginTop="10dp"
+                android:layout_marginRight="3dp"
                 app:lineMargin="5dp"
                 app:tagMargin="3dp"
-                android:layout_marginLeft="3dp"
-                android:layout_marginRight="3dp"
                 app:textPaddingBottom="3dp"
                 app:textPaddingLeft="10dp"
                 app:textPaddingRight="10dp"
-                app:textPaddingTop="3dp">
-            </com.develop.dayre.tagfield.TagView>
+                app:textPaddingTop="3dp"></com.develop.dayre.tagfield.TagView>
+
             <RatingBar
                 android:id="@+id/ratingBar"
                 android:layout_width="wrap_content"
@@ -112,7 +108,7 @@
                 android:numStars="@{test.getCurrentSong().rating}"
                 android:rating="1"
                 android:stepSize="1"
-                android:visibility="gone"/>
+                android:visibility="gone" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -159,19 +155,16 @@
                     android:background="@android:color/transparent"
                     android:src="@drawable/rename" />
             </RelativeLayout>
-            </LinearLayout>
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@android:color/black" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:text="@{Integer.toString(test.takeTestCounter())}"
-                android:textSize="25sp"
-                android:visibility="gone"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/search_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/footer"
+            android:layout_below="@+id/edit_tag"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/tracks_found"
@@ -181,51 +174,33 @@
                 android:lines="1"
                 android:text="@{Integer.toString(test.getCurrentSongsList().size)}"
                 android:textAlignment="center"
-                android:textSize="@dimen/tags_font_size"/>
-
-            <TextView
-                android:id="@+id/search_track_tags_old"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="3dp"
-                android:layout_marginRight="3dp"
-                android:textSize="@dimen/tags_font_size"
-                android:visibility="gone"/>
-
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@android:color/black"/>
+                android:textSize="@dimen/tags_font_size" />
 
             <com.develop.dayre.tagfield.TagView
                 android:id="@+id/search_track_tags"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="3dp"
                 android:layout_marginTop="10dp"
+                android:layout_marginRight="3dp"
                 app:lineMargin="5dp"
                 app:tagMargin="3dp"
-                android:layout_marginLeft="3dp"
-                android:layout_marginRight="3dp"
                 app:textPaddingBottom="3dp"
                 app:textPaddingLeft="10dp"
                 app:textPaddingRight="10dp"
-                app:textPaddingTop="3dp">
-            </com.develop.dayre.tagfield.TagView>
+                app:textPaddingTop="3dp" />
 
             <ListView
                 android:id="@+id/current_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_above="@id/footer"
                 android:choiceMode="singleChoice"
                 android:clickable="true"
                 android:dividerHeight="0dp"
-                android:focusable="true"/>
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@android:color/black" />
+                android:focusable="true" />
         </LinearLayout>
+
     </RelativeLayout>
 
 

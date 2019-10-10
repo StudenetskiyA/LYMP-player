@@ -173,6 +173,14 @@ class LYMPModel(context: Context) : ILYMPModel, ILYMPObservable, BaseObservable(
     }
 
     init {
+        helper.writeSong(Song("Американская мечта",250,2))
+        helper.writeSong(Song("Русская мечта",250,2))
+        helper.writeSong(Song("Песня-мечта",250,2))
+        helper.writeSong(Song("Голова",250,2))
+        helper.writeSong(Song("Песня для всех тегов",250,2))
+        helper.writeSong(Song("Песня с очень длинным названием прям вообще",250,2))
+        helper.writeSong(Song("99394",250,2))
+
         createCurrentList()
     }
 
