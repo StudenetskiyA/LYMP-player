@@ -115,6 +115,10 @@
                     android:background="@android:color/transparent"
                     android:src="@drawable/rename" />
             </RelativeLayout>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/black" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -153,7 +157,7 @@
                 android:lines="1"
                 android:text="@{Integer.toString(test.getCurrentSongsList().size)}"
                 android:textAlignment="center"
-                android:textSize="@dimen/tags_font_size" />
+                android:textSize="@dimen/tags_font_size"/>
 
             <TextView
                 android:id="@+id/search_track_tags"
@@ -161,19 +165,26 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="3dp"
                 android:layout_marginRight="3dp"
-                android:textSize="@dimen/tags_font_size" />
+                android:textSize="@dimen/tags_font_size"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/black"/>
+
 
             <ListView
                 android:id="@+id/current_list"
                 android:layout_width="match_parent"
-                android:layout_height="100dp"
-                android:layout_weight="0"
+                android:layout_height="wrap_content"
                 android:choiceMode="singleChoice"
                 android:clickable="true"
                 android:dividerHeight="0dp"
-                android:focusable="true"
-                android:gravity="center"
-                android:visibility="gone"/>
+                android:focusable="true"/>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/black" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 

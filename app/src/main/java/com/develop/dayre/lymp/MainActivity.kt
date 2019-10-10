@@ -9,6 +9,8 @@ import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
 import android.util.Log
 import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.ListView
 import android.widget.TextView
 import androidx.databinding.DataBindingUtil
 import kotlinx.android.synthetic.main.activity_main.*
@@ -17,17 +19,27 @@ import com.develop.dayre.lymp.databinding.ActivityMainBinding
 const val APP_TAG = "lymp"
 const val SPACE_IN_LINK = ';'
 
-class MainActivity : AppCompatActivity(), ILYMPView, ILYMPObserver {
-    override fun update() {
-        buildLinkField()
-        buildSearchField()
-    }
+var array = arrayOf("Melbourne", "Vienna", "Vancouver", "Toronto", "Calgary", "Adelaide", "Perth", "Auckland", "Helsinki", "Hamburg", "Munich", "New York", "Sydney", "Paris", "Cape Town", "Barcelona", "London", "Bangkok")
 
+class MainActivity : AppCompatActivity(), ILYMPView, ILYMPObserver {
     private val tag = "$APP_TAG/view"
 
     private lateinit var presenter: ILYMPPresenter
     private lateinit var model: LYMPModel
     private lateinit var binding: ActivityMainBinding
+    private lateinit var adapter: SongListAdapter
+    private lateinit var listView: ListView
+
+    override fun update() {
+        Log.i(tag,"update")
+        buildLinkField()
+        buildSearchField()
+
+        //adapter.notifyDataSetChanged() - не работает!
+        adapter = SongListAdapter(model.getCurrentSongsList(), this)
+        listView.adapter = adapter
+    }
+
 
     override fun refreshList() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -63,6 +75,11 @@ class MainActivity : AppCompatActivity(), ILYMPView, ILYMPObserver {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.test = model
         binding.executePendingBindings()
+
+        //Делай это после биндинга, иначе не видно.
+        listView = findViewById(R.id.current_list)
+        adapter = SongListAdapter(model.getCurrentSongsList(), this)
+        listView.adapter = adapter
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
