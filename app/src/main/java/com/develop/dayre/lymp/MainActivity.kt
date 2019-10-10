@@ -1,5 +1,7 @@
 package com.develop.dayre.lymp
 
+import com.develop.dayre.tagfield.TagView
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Spannable
@@ -12,9 +14,13 @@ import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import kotlinx.android.synthetic.main.activity_main.*
 import com.develop.dayre.lymp.databinding.ActivityMainBinding
+import com.develop.dayre.tagfield.OnTagClickListener
+import com.develop.dayre.tagfield.OnTagDeleteListener
+import com.develop.dayre.tagfield.Tag
 
 const val APP_TAG = "lymp"
 const val SPACE_IN_LINK = ';'
@@ -24,6 +30,7 @@ var array = arrayOf("Melbourne", "Vienna", "Vancouver", "Toronto", "Calgary", "A
 class MainActivity : AppCompatActivity(), ILYMPView, ILYMPObserver {
     private val tag = "$APP_TAG/view"
 
+    private lateinit var tagView: TagView
     private lateinit var presenter: ILYMPPresenter
     private lateinit var model: LYMPModel
     private lateinit var binding: ActivityMainBinding
@@ -80,6 +87,31 @@ class MainActivity : AppCompatActivity(), ILYMPView, ILYMPObserver {
         listView = findViewById(R.id.current_list)
         adapter = SongListAdapter(model.getCurrentSongsList(), this)
         listView.adapter = adapter
+
+        tagView = this.findViewById(R.id.tagview)
+
+        val tag = Tag("Rock")
+        tag.tagTextColor = Color.BLACK
+        tag.layoutBorderSize = 2f
+        tag.layoutBorderColor = Color.BLACK
+        tag.radius = 20f
+        tag.layoutColor = Color.TRANSPARENT
+        // tag.isDeletable = true;
+        tagView.addTag(tag)
+
+        tagView.setOnTagClickListener { position, tag ->
+            Log.i("TESTTAG", "click $position")
+            tagView.tags[position].layoutColor = Color.YELLOW
+            tagView.drawTags()
+        }
+        tagView.setOnTagDeleteListener { position, tag ->
+            Toast.makeText(
+                this@MainActivity,
+                "delete tag id = " + tag.id + " position =" + position,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
