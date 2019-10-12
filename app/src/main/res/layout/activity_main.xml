@@ -32,12 +32,23 @@
                 android:visibility="gone" />
 
             <Button
-                android:id="@+id/prevbutton"
+                android:id="@+id/repeatbutton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
+                android:text="No repeat" />
+            <Button
+                android:id="@+id/prevbutton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@+id/repeatbutton"
                 android:text="Prev" />
-
+            <Button
+                android:id="@+id/playbutton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="Play" />
             <Button
                 android:id="@+id/nextbutton"
                 android:layout_width="wrap_content"

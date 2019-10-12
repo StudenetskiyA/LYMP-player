@@ -1,9 +1,14 @@
 package com.develop.dayre.lymp
 
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import com.develop.dayre.tagfield.TagView
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.IBinder
 import android.text.Spannable
 import android.text.TextPaint
 import android.text.method.LinkMovementMethod
@@ -32,10 +37,39 @@ class MainActivity : AppCompatActivity(), ILYMPView, ILYMPObserver {
     private lateinit var searchTagView: TagView
 
     private lateinit var presenter: ILYMPPresenter
-    private lateinit var model: LYMPModel
+
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: SongListAdapter
     private lateinit var listView: ListView
+
+    var serv: LYMPService? = null
+    var isBound = false
+    private val myConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName,
+                                        service: IBinder) {
+            val binder = service as LYMPService.MyLocalBinder
+            serv = binder.getService()
+            isBound = true
+            Log.i(TAG, "Service binded.")
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            isBound = false
+            Log.i(TAG, "Service unbinded.")
+        }
+    }
+
+    init {
+        instance = this
+    }
+
+    companion object {
+        var instance: MainActivity? = null
+        lateinit var model: LYMPModel
+        fun applicationContext() : Context {
+            return instance!!.applicationContext
+        }
+    }
 
     override fun update() {
         Log.i(TAG, "update")
@@ -58,6 +92,9 @@ class MainActivity : AppCompatActivity(), ILYMPView, ILYMPObserver {
         }
         nextbutton.setOnClickListener {
             Log.i(TAG, "next button pressed")
+            val intent = Intent(this@MainActivity, LYMPService::class.java)
+            intent.putExtra(EXTRA_COMMAND, ServiceCommand.Next)
+            startService(intent)
             presenter.nextPress()
         }
         prevbutton.setOnClickListener {
@@ -132,8 +169,14 @@ class MainActivity : AppCompatActivity(), ILYMPView, ILYMPObserver {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val intent = Intent(this, LYMPService::class.java)
+        bindService(intent, myConnection, Context.BIND_AUTO_CREATE)
+
+//        val intent = Intent(this@MainActivity, LYMPService::class.java)
+
+
         //Потом будем передавать контекст сервиса, а не активити.
-        model = LYMPModel(this)
+        model = LYMPModel.instance
         model.addObserver(this)
         presenter = LYMPPresenter(model, this)
     }
@@ -163,7 +206,7 @@ class MainActivity : AppCompatActivity(), ILYMPView, ILYMPObserver {
             tag.layoutBorderSize = 2f
             tag.layoutBorderColor = Color.BLACK
             tag.radius = 20f
-            if (getListFromString(model.getCurrentSong()!!.tags).contains(word))
+            if (model.getCurrentSong()!=null && getListFromString(model.getCurrentSong()!!.tags).contains(word))
                 tag.layoutColor = Color.YELLOW
             else tag.layoutColor = Color.TRANSPARENT
             tagView.addTag(tag)
