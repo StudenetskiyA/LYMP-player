@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
 
     <data>
-
+        <import type="android.view.View" />
         <variable
-            name="test"
-            type="com.develop.dayre.lymp.LYMPModel" />
+            name="viewmodel"
+            type="com.develop.dayre.lymp.LYMPViewModel" />
     </data>
 
-    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <RelativeLayout
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
@@ -61,22 +61,23 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
-                android:text="@{test.getShuffleStatus() ? @string/shuffleButtonName : @string/noShuffleButtonName}" />
+                android:text="@{viewmodel.shuffle ? @string/shuffleButtonName : @string/noShuffleButtonName}"
+                />
         </RelativeLayout>
 
         <TextView
-            android:id="@+id/current_song"
+            android:id="@+id/track_info_current_song"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:text="@{test.getCurrentSong().name}"
+            android:layout_marginStart="10dp"
+            android:text="Не выбран трек."
             android:textSize="@dimen/tags_font_size" />
 
         <LinearLayout
             android:id="@+id/edit_tag"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/current_song"
+            android:layout_below="@+id/track_info_current_song"
             android:orientation="vertical">
 
             <TextView
@@ -84,7 +85,6 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:lines="1"
-                android:text="@{String.format(@string/added_at, test.getCurrentSong().added)}"
                 android:textAlignment="center"
                 android:textSize="@dimen/tags_font_size" />
 
@@ -93,7 +93,6 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:lines="1"
-                android:text="@{String.format(@string/listened_times, test.getCurrentSong().listenedTimes)}"
                 android:textAlignment="center"
                 android:textSize="@dimen/tags_font_size" />
 
@@ -109,17 +108,18 @@
                 app:textPaddingBottom="3dp"
                 app:textPaddingLeft="10dp"
                 app:textPaddingRight="10dp"
-                app:textPaddingTop="3dp"></com.develop.dayre.tagfield.TagView>
+                app:textPaddingTop="3dp"/>
 
             <RatingBar
                 android:id="@+id/ratingBar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="left"
-                android:numStars="@{test.getCurrentSong().rating}"
+                android:layout_gravity="start"
+
                 android:rating="1"
                 android:stepSize="1"
                 android:visibility="gone" />
+<!--            android:numStars="@{viewmodel.getCurrentSong().rating}"-->
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -132,7 +132,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:background="@android:color/transparent"
-                    android:src="@drawable/addnewtag" />
+                    android:src="@drawable/addnewtag"/>
 
                 <ImageButton
                     android:id="@+id/deltag"
@@ -183,9 +183,11 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:lines="1"
-                android:text="@{Integer.toString(test.getCurrentSongsList().size)}"
+
                 android:textAlignment="center"
                 android:textSize="@dimen/tags_font_size" />
+<!--            android:text="@{Integer.toString(viewmodel.getCurrentSongsList().size)}"-->
+
 
             <com.develop.dayre.tagfield.TagView
                 android:id="@+id/search_track_tags"
@@ -201,15 +203,21 @@
                 app:textPaddingRight="10dp"
                 app:textPaddingTop="3dp" />
 
+            <ProgressBar
+                android:id="@+id/loading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="@{viewmodel.isLoadingSongsList() ? View.VISIBLE : View.GONE}" />
             <ListView
                 android:id="@+id/current_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_above="@id/footer"
                 android:choiceMode="singleChoice"
                 android:clickable="true"
                 android:dividerHeight="0dp"
-                android:focusable="true" />
+                android:focusable="true"
+                tools:listitem="@layout/song_in_list"
+                android:visibility="@{viewmodel.isLoadingSongsList() ? View.GONE : View.VISIBLE}"/>
         </LinearLayout>
 
     </RelativeLayout>

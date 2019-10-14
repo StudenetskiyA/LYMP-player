@@ -1,40 +1,19 @@
 package com.develop.dayre.lymp
 
-import android.content.Context
 import android.util.Log
 import androidx.databinding.BaseObservable
-import androidx.databinding.Bindable
+import io.reactivex.Observable
+import java.util.concurrent.TimeUnit
 
 enum class RepeatState { All, One, Stop }
 enum class PlayState { Play, Stop, Pause }
 enum class SortState { ByName, ByAdded, ByListened }
 enum class TagsFlag { Or, And }
 
-interface ILYMPObserver {
-    //Надо подумать, что именно передавать.
-    //Возможно, будет переменная что-то в духе allData либо несколько вариантов
-    //update, если мы не хотм обновлять всегда все разом.
-    fun update()
-}
-
-interface ILYMPObservable {
-    var observersList: ArrayList<ILYMPObserver>
-
-    fun addObserver(newObserver: ILYMPObserver) {
-        observersList.add(newObserver)
-    }
-
-    fun removeObserver(remObserver: ILYMPObserver) {
-        if (observersList.contains(remObserver)) observersList.remove(remObserver)
-    }
-
-    fun notifyObservers()
-}
-
 interface ILYMPModel {
     fun initialize()
 
-    fun newSearch(tags: String)
+    fun newSearch(tags: String): Observable<ArrayList<Song>>
 
     fun saveSongToDB(song: Song)
     fun nextSong()
@@ -43,57 +22,31 @@ interface ILYMPModel {
     fun clearTag()
 
     fun testAction()
-    fun takeTestCounter(): Int
-    fun getCurrentSong(): Song?
+    fun getCurrentSong(): Observable<Song?>
     fun getCurrentSongsList(): ArrayList<Song>
     fun getAllTags(): String
     fun getShuffleStatus(): Boolean
-    fun getCurrentSearchTags(): String
+    fun getCurrentSearchTags(): Observable<String>
 }
 
-class LYMPModel : ILYMPModel, ILYMPObservable, BaseObservable() {
-    override var observersList = ArrayList<ILYMPObserver>()
-    private val tag = "$APP_TAG/model"
+class LYMPModel : ILYMPModel, BaseObservable() {
+    private val TAG = "$APP_TAG/model"
+    private var currentSong: Song? =
+        Song() //У нас бывают ситуации, когда текущий трек не в текущем листе.
     private var currentSongsList = ArrayList<Song>()
     private var currentSongsShuffledListNumber = ArrayList<Int>()
     private var helper: RealmHelper = RealmHelper(MainActivity.applicationContext())
     private var searchTags = ";"
-
-
     private var shuffleStatus: Boolean = false
-        @Bindable set(value) {
-            field = value
-            notifyObservers()
-        }
-
-    private var testCounter: Int = 0
-        @Bindable set(value) {
-            field = value
-            notifyObservers()
-        }
     private var currentSongPositionInList: Int = 0
-        @Bindable set(value) {
-            field = value
-            notifyObservers()
+        set(value) {
+            if (value < currentSongsList.size) {
+                field = value
+                currentSong = currentSongsList[currentSongPositionInList]
+            }
         }
-
-    //
-    companion object {
-        val instance = LYMPModel()
-    }
 
     //Методы для обсерверов
-    override fun getCurrentSearchTags(): String {
-        return searchTags
-    }
-
-    override fun notifyObservers() {
-        notifyChange()
-        for (obs in observersList) {
-            obs.update()
-        }
-    }
-
     override fun getShuffleStatus(): Boolean {
         return shuffleStatus
     }
@@ -106,32 +59,49 @@ class LYMPModel : ILYMPModel, ILYMPObservable, BaseObservable() {
         return currentSongsList
     }
 
-    override fun getCurrentSong(): Song? {
+    override fun getCurrentSong(): Observable<Song?> {
         return if (currentSongPositionInList < currentSongsList.size && currentSongPositionInList >= 0)
-            currentSongsList[currentSongPositionInList]
-        else null
+            Observable.just(currentSongsList[currentSongPositionInList])
+        else Observable.just(null)
     }
 
-    override fun takeTestCounter(): Int {
-        return testCounter
+    override fun getCurrentSearchTags(): Observable<String> {
+        return Observable.just(searchTags)
+    }
+
+    //Действия
+    fun setCurrentSong(songName: String) {
+        val s = helper.getSongByName(songName)
+        if (s!=null && currentSongsList.contains(s)) {
+            currentSong = s
+            currentSongPositionInList = currentSongsList.indexOf(s)
+        }
+    }
+
+    fun setPositionInList(position: Int) {
+        currentSongPositionInList = position
     }
 
     override fun clearTag() {
-        val song = getCurrentSong()?.copy()
-        song?.tags = ";"
-        if (song!=null) helper.writeSong(song)
-        notifyObservers()
-        createCurrentList()
+        val song = currentSong?.copy()
+        if (song != null) {
+            song.tags = ";"
+            helper.writeSong(song)
+            createCurrentList() //После удаления тегов трека он может пропасть/появиться в листе.
+        }
     }
-    override fun newSearch(tags: String) {
+
+    override fun newSearch(tags: String): Observable<ArrayList<Song>> {
+        Log.i(TAG, "new search")
         searchTags = tags
         createCurrentList()
+        //  return Observable.just(currentSongsList).delay(5, TimeUnit.SECONDS)
+        return Observable.just(currentSongsList)
     }
 
     override fun saveSongToDB(song: Song) {
         helper.writeSong(song)
-        Log.i(tag, "Song with name ${song.name} and tags ${song.tags} saved to DB")
-        notifyObservers()
+        Log.i(TAG, "Song with name ${song.name} and tags ${song.tags} saved to DB")
     }
 
     override fun nextSong() {
@@ -141,9 +111,10 @@ class LYMPModel : ILYMPModel, ILYMPObservable, BaseObservable() {
                 currentSongPositionInList,
                 shuffleStatus
             )
-            Log.i(tag, "Next track ${currentSongsList[currentSongPositionInList].name} / " +
-                    "${currentSongsList[currentSongPositionInList].tags}")
-            notifyObservers()
+            Log.i(
+                TAG, "Next track ${currentSong?.name} / " +
+                        "${currentSong?.tags}"
+            )
         }
     }
 
@@ -154,38 +125,35 @@ class LYMPModel : ILYMPModel, ILYMPObservable, BaseObservable() {
                 currentSongPositionInList,
                 shuffleStatus
             )
-            Log.i(tag, "Next track name ${currentSongsList[currentSongPositionInList].name}")
-            notifyObservers()
+            Log.i(TAG, "Next track name ${currentSong?.name}")
         }
     }
 
     override fun changeShuffle() {
         shuffleStatus = !shuffleStatus
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
-        Log.i(tag, "Now shuffle is $shuffleStatus")
+        Log.i(TAG, "Now shuffle is $shuffleStatus")
     }
-    //
-
 
     override fun testAction() {
-        Log.i(tag, "testAction")
-        testCounter++
-        getCurrentSong()?.name = "new name"
+        Log.i(TAG, "testAction")
+//        testCounter++
+//        getCurrentSong()?.name = "new name"
     }
 
     override fun initialize() {
-        Log.i(tag, "initialization")
+        Log.i(TAG, "initialization")
+        createCurrentList()
     }
 
-    init {
-          createCurrentList()
-    }
-
+    //Private
     private fun createCurrentList() {
         currentSongsList =
             ArrayList(helper.getSongsFromDBToCurrentSongsList(getListFromString(searchTags)))
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
-        currentSongPositionInList = 0
+
+        //currentSongPositionInList = 0 - при поиске мы не меняем трек, играет/редактируется тот же, что и был.
     }
+
 
 }

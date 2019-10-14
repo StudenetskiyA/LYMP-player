@@ -16,12 +16,23 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.PRIORITY_MIN
 import com.develop.dayre.lymp.ServiceCommand.*
 import com.develop.dayre.lymp.PlayState.*
+import android.app.NotificationManager
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+
+
 
 const val EXTRA_COMMAND = "EXTRA_COMMAND"
 enum class ServiceCommand {Start , Stop, Next, Prev}
 
 class LYMPService: Service()  {
     private val TAG = "$APP_TAG/service"
+
+
+    var mNotifyManager: NotificationManager? = null
+    var notification: Notification? = null
+
+    lateinit var  mBuilder: NotificationCompat.Builder
 
     private val myBinder = MyLocalBinder()
 
@@ -43,29 +54,6 @@ class LYMPService: Service()  {
 
         val callIntent = PendingIntent.getActivity(applicationContext, 0, Intent(applicationContext, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT)
 
-        val title = if ( MainActivity.model.getCurrentSong()!=null)  MainActivity.model.getCurrentSong()!!.name
-        else "no title"
-
-        val channelId =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                createNotificationChannel("my_service", "My Background Service")
-            } else {
-                  ""
-            }
-
-        val notificationBuilder = NotificationCompat.Builder(this, channelId )
-
-        val notification = notificationBuilder.setOngoing(true)
-            .setSmallIcon(R.drawable.notification_icon_background)
-            .setWhen(0)
-            .setContentIntent(callIntent)
-            .setAutoCancel(false)
-            .setPriority(PRIORITY_MIN)
-            .setCategory(Notification.CATEGORY_SERVICE)
-            .setContentTitle("LYM-player")
-            .setContentText(title)
-            .build()
-
         //Proceed command
         Log.i(APP_TAG, "command = $command")
         when (command) {
@@ -83,14 +71,34 @@ class LYMPService: Service()  {
             }
         }
 
-        bindUI()
+
+        //Нотификация
+        val title = if ( MainActivity.viewModel.currentSong.value!=null)  MainActivity.viewModel.currentSong!!.value!!.name
+        else "no title"
+        val channelId =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                createNotificationChannel("my_service", "My Background Service")
+            } else {
+                  ""
+            }
+        mBuilder = NotificationCompat.Builder(this, channelId )
+        notification = mBuilder.setOngoing(true)
+            .setSmallIcon(R.drawable.notification_icon_background)
+            .setWhen(0)
+            .setContentIntent(callIntent)
+            .setAutoCancel(false)
+            .setPriority(PRIORITY_MIN)
+            .setCategory(Notification.CATEGORY_SERVICE)
+            .setContentTitle("LYM-player")
+            .setContentText(title)
+            .build()
 
         startForeground(9595, notification)
         return START_STICKY
     }
 
     private fun next() {
-
+        MainActivity.viewModel.nextPress()
     }
 
     private fun prev() {
