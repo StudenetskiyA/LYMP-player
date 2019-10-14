@@ -19,6 +19,19 @@ import com.develop.dayre.lymp.PlayState.*
 import android.app.NotificationManager
 import androidx.core.content.ContextCompat.getSystemService
 import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import android.app.PendingIntent
+import android.graphics.drawable.Icon
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import androidx.core.app.NotificationCompat.VISIBILITY_PRIVATE
+import android.widget.RemoteViews
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+
 
 
 
@@ -26,10 +39,12 @@ const val EXTRA_COMMAND = "EXTRA_COMMAND"
 enum class ServiceCommand {Start , Stop, Next, Prev, Init}
 
 class LYMPService: Service()  {
+     val requestCode = 9999
     private val TAG = "$APP_TAG/service"
 
-    var mNotifyManager: NotificationManager? = null
+   // var mNotifyManager: NotificationManager? = null
     var notification: Notification? = null
+    lateinit var notificationView : RemoteViews
 
     lateinit var  mBuilder: NotificationCompat.Builder
 
@@ -50,8 +65,7 @@ class LYMPService: Service()  {
         Log.i(TAG, "Try to start service")
 
         val command = intent.getSerializableExtra(EXTRA_COMMAND) as ServiceCommand
-
-        val callIntent = PendingIntent.getActivity(applicationContext, 0, Intent(applicationContext, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT)
+        notificationView = RemoteViews(packageName,R.layout.notification)
 
         //Proceed command
         Log.i(APP_TAG, "command = $command")
@@ -80,19 +94,42 @@ class LYMPService: Service()  {
             } else {
                   ""
             }
+        //Кнопки на нотификации
+        val callIntent = PendingIntent.getActivity(applicationContext, 0, Intent(applicationContext, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT)
+//        val prevReceive = Intent()
+//        prevReceive.action =
+//        val pendingIntentPrev =
+//            PendingIntent.getBroadcast(this, 12345, prevReceive, PendingIntent.FLAG_UPDATE_CURRENT)
+//        //play intent
+//        val playReceive = Intent()
+//        playReceive.action = "PLAY_ACTION"
+//        val pendingIntentPlay =
+//            PendingIntent.getBroadcast(this, 12345, playReceive, PendingIntent.FLAG_UPDATE_CURRENT)
+        //next intent
+        val nextReceive = Intent()
+        nextReceive.action = "NEXT_ACTION"
+        val pendingIntentNext =
+            PendingIntent.getBroadcast(this, requestCode, nextReceive, PendingIntent.FLAG_UPDATE_CURRENT)
+
+
+        notificationView.setOnClickPendingIntent(R.id.next,  pendingIntentNext)
+        notificationView.setTextViewText(R.id.track_name,  title)
         mBuilder = NotificationCompat.Builder(this, channelId )
         notification = mBuilder.setOngoing(true)
+            .setCustomContentView(notificationView)
             .setSmallIcon(R.drawable.notification_icon_background)
             .setWhen(0)
             .setContentIntent(callIntent)
             .setAutoCancel(false)
             .setPriority(PRIORITY_MIN)
             .setCategory(Notification.CATEGORY_SERVICE)
+            .setVisibility(VISIBILITY_PRIVATE)
             .setContentTitle("LYM-player")
             .setContentText(title)
+           // .addAction(nextAction)
             .build()
 
-        startForeground(9595, notification)
+        startForeground(requestCode, notification)
         return START_STICKY
     }
 

@@ -21,6 +21,13 @@ import kotlinx.android.synthetic.main.activity_main.*
 import com.develop.dayre.lymp.databinding.ActivityMainBinding
 import com.develop.dayre.tagfield.Tag
 import androidx.lifecycle.Observer
+import android.content.IntentFilter
+import androidx.core.app.ComponentActivity.ExtraData
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import android.R.attr.name
+
+
 
 const val APP_TAG = "lymp"
 const val SPACE_IN_LINK = ';'
@@ -72,6 +79,25 @@ class MainActivity : AppCompatActivity() {
         fun applicationContext(): Context {
             return instance!!.applicationContext
         }
+    }
+
+    private var receiversRegistered = false
+
+    private fun registerReceivers(contextIn: Context) {
+        if (receiversRegistered) return
+
+        val context = contextIn.applicationContext
+        val receiver = NotificationReceiver()
+
+        val providerChanged = IntentFilter()
+        providerChanged.addAction("NEXT_ACTION")
+        context.registerReceiver(receiver, providerChanged)
+
+        val userPresent = IntentFilter()
+        userPresent.addAction("android.intent.action.USER_PRESENT")
+        context.registerReceiver(receiver, userPresent)
+
+        receiversRegistered = true
     }
 
     private fun createControl() {
@@ -188,9 +214,9 @@ class MainActivity : AppCompatActivity() {
                     listView.smoothScrollToPosition(n)
                 }
 
-                serv?.notification =
-                    serv?.mBuilder?.setContentText(viewModel.currentSong.value?.name)?.build()
-                serv?.startForeground(9595, serv?.notification)
+                serv?.notificationView?.setTextViewText(R.id.track_name,  viewModel.currentSong.value?.name)
+
+                serv?.startForeground(serv?.requestCode!!, serv?.notification)
 
                 buildLinkField()
             })
@@ -217,6 +243,8 @@ class MainActivity : AppCompatActivity() {
 //        viewModel.songSelect(name)
         val search = "rock"
         viewModel.newSearch("")
+        //Нужно в Андроид 7+, запись в манифесте больше не работает.
+        registerReceivers(this)
     }
 
     private fun buildSearchField() {
