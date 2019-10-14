@@ -125,6 +125,11 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
         setCurrentSong()
     }
 
+    fun songSelectByID(songID: Long) {
+        model.setCurrentSongByID(songID)
+        setCurrentSong()
+    }
+
     override fun repeatPress() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }

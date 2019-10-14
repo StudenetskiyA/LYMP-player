@@ -77,6 +77,13 @@ class LYMPModel : ILYMPModel, BaseObservable() {
             currentSongPositionInList = currentSongsList.indexOf(s)
         }
     }
+    fun setCurrentSongByID(songID: Long) {
+        val s = helper.getSongByID(songID)
+        if (s != null && currentSongsList.contains(s)) {
+            currentSong = s
+            currentSongPositionInList = currentSongsList.indexOf(s)
+        }
+    }
 
     fun setPositionInList(position: Int) {
         currentSongPositionInList = position

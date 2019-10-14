@@ -92,7 +92,7 @@ class RealmHelper(context: Context) {
         else null
     }
 
-    private fun getSongByID(songID: Long): Song? {
+    fun getSongByID(songID: Long): Song? {
         return if (realm.where(Song::class.java).equalTo("ID", songID).count() > 0)
             realm.where(Song::class.java).equalTo("ID", songID).findFirst()
         else null

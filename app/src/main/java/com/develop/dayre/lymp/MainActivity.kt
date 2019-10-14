@@ -1,11 +1,5 @@
 package com.develop.dayre.lymp
 
-import android.app.Notification
-import android.app.PendingIntent
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
 import com.develop.dayre.tagfield.TagView
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
@@ -14,23 +8,14 @@ import android.os.IBinder
 import android.util.Log
 import android.widget.ListView
 import android.widget.Toast
-import androidx.core.app.NotificationCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProviders
 import kotlinx.android.synthetic.main.activity_main.*
 import com.develop.dayre.lymp.databinding.ActivityMainBinding
 import com.develop.dayre.tagfield.Tag
 import androidx.lifecycle.Observer
-import android.content.IntentFilter
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import android.R.attr.name
+import android.content.*
 
-
-
-const val APP_TAG = "lymp"
-const val SPACE_IN_LINK = ';'
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "$APP_TAG/view"
@@ -42,6 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: SongListAdapter
     private lateinit var listView: ListView
 
+    private lateinit var settings: SharedPreferences
     var serv: LYMPService? = null
     var isBound = false
 
@@ -213,18 +199,26 @@ class MainActivity : AppCompatActivity() {
                     listView.setItemChecked(n, true)
                     listView.smoothScrollToPosition(n)
                 }
-
                 buildLinkField()
             })
         viewModel.currentSearchTags.observe(this,
             Observer<String> {
-                Log.i(TAG, "current search tags updated")
+                Log.i(TAG, "current search tags updated, ${viewModel.currentSearchTags.value}")
+                settings.edit().putString(APP_PREFERENCES_CURRENT_SEARCH, viewModel.currentSearchTags.value).apply()
                 buildSearchField()
             })
     }
 
+    override fun onResume() {
+        super.onResume()
+        Log.i(TAG, "onResume")
+        registerReceivers(this)
+        readSettings()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        settings = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE)
         createView()
         createControl()
         createObservers()
@@ -234,13 +228,10 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.startModel()
 
-        //From settings - только в таком порядке
-//        val name = "Русская мечта"
-//        viewModel.songSelect(name)
-        val search = "rock"
-        viewModel.newSearch("")
         //Нужно в Андроид 7+, запись в манифесте больше не работает.
         registerReceivers(this)
+
+        readSettings()
     }
 
     private fun buildSearchField() {
@@ -279,5 +270,17 @@ class MainActivity : AppCompatActivity() {
                 tagView.addTag(tag)
             }
         }
+    }
+
+    private fun readSettings() {
+        if (settings.contains(APP_PREFERENCES_SELECT_SONG)) {
+            val t = settings.getString(APP_PREFERENCES_SELECT_SONG, "0")
+            viewModel.songSelectByID(t.toLong())
+        }
+        var search = ""
+        if (settings.contains(APP_PREFERENCES_CURRENT_SEARCH)) {
+            search = settings.getString(APP_PREFERENCES_CURRENT_SEARCH, "")!!
+        }
+        viewModel.newSearch(search)
     }
 }

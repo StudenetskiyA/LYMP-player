@@ -61,31 +61,9 @@ class LYMPService: LifecycleService()  {
 
     }
 
-    override fun onStartCommand(intent :Intent, flags :Int, startId :Int) : Int {
-        super.onStartCommand(intent, flags, startId)
-        Log.i(TAG, "Try to start service")
-
-        val command = intent.getSerializableExtra(EXTRA_COMMAND) as ServiceCommand
+    fun initService() {
+        Log.i(TAG, "Try to init service")
         notificationView = RemoteViews(packageName,R.layout.notification)
-
-        //Proceed command
-        Log.i(APP_TAG, "command = $command")
-        when (command) {
-            ServiceCommand.Stop -> {
-                stop()
-            }
-            Start -> {
-                play()
-            }
-            Next -> {
-                next()
-            }
-            Prev -> {
-                prev()
-            }
-        }
-
-        createObservers()
 
         //Нотификация
         val title = if ( MainActivity.viewModel.currentSong.value!=null)  MainActivity.viewModel.currentSong!!.value!!.name
@@ -94,7 +72,7 @@ class LYMPService: LifecycleService()  {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 createNotificationChannel("my_service", "My Background Service")
             } else {
-                  ""
+                ""
             }
         //Кнопки на нотификации
         val callIntent = PendingIntent.getActivity(applicationContext, 0, Intent(applicationContext, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT)
@@ -132,8 +110,34 @@ class LYMPService: LifecycleService()  {
             .setContentTitle("LYM-player")
             .setContentText(title)
             .build()
+        createObservers()
+    }
+
+    override fun onStartCommand(intent :Intent, flags :Int, startId :Int) : Int {
+        super.onStartCommand(intent, flags, startId)
+
+        val command = intent.getSerializableExtra(EXTRA_COMMAND) as ServiceCommand
+
+        //Proceed command
+        Log.i(APP_TAG, "command = $command")
+        when (command) {
+            Init -> { initService()}
+            ServiceCommand.Stop -> {
+                stop()
+            }
+            Start -> {
+                play()
+            }
+            Next -> {
+                next()
+            }
+            Prev -> {
+                prev()
+            }
+        }
 
         startForeground(requestCode, notification)
+
         return START_STICKY
     }
 
@@ -153,14 +157,14 @@ class LYMPService: LifecycleService()  {
 
     }
 
-    private fun bindUI() {
-
-    }
-
     private fun createObservers() {
+        //TODO Observe play status to change play/pause icon
         MainActivity.viewModel.currentSong.observe(this,
             Observer<Song> {
                 Log.i(TAG, "current song updated")
+                val settings = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE)
+                settings.edit().putString(APP_PREFERENCES_SELECT_SONG, MainActivity.viewModel.currentSong.value?.ID.toString()).apply()
+
                 notificationView?.setTextViewText(R.id.track_name,  MainActivity.viewModel.currentSong.value?.name)
                 startForeground(requestCode, notification)
             })
