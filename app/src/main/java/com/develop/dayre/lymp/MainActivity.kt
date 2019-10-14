@@ -214,10 +214,6 @@ class MainActivity : AppCompatActivity() {
                     listView.smoothScrollToPosition(n)
                 }
 
-                serv?.notificationView?.setTextViewText(R.id.track_name,  viewModel.currentSong.value?.name)
-
-                serv?.startForeground(serv?.requestCode!!, serv?.notification)
-
                 buildLinkField()
             })
         viewModel.currentSearchTags.observe(this,

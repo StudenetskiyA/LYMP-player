@@ -10,23 +10,35 @@
         android:id="@+id/notifiation_image"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="30"
+        android:layout_weight="10"
         android:contentDescription="Logo"
         android:src="@drawable/logo" />
 
     <TextView
         android:id="@+id/track_name"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="50"
+        android:layout_weight="45"
         android:gravity="center"
         android:text="Song name"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
-    <Button
-        android:id="@+id/next"
-        android:layout_width="wrap_content"
+    <ImageButton
+        android:id="@+id/prev_in_notification"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="20"
-        android:text="Next" />
+        android:layout_weight="15"
+        android:src="@drawable/prev_inbar" />
+    <ImageButton
+        android:id="@+id/play_in_notification"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="15"
+        android:src="@drawable/pause_inbar" />
+    <ImageButton
+        android:id="@+id/next_in_notification"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="15"
+        android:src="@drawable/next_inbar" />
 </LinearLayout>
