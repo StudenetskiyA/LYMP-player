@@ -23,11 +23,10 @@ import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 
 
 const val EXTRA_COMMAND = "EXTRA_COMMAND"
-enum class ServiceCommand {Start , Stop, Next, Prev}
+enum class ServiceCommand {Start , Stop, Next, Prev, Init}
 
 class LYMPService: Service()  {
     private val TAG = "$APP_TAG/service"
-
 
     var mNotifyManager: NotificationManager? = null
     var notification: Notification? = null

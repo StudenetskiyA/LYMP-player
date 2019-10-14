@@ -141,11 +141,11 @@ class LYMPModel : ILYMPModel, BaseObservable() {
 
     override fun initialize() {
         Log.i(TAG, "initialization")
-        //helper.clearDataBase()
+//        helper.clearDataBase()
 //        helper.writeSong(Song(name = "1 track"))
 //        helper.writeSong(Song(name = "2 track"))
 //        helper.writeSong(Song(name = "3 track"))
-//        helper.writeSong(Song(name = "1 track"))
+//        helper.writeSong(Song(path = "subfolder",name = "1 track"))
 //        helper.writeSong(Song(name = "Русский track"))
 //        helper.writeSong(Song(name = "Еще один track"))
 //        helper.writeSong(Song(name = "Трек с очень-очень длинным именем, прям куда деваться"))

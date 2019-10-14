@@ -1,5 +1,7 @@
 package com.develop.dayre.lymp
 
+import android.app.Notification
+import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -12,6 +14,7 @@ import android.os.IBinder
 import android.util.Log
 import android.widget.ListView
 import android.widget.Toast
+import androidx.core.app.NotificationCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProviders
 import kotlinx.android.synthetic.main.activity_main.*
@@ -44,6 +47,9 @@ class MainActivity : AppCompatActivity() {
             serv = binder.getService()
             isBound = true
             Log.i(TAG, "Service binded.")
+            val intent = Intent(this@MainActivity, LYMPService::class.java)
+            intent.putExtra(EXTRA_COMMAND, ServiceCommand.Init)
+            startService(intent)
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
@@ -62,6 +68,7 @@ class MainActivity : AppCompatActivity() {
         //Или передавать контектст при инициализации вьюмодели и модели.
         //По факту он нужен только для БД.
         var instance: MainActivity? = null
+
         fun applicationContext(): Context {
             return instance!!.applicationContext
         }
@@ -150,7 +157,10 @@ class MainActivity : AppCompatActivity() {
                 Log.i(TAG, "songs list updated")
                 adapter = SongListAdapter(it, this)
                 listView.adapter = adapter
-                if (viewModel.currentSongsList.value!=null && viewModel.currentSongsList.value!!.contains(viewModel.currentSong.value)) {
+                if (viewModel.currentSongsList.value != null && viewModel.currentSongsList.value!!.contains(
+                        viewModel.currentSong.value
+                    )
+                ) {
                     val n = viewModel.currentSongsList.value!!.indexOf(viewModel.currentSong.value)
                     listView.setItemChecked(n, true)
                     listView.smoothScrollToPosition(n)
@@ -168,14 +178,18 @@ class MainActivity : AppCompatActivity() {
                 track_info_listened_times.text =
                     viewModel.currentSong.value?.listenedTimes.toString()
 
-                if (viewModel.currentSongsList.value!=null && viewModel.currentSongsList.value!!.contains(viewModel.currentSong.value)) {
+                if (viewModel.currentSongsList.value != null && viewModel.currentSongsList.value!!.contains(
+                        viewModel.currentSong.value
+                    )
+                ) {
                     val n = viewModel.currentSongsList.value!!.indexOf(viewModel.currentSong.value)
                     Log.i(TAG, "current song index in list $n")
                     listView.setItemChecked(n, true)
                     listView.smoothScrollToPosition(n)
                 }
 
-                serv?.mBuilder?.setContentText(viewModel.currentSong.value?.name)
+                serv?.notification =
+                    serv?.mBuilder?.setContentText(viewModel.currentSong.value?.name)?.build()
                 serv?.startForeground(9595, serv?.notification)
 
                 buildLinkField()
@@ -202,27 +216,30 @@ class MainActivity : AppCompatActivity() {
 //        val name = "Русская мечта"
 //        viewModel.songSelect(name)
         val search = "rock"
-        viewModel.newSearch(search)
+        viewModel.newSearch("")
     }
 
     private fun buildSearchField() {
         searchTagView.removeAllTags()
-            for (word in getListFromString(viewModel.getAllTags())) {
-                val tag = Tag(word)
-                tag.tagTextColor = Color.BLACK
-                tag.layoutBorderSize = 2f
-                tag.layoutBorderColor = Color.BLACK
-                tag.radius = 20f
-                if (viewModel.currentSearchTags.value!=null && getListFromString(viewModel.currentSearchTags.value!!).contains(word))
-                    tag.layoutColor = Color.YELLOW
-                else tag.layoutColor = Color.TRANSPARENT
-                searchTagView.addTag(tag)
-            }
+        for (word in getListFromString(viewModel.getAllTags())) {
+            val tag = Tag(word)
+            tag.tagTextColor = Color.BLACK
+            tag.layoutBorderSize = 2f
+            tag.layoutBorderColor = Color.BLACK
+            tag.radius = 20f
+            if (viewModel.currentSearchTags.value != null && getListFromString(viewModel.currentSearchTags.value!!).contains(
+                    word
+                )
+            )
+                tag.layoutColor = Color.YELLOW
+            else tag.layoutColor = Color.TRANSPARENT
+            searchTagView.addTag(tag)
+        }
     }
 
     private fun buildLinkField() {
         tagView.removeAllTags()
-        if (viewModel.currentSong.value!=null) {
+        if (viewModel.currentSong.value != null) {
             for (word in getListFromString(viewModel.getAllTags())) {
                 val tag = Tag(word)
                 tag.tagTextColor = Color.BLACK
