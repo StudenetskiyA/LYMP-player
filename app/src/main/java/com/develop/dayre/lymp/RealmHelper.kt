@@ -17,9 +17,23 @@ class RealmHelper(context: Context) {
     }
 
     fun writeSong(song: Song) {
+        if (getSongByNameAndPath(song.name,song.path)!=null)
         realm.executeTransaction {
             realm.insertOrUpdate(song)
         }
+        else {
+            val lastID = getLastID()
+            song.ID=lastID+1
+            realm.executeTransaction {
+                realm.insertOrUpdate(song)
+            }
+        }
+    }
+
+    private fun getLastID():Long {
+        return if ( realm.where(Song::class.java).count()!=0.toLong()) {
+            realm.where(Song::class.java).max("ID").toLong()
+        } else 0
     }
 
     fun getSongsFromDBToCurrentSongsList(
@@ -55,7 +69,7 @@ class RealmHelper(context: Context) {
         return ArrayList<Song>()
     }
 
-     fun getAllSongs(): ArrayList<Song> {
+     private fun getAllSongs(): ArrayList<Song> {
         val result = ArrayList<Song>()
 
         val resultRealm = realm.where(Song::class.java).findAll()
@@ -66,18 +80,31 @@ class RealmHelper(context: Context) {
         return result
     }
 
+    fun getSongByNameAndPath(songName: String, path: String): Song? {
+        return if (realm.where(Song::class.java).equalTo("name", songName).equalTo("path", path).count() > 0)
+            realm.where(Song::class.java).equalTo("name", songName).equalTo("path", path).findFirst()
+        else null
+    }
+
     fun getSongByName(songName: String): Song? {
         return if (realm.where(Song::class.java).equalTo("name", songName).count() > 0)
             realm.where(Song::class.java).equalTo("name", songName).findFirst()
         else null
     }
 
+    private fun getSongByID(songID: Long): Song? {
+        return if (realm.where(Song::class.java).equalTo("ID", songID).count() > 0)
+            realm.where(Song::class.java).equalTo("ID", songID).findFirst()
+        else null
+    }
+
+
     fun initRealm(context: Context): Realm {
         //Инициализируем движок Realm
         Realm.init(context)
         val config = RealmConfiguration.Builder()
             .name("lymp.realm")
-            .schemaVersion(1)
+            .schemaVersion(3)
             .deleteRealmIfMigrationNeeded() // todo remove for production
             .build()
         Realm.setDefaultConfiguration(config)

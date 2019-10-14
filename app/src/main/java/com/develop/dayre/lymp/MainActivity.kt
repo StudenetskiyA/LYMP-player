@@ -199,8 +199,8 @@ class MainActivity : AppCompatActivity() {
         viewModel.startModel()
 
         //From settings - только в таком порядке
-        val name = "Русская мечта"
-        viewModel.songSelect(name)
+//        val name = "Русская мечта"
+//        viewModel.songSelect(name)
         val search = "rock"
         viewModel.newSearch(search)
     }

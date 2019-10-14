@@ -72,7 +72,7 @@ class LYMPModel : ILYMPModel, BaseObservable() {
     //Действия
     fun setCurrentSong(songName: String) {
         val s = helper.getSongByName(songName)
-        if (s!=null && currentSongsList.contains(s)) {
+        if (s != null && currentSongsList.contains(s)) {
             currentSong = s
             currentSongPositionInList = currentSongsList.indexOf(s)
         }
@@ -137,12 +137,20 @@ class LYMPModel : ILYMPModel, BaseObservable() {
 
     override fun testAction() {
         Log.i(TAG, "testAction")
-//        testCounter++
-//        getCurrentSong()?.name = "new name"
     }
 
     override fun initialize() {
         Log.i(TAG, "initialization")
+        //helper.clearDataBase()
+//        helper.writeSong(Song(name = "1 track"))
+//        helper.writeSong(Song(name = "2 track"))
+//        helper.writeSong(Song(name = "3 track"))
+//        helper.writeSong(Song(name = "1 track"))
+//        helper.writeSong(Song(name = "Русский track"))
+//        helper.writeSong(Song(name = "Еще один track"))
+//        helper.writeSong(Song(name = "Трек с очень-очень длинным именем, прям куда деваться"))
+//        helper.writeSong(Song(name = "Без тегов"))
+//        helper.writeSong(Song(name = "Все теги"))
         createCurrentList()
     }
 
