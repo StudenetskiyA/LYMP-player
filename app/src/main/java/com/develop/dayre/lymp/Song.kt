@@ -4,6 +4,8 @@ import io.realm.RealmModel
 import io.realm.annotations.PrimaryKey
 import io.realm.annotations.RealmClass
 
+class FileSong(fileName: String, path: String)
+
 @RealmClass
 open class Song(
     @PrimaryKey

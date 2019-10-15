@@ -1,5 +1,6 @@
 package com.develop.dayre.lymp
 
+import android.Manifest
 import com.develop.dayre.tagfield.TagView
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
@@ -15,6 +16,9 @@ import com.develop.dayre.lymp.databinding.ActivityMainBinding
 import com.develop.dayre.tagfield.Tag
 import androidx.lifecycle.Observer
 import android.content.*
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
 
 class MainActivity : AppCompatActivity() {
@@ -50,6 +54,8 @@ class MainActivity : AppCompatActivity() {
             Log.i(TAG, "Service unbinded.")
         }
     }
+
+    private val MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 0
 
     init {
         instance = this
@@ -93,9 +99,12 @@ class MainActivity : AppCompatActivity() {
         }
         nextbutton.setOnClickListener {
             Log.i(TAG, "next button pressed")
-            val intent = Intent(this@MainActivity, LYMPService::class.java)
-            intent.putExtra(EXTRA_COMMAND, ServiceCommand.Next)
-            startService(intent)
+            val folderDialog = OpenFolderDialog(this)
+            folderDialog.show()
+
+//            val intent = Intent(this@MainActivity, LYMPService::class.java)
+//            intent.putExtra(EXTRA_COMMAND, ServiceCommand.Next)
+//            startService(intent)
         }
         prevbutton.setOnClickListener {
             Log.i(TAG, "next button pressed")
@@ -204,7 +213,9 @@ class MainActivity : AppCompatActivity() {
         viewModel.currentSearchTags.observe(this,
             Observer<String> {
                 Log.i(TAG, "current search tags updated, ${viewModel.currentSearchTags.value}")
-                settings.edit().putString(APP_PREFERENCES_CURRENT_SEARCH, viewModel.currentSearchTags.value).apply()
+                settings.edit()
+                    .putString(APP_PREFERENCES_CURRENT_SEARCH, viewModel.currentSearchTags.value)
+                    .apply()
                 buildSearchField()
             })
     }
@@ -216,13 +227,69 @@ class MainActivity : AppCompatActivity() {
         readSettings()
     }
 
+    fun grantPermission() {
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE)
+            != PackageManager.PERMISSION_GRANTED) {
+
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                )
+            ) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                    MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE
+                )
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        } else {
+            Log.i(TAG,"Permission has already been granted")
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>, grantResults: IntArray
+    ) {
+        when (requestCode) {
+            MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE -> {
+                // If request is cancelled, the result arrays are empty.
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return
+            }
+
+            // Add other 'when' lines to check for other
+            // permissions this app might request.
+            else -> {
+                // Ignore all other requests.
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         settings = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE)
         createView()
         createControl()
         createObservers()
-
+        grantPermission()
         val intent = Intent(this, LYMPService::class.java)
         bindService(intent, myConnection, Context.BIND_AUTO_CREATE)
 

@@ -1,5 +1,19 @@
 package com.develop.dayre.lymp
 
+import android.util.Log
+import java.io.File
+
+
+
+fun getFilesListInFolderAndSubFolder(path : File) : ArrayList<Pair<String,String>>{
+    val find = ArrayList<Pair<String,String>>()
+    File(path.canonicalPath).walk().forEach {
+        if ( it.name.endsWith(".mp3")) //TODO Change to supported music
+            find.add(Pair(it.name,it.canonicalPath))
+    }
+    return find
+}
+
 //Необходима для текста-ссылок
 fun getSpaceIndices(s: String, c: Char): Array<Int> {
     var pos = s.indexOf(c, 0)

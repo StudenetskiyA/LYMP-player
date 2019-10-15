@@ -1,9 +1,10 @@
 package com.develop.dayre.lymp
 
+import android.os.Environment
 import android.util.Log
 import androidx.databinding.BaseObservable
 import io.reactivex.Observable
-import java.util.concurrent.TimeUnit
+import java.io.File
 
 enum class RepeatState { All, One, Stop }
 enum class PlayState { Play, Stop, Pause }
@@ -70,6 +71,10 @@ class LYMPModel : ILYMPModel, BaseObservable() {
     }
 
     //Действия
+    private fun createOrUpdateDBBrowsingFolder() {
+
+    }
+
     fun setCurrentSong(songName: String) {
         val s = helper.getSongByName(songName)
         if (s != null && currentSongsList.contains(s)) {
@@ -148,6 +153,7 @@ class LYMPModel : ILYMPModel, BaseObservable() {
 
     override fun initialize() {
         Log.i(TAG, "initialization")
+        createOrUpdateDBBrowsingFolder()
 //        helper.clearDataBase()
 //        helper.writeSong(Song(name = "1 track"))
 //        helper.writeSong(Song(name = "2 track"))
