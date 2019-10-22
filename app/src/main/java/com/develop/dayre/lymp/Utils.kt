@@ -1,29 +1,42 @@
 package com.develop.dayre.lymp
 
+import android.content.Context
 import android.util.Log
+import android.view.Gravity
+import android.widget.Toast
 import java.io.File
 
+// This is an extension method for easy Toast call
+fun Context.toast(message: CharSequence) {
+    val toast = Toast.makeText(this, message, Toast.LENGTH_SHORT)
+    toast.setGravity(Gravity.BOTTOM, 0, 325)
+    toast.show()
+}
 
+fun String.getNameFromPath() : String  {
+    val nd = this.substring(this.lastIndexOf("/"),this.length)
+    return nd.substring(1,nd.lastIndexOf("."))
+}
 
-fun getFilesListInFolderAndSubFolder(path : File) : ArrayList<Pair<String,String>>{
-    val find = ArrayList<Pair<String,String>>()
+//Возвращает лист из всех файлов в папке и подпапках в парах имя/путь(включая имя)
+fun getFilesListInFolderAndSubFolder(path : File,endWith : String) : ArrayList<String>{
+    val find = ArrayList<String>()
     File(path.canonicalPath).walk().forEach {
-        if ( it.name.endsWith(".mp3")) //TODO Change to supported music
-            find.add(Pair(it.name,it.canonicalPath))
+        if ( it.name.endsWith(".$endWith")) //TODO Change to supported music
+            find.add(it.canonicalPath)
     }
     return find
 }
 
-//Необходима для текста-ссылок
-fun getSpaceIndices(s: String, c: Char): Array<Int> {
-    var pos = s.indexOf(c, 0)
-    val indices = ArrayList<Int>()
-    while (pos != -1) {
-        indices.add(pos)
-        pos = s.indexOf(c, pos + 1)
-    }
-    return indices.toTypedArray()
-}
+////Возвращает лист из всех файлов в папке и подпапках в парах имя/путь(включая имя)
+//fun getFilesListInFolderAndSubFolder(path : File,endWith : String) : ArrayList<Pair<String,String>>{
+//    val find = ArrayList<Pair<String,String>>()
+//    File(path.canonicalPath).walk().forEach {
+//        if ( it.name.endsWith(".$endWith")) //TODO Change to supported music
+//            find.add(Pair(it.name,it.canonicalPath))
+//    }
+//    return find
+//}
 
 fun getStringFromList(list : ArrayList<String>) : String{
     var result = "$SPACE_IN_LINK"

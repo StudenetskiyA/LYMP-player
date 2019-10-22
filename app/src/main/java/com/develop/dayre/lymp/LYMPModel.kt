@@ -1,10 +1,12 @@
 package com.develop.dayre.lymp
 
 import android.os.Environment
+import android.os.Handler
 import android.util.Log
 import androidx.databinding.BaseObservable
 import io.reactivex.Observable
-import java.io.File
+import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 enum class RepeatState { All, One, Stop }
 enum class PlayState { Play, Stop, Pause }
@@ -23,7 +25,7 @@ interface ILYMPModel {
     fun clearTag()
 
     fun testAction()
-    fun getCurrentSong(): Observable<Song?>
+    fun getCurrentSong(): Observable<SongOrNull>
     fun getCurrentSongsList(): ArrayList<Song>
     fun getAllTags(): String
     fun getShuffleStatus(): Boolean
@@ -60,10 +62,12 @@ class LYMPModel : ILYMPModel, BaseObservable() {
         return currentSongsList
     }
 
-    override fun getCurrentSong(): Observable<Song?> {
+    override fun getCurrentSong(): Observable<SongOrNull> {
         return if (currentSongPositionInList < currentSongsList.size && currentSongPositionInList >= 0)
-            Observable.just(currentSongsList[currentSongPositionInList])
-        else Observable.just(null)
+            Observable.just(SongOrNull(currentSongsList[currentSongPositionInList]))
+
+        //In Rx2 I can't do Observable.just(null)!
+        else Observable.just(SongOrNull(Song(), true))
     }
 
     override fun getCurrentSearchTags(): Observable<String> {
@@ -71,8 +75,44 @@ class LYMPModel : ILYMPModel, BaseObservable() {
     }
 
     //Действия
-    private fun createOrUpdateDBBrowsingFolder() {
-
+    fun browseFolderForFiles() : Observable<Boolean> {
+        var newSongFound = 0
+        var songsRestored = 0
+        var deletedSong = 0
+        //Получаем список всех файлов в папке и подпапках
+        //TODO Поменять путь на недефолтный при загрузке из настроек.
+        val allFiles = getFilesListInFolderAndSubFolder(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "mp3"
+        )
+        val allRecord = helper.getAllSongsFileExist()
+        //Проверяем, каких файлов больше физически нет и помечаем их как отсутствующие, из базы не удаляем.
+        for (r in allRecord) {
+            if (!allFiles.contains(r.path)) {
+                deletedSong++
+                r.isFileExist = false
+                helper.writeSong(r)
+            }
+        }
+        //Проверяем, каких нет в базе или они помечены isFileExist=false и добавляем их.
+        for (f in allFiles) {
+            val s = helper.getSongByPath(f)
+            if (s == null) {
+                newSongFound++
+                helper.writeSong(Song(name = f.getNameFromPath(), path = f))
+            }
+            if (s != null && !s.isFileExist) {
+                songsRestored++
+                s.isFileExist = true
+                helper.writeSong(s)
+            }
+        }
+        //И уведомление с результатами
+        //Вообще, наверное, не правильно в модели использовать контекст активити. Но пока сделаю так.
+        // if (songsRestored!=0 || newSongFound!=0 || deletedSong!=0)
+        MainActivity.applicationContext()
+            .toast("Новых песен найдено - $newSongFound \r\nУдалено песен - $deletedSong \r\nВосстановленно удаленных - $songsRestored")
+      //  return Observable.just(true).delay(5, TimeUnit.SECONDS)
+        return Observable.just(true)
     }
 
     fun setCurrentSong(songName: String) {
@@ -82,6 +122,7 @@ class LYMPModel : ILYMPModel, BaseObservable() {
             currentSongPositionInList = currentSongsList.indexOf(s)
         }
     }
+
     fun setCurrentSongByID(songID: Long) {
         val s = helper.getSongByID(songID)
         if (s != null && currentSongsList.contains(s)) {
@@ -153,7 +194,7 @@ class LYMPModel : ILYMPModel, BaseObservable() {
 
     override fun initialize() {
         Log.i(TAG, "initialization")
-        createOrUpdateDBBrowsingFolder()
+            //browseFolderForFiles()
 //        helper.clearDataBase()
 //        helper.writeSong(Song(name = "1 track"))
 //        helper.writeSong(Song(name = "2 track"))
@@ -175,6 +216,5 @@ class LYMPModel : ILYMPModel, BaseObservable() {
 
         //currentSongPositionInList = 0 - при поиске мы не меняем трек, играет/редактируется тот же, что и был.
     }
-
 
 }

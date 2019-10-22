@@ -17,9 +17,9 @@ class FileWorkTests {
         Log.i(TAG, "browse folder ${f.canonicalPath}, exist = ${f.exists()}, canRead = ${f.canRead()}")
 
         if (f.exists() && f.isDirectory && f.canRead()) {
-            val find = getFilesListInFolderAndSubFolder(f)
+            val find = getFilesListInFolderAndSubFolder(f,"mp3")
             for (i in find)
-                Log.i(TAG, "${i.second} , ${i.first}")
+                Log.i(TAG, "$i")
         } else {
             Log.i(TAG, "Нет доступа к директории.")
         }

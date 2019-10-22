@@ -2,225 +2,252 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
 
     <data>
+
         <import type="android.view.View" />
+
         <variable
             name="viewmodel"
             type="com.develop.dayre.lymp.LYMPViewModel" />
     </data>
 
-    <RelativeLayout
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        tools:context=".MainActivity">
-
-        <RelativeLayout
-            android:id="@+id/footer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:gravity="bottom"
-            android:orientation="vertical">
-
-            <Button
-                android:id="@+id/testbutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/testText"
-                android:visibility="gone" />
-
-            <Button
-                android:id="@+id/repeatbutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:text="No repeat" />
-            <Button
-                android:id="@+id/prevbutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_toRightOf="@+id/repeatbutton"
-                android:text="Prev" />
-            <Button
-                android:id="@+id/playbutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:text="Play" />
-            <Button
-                android:id="@+id/nextbutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_toLeftOf="@id/shufflebutton"
-                android:text="@string/nextButtonName" />
-
-            <Button
-                android:id="@+id/shufflebutton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:text="@{viewmodel.shuffle ? @string/shuffleButtonName : @string/noShuffleButtonName}"
-                />
-        </RelativeLayout>
-
-        <TextView
-            android:id="@+id/track_info_current_song"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:text="Не выбран трек."
-            android:textSize="@dimen/tags_font_size" />
+        android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/edit_tag"
+            android:id="@+id/main_view"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/track_info_current_song"
-            android:orientation="vertical">
+            android:layout_height="match_parent"
+            android:visibility="@{viewmodel.isLoadingFilesList() ? View.GONE : View.VISIBLE}">
 
-            <TextView
-                android:id="@+id/track_info_added_at"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:lines="1"
-                android:textAlignment="center"
-                android:textSize="@dimen/tags_font_size" />
-
-            <TextView
-                android:id="@+id/track_info_listened_times"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:lines="1"
-                android:textAlignment="center"
-                android:textSize="@dimen/tags_font_size" />
-
-            <com.develop.dayre.tagfield.TagView
-                android:id="@+id/current_track_tags"
+            <RelativeLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+                xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="3dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginRight="3dp"
-                app:lineMargin="5dp"
-                app:tagMargin="3dp"
-                app:textPaddingBottom="3dp"
-                app:textPaddingLeft="10dp"
-                app:textPaddingRight="10dp"
-                app:textPaddingTop="3dp"/>
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                tools:context=".MainActivity">
 
-            <RatingBar
-                android:id="@+id/ratingBar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="start"
-
-                android:rating="1"
-                android:stepSize="1"
-                android:visibility="gone" />
-<!--            android:numStars="@{viewmodel.getCurrentSong().rating}"-->
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <ImageButton
-                    android:id="@+id/addtag"
-                    android:layout_width="wrap_content"
+                <RelativeLayout
+                    android:id="@+id/footer"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
-                    android:background="@android:color/transparent"
-                    android:src="@drawable/addnewtag"/>
+                    android:layout_alignParentBottom="true"
+                    android:gravity="bottom"
+                    android:orientation="vertical">
 
-                <ImageButton
-                    android:id="@+id/deltag"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toRightOf="@id/addtag"
-                    android:background="@android:color/transparent"
-                    android:src="@drawable/deltag" />
+                    <Button
+                        android:id="@+id/testbutton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/testText"
+                        android:visibility="gone" />
 
-                <ImageButton
-                    android:id="@+id/delete"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:background="@android:color/transparent"
-                    android:src="@drawable/delete" />
+                    <Button
+                        android:id="@+id/repeatbutton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:text="No repeat" />
 
-                <ImageButton
-                    android:id="@+id/clear_tag"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toLeftOf="@id/delete"
-                    android:background="@android:color/transparent"
-                    android:src="@drawable/delete" />
+                    <Button
+                        android:id="@+id/prevbutton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toRightOf="@+id/repeatbutton"
+                        android:text="Prev" />
 
-                <ImageButton
-                    android:id="@+id/rename"
-                    android:layout_width="wrap_content"
+                    <Button
+                        android:id="@+id/playbutton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:text="Play" />
+
+                    <Button
+                        android:id="@+id/nextbutton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toRightOf="@id/playbutton"
+                        android:text="@string/nextButtonName" />
+
+                    <Button
+                        android:id="@+id/shufflebutton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                               android:text="@{viewmodel.shuffle ? @string/shuffleButtonName : @string/noShuffleButtonName}" />
+                </RelativeLayout>
+
+                <TextView
+                    android:id="@+id/track_info_current_song"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_toLeftOf="@id/clear_tag"
-                    android:background="@android:color/transparent"
-                    android:src="@drawable/rename" />
+                    android:layout_marginStart="10dp"
+                    android:text="Не выбран трек."
+                    android:textSize="@dimen/tags_font_size" />
+
+                <LinearLayout
+                    android:id="@+id/edit_tag"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/track_info_current_song"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/track_info_added_at"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:lines="1"
+                        android:textAlignment="center"
+                        android:textSize="@dimen/tags_font_size" />
+
+                    <TextView
+                        android:id="@+id/track_info_listened_times"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:lines="1"
+                        android:textAlignment="center"
+                        android:textSize="@dimen/tags_font_size" />
+
+                    <com.develop.dayre.tagfield.TagView
+                        android:id="@+id/current_track_tags"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="3dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginRight="3dp"
+                        app:lineMargin="5dp"
+                        app:tagMargin="3dp"
+                        app:textPaddingBottom="3dp"
+                        app:textPaddingLeft="10dp"
+                        app:textPaddingRight="10dp"
+                        app:textPaddingTop="3dp" />
+
+                    <RatingBar
+                        android:id="@+id/ratingBar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+
+                        android:rating="1"
+                        android:stepSize="1"
+                        android:visibility="gone" />
+                    <!--            android:numStars="@{viewmodel.getCurrentSong().rating}"-->
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <ImageButton
+                            android:id="@+id/addtag"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:background="@android:color/transparent"
+                            android:src="@drawable/addnewtag" />
+
+                        <ImageButton
+                            android:id="@+id/deltag"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toRightOf="@id/addtag"
+                            android:background="@android:color/transparent"
+                            android:src="@drawable/deltag" />
+
+                        <ImageButton
+                            android:id="@+id/delete"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:background="@android:color/transparent"
+                            android:src="@drawable/delete" />
+
+                        <ImageButton
+                            android:id="@+id/clear_tag"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toLeftOf="@id/delete"
+                            android:background="@android:color/transparent"
+                            android:src="@drawable/delete" />
+
+                        <ImageButton
+                            android:id="@+id/rename"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_toLeftOf="@id/clear_tag"
+                            android:background="@android:color/transparent"
+                            android:src="@drawable/rename" />
+                    </RelativeLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/search_result"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@+id/footer"
+                    android:layout_below="@+id/edit_tag"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tracks_found"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:lines="1"
+
+                        android:textAlignment="center"
+                        android:textSize="@dimen/tags_font_size" />
+                    <!--            android:text="@{Integer.toString(viewmodel.getCurrentSongsList().size)}"-->
+
+
+                    <com.develop.dayre.tagfield.TagView
+                        android:id="@+id/search_track_tags"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="3dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginRight="3dp"
+                        app:lineMargin="5dp"
+                        app:tagMargin="3dp"
+                        app:textPaddingBottom="3dp"
+                        app:textPaddingLeft="10dp"
+                        app:textPaddingRight="10dp"
+                        app:textPaddingTop="3dp" />
+
+                    <ProgressBar
+                        android:id="@+id/loading"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="@{viewmodel.isLoadingSongsList() ? View.VISIBLE : View.GONE}" />
+
+                    <ListView
+                        android:id="@+id/current_list"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:choiceMode="singleChoice"
+                        android:clickable="true"
+                        android:dividerHeight="0dp"
+                        android:focusable="true"
+                        android:visibility="@{viewmodel.isLoadingSongsList() ? View.GONE : View.VISIBLE}"
+                        tools:listitem="@layout/song_in_list" />
+                </LinearLayout>
+
             </RelativeLayout>
-
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/search_result"
+            android:id="@+id/load_view"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_above="@+id/footer"
-            android:layout_below="@+id/edit_tag"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/tracks_found"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:lines="1"
-
-                android:textAlignment="center"
-                android:textSize="@dimen/tags_font_size" />
-<!--            android:text="@{Integer.toString(viewmodel.getCurrentSongsList().size)}"-->
-
-
-            <com.develop.dayre.tagfield.TagView
-                android:id="@+id/search_track_tags"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="3dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginRight="3dp"
-                app:lineMargin="5dp"
-                app:tagMargin="3dp"
-                app:textPaddingBottom="3dp"
-                app:textPaddingLeft="10dp"
-                app:textPaddingRight="10dp"
-                app:textPaddingTop="3dp" />
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="@{viewmodel.isLoadingFilesList() ? View.VISIBLE : View.GONE}">
 
             <ProgressBar
-                android:id="@+id/loading"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="@{viewmodel.isLoadingSongsList() ? View.VISIBLE : View.GONE}" />
-            <ListView
-                android:id="@+id/current_list"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:choiceMode="singleChoice"
-                android:clickable="true"
-                android:dividerHeight="0dp"
-                android:focusable="true"
-                tools:listitem="@layout/song_in_list"
-                android:visibility="@{viewmodel.isLoadingSongsList() ? View.GONE : View.VISIBLE}"/>
+                android:layout_height="match_parent" />
         </LinearLayout>
-
-    </RelativeLayout>
-
-
+    </LinearLayout>
 </layout>

@@ -1,11 +1,29 @@
 package com.develop.dayre.lymp
 
+import androidx.databinding.ObservableField
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThat
 import org.junit.Test
 
 class UtilsTests {
     private val tag = "$APP_TAG/tests"
+
+    val n = ObservableField<Int>(0)
+
+    @Test
+    fun changeVarInFunTest() {
+
+        fun change(b:ObservableField<Int>) {
+            b.set(7)
+        }
+        change(n)
+        println ("CHANGETEST ${n.get()}")
+    }
+
+    @Test
+    fun getNameFromPathTest() {
+        assertEquals("name", "/path/path/name.mp3".getNameFromPath())
+    }
 
     @Test
     fun getShuffledListOfIntTest() {

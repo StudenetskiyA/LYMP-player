@@ -61,7 +61,7 @@ class LYMPService: LifecycleService()  {
 
     }
 
-    fun initService() {
+    private fun initService() {
         Log.i(TAG, "Try to init service")
         notificationView = RemoteViews(packageName,R.layout.notification)
 

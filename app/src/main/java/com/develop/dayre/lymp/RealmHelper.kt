@@ -12,12 +12,16 @@ class RealmHelper(context: Context) {
     private val tag = "$APP_TAG/realm"
     var realm: Realm = initRealm(context)
 
+    fun close() {
+        realm.close()
+    }
+
     fun clearDataBase() {
         realm.executeTransaction { realm.deleteAll() }
     }
 
     fun writeSong(song: Song) {
-        if (getSongByNameAndPath(song.name,song.path)!=null)
+        if (getSongByPath(song.path)!=null)
         realm.executeTransaction {
             realm.insertOrUpdate(song)
         }
@@ -44,12 +48,12 @@ class RealmHelper(context: Context) {
     ): ArrayList<Song> {
         var result: List<Song>? = if (tags.isNotEmpty()) {
             if (tagsFlag == Or)
-                getAllSongs().filter {
+                getAllSongsFileExist().filter {
                     it.tags.split(SPACE_IN_LINK).intersect(tags.asIterable()).isNotEmpty()
                 }
             else
-                getAllSongs().filter { it.tags.split(SPACE_IN_LINK).toMutableList().containsAll(tags) }
-        } else getAllSongs()
+                getAllSongsFileExist().filter { it.tags.split(SPACE_IN_LINK).toMutableList().containsAll(tags) }
+        } else getAllSongsFileExist()
 
         result = result?.filter { it.name.contains(searchName) }
 
@@ -69,10 +73,10 @@ class RealmHelper(context: Context) {
         return ArrayList<Song>()
     }
 
-     private fun getAllSongs(): ArrayList<Song> {
+     fun getAllSongsFileExist(): ArrayList<Song> {
         val result = ArrayList<Song>()
 
-        val resultRealm = realm.where(Song::class.java).findAll()
+        val resultRealm = realm.where(Song::class.java).equalTo("isFileExist", true).findAll()
 
         for (r in resultRealm) {
             result.add(r)
@@ -80,9 +84,9 @@ class RealmHelper(context: Context) {
         return result
     }
 
-    fun getSongByNameAndPath(songName: String, path: String): Song? {
-        return if (realm.where(Song::class.java).equalTo("name", songName).equalTo("path", path).count() > 0)
-            realm.where(Song::class.java).equalTo("name", songName).equalTo("path", path).findFirst()
+    fun getSongByPath(fullPath: String): Song? {
+        return if (realm.where(Song::class.java).equalTo("path", fullPath).count() > 0)
+            realm.where(Song::class.java).equalTo("path", fullPath).findFirst()
         else null
     }
 

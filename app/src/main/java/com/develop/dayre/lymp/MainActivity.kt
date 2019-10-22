@@ -99,12 +99,11 @@ class MainActivity : AppCompatActivity() {
         }
         nextbutton.setOnClickListener {
             Log.i(TAG, "next button pressed")
-            val folderDialog = OpenFolderDialog(this)
-            folderDialog.show()
-
-//            val intent = Intent(this@MainActivity, LYMPService::class.java)
-//            intent.putExtra(EXTRA_COMMAND, ServiceCommand.Next)
-//            startService(intent)
+//            val folderDialog = OpenFolderDialog(this)
+//            folderDialog.show()
+            val intent = Intent(this@MainActivity, LYMPService::class.java)
+            intent.putExtra(EXTRA_COMMAND, ServiceCommand.Next)
+            startService(intent)
         }
         prevbutton.setOnClickListener {
             Log.i(TAG, "next button pressed")
@@ -258,10 +257,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>, grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE -> {
                 // If request is cancelled, the result arrays are empty.

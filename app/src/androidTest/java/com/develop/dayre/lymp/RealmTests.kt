@@ -18,7 +18,7 @@ class RealmTests {
     private val tag = "$APP_TAG/tests"
     private var realm : Realm
     private var helper : RealmHelper
-    private val data = Song(1,"TestName", "", 100, 2, "rock" )
+    private val data = Song(1,"", "TestName", 100, 2, "rock" )
 
     init {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext

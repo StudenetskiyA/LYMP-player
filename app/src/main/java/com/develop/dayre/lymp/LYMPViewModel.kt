@@ -34,14 +34,17 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
 
     private var model = LYMPModel()
 
-    var currentSongsList = MutableLiveData<ArrayList<Song>>() //Локальный список, потом будет урезанная версия.
-    val isLoadingSongsList = ObservableField<Boolean>(true)
+    var currentSongsList =
+        MutableLiveData<ArrayList<Song>>() //Локальный список, потом будет урезанная версия.
+    val isLoadingSongsList = ObservableField<Boolean>(false)
+    val isLoadingFilesList = ObservableField<Boolean>(false)
     var currentSong = MutableLiveData<Song>()
     var currentSearchTags = MutableLiveData<String>()
     val shuffle = ObservableField<Boolean>()
 
     fun startModel() {
         model.initialize()
+        startBrowseFolderForFiles()
     }
 
     fun getAllTags(): String {
@@ -86,7 +89,7 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
 
     //Вызывается вью при новом поиске. TODO Добавить сюда остальные критерии поиска.
     override fun newSearch(tags: String) {
-        Log.i(TAG, "load ongs")
+        Log.i(TAG, "load songs")
         isLoadingSongsList.set(true)
 
         model.newSearch(tags)
@@ -106,7 +109,7 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
                 }
 
                 override fun onComplete() {
-                    Log.i(TAG, "ongs list updated complite")
+                    Log.i(TAG, "songs list updated complite")
                     isLoadingSongsList.set(false)
                 }
             })
@@ -125,6 +128,7 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
         setCurrentSong()
     }
 
+    //Используется для выбора песни не из текущего листа. Например, при загрузке из настроек.
     fun songSelectByID(songID: Long) {
         model.setCurrentSongByID(songID)
         setCurrentSong()
@@ -187,7 +191,7 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
         model.getCurrentSong()
             .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(object : Observer<Song?> {
+            .subscribe(object : Observer<SongOrNull> {
                 override fun onSubscribe(d: Disposable) {
                     //todo
                 }
@@ -196,12 +200,38 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
                     //todo
                 }
 
-                override fun onNext(data: Song) {
+                override fun onNext(data: SongOrNull) {
                     Log.i(TAG, "current song update")
-                    currentSong.value = data
+                    if (!data.isNull)
+                        currentSong.value = data.song
                 }
 
                 override fun onComplete() {
+                }
+            })
+    }
+
+    fun startBrowseFolderForFiles() {
+        Log.i(TAG, "load files list")
+        isLoadingFilesList.set(true)
+        model. browseFolderForFiles()
+            .subscribeOn(Schedulers.newThread())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : Observer<Boolean> {
+                override fun onSubscribe(d: Disposable) {
+
+                }
+
+                override fun onError(e: Throwable) {
+
+                }
+
+                override fun onNext(data: Boolean) {
+                }
+
+                override fun onComplete() {
+                    isLoadingFilesList.set(false)
+                    Log.i(TAG, "initial load complete.")
                 }
             })
     }

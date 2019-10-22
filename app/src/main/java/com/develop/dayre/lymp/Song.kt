@@ -4,19 +4,20 @@ import io.realm.RealmModel
 import io.realm.annotations.PrimaryKey
 import io.realm.annotations.RealmClass
 
-class FileSong(fileName: String, path: String)
+class SongOrNull(var song:Song, var isNull:Boolean=false)
 
 @RealmClass
 open class Song(
     @PrimaryKey
     var ID : Long = 0,
-    var path : String = "",
+    var path : String = "", //Полный путь, включая имя и расширение
     var name : String = "no name",
     var lenght : Int = 0,
     var rating : Int = 0,
     var tags : String = "",
     var added : String = "01.01.1000 00:00",
-    var listenedTimes : Double = 0.0
+    var listenedTimes : Double = 0.0,
+    var isFileExist: Boolean = true
 )  : RealmModel {
 
     fun setTagsFromList(list : ArrayList<String>) {
@@ -27,10 +28,10 @@ open class Song(
     }
 
     fun copy() : Song {
-        return Song(this.ID, this.path, this.name,this.lenght,this.rating,this.tags,this.added,this.listenedTimes)
+        return Song(this.ID, this.path, this.name,this.lenght,this.rating,this.tags,this.added,this.listenedTimes,this.isFileExist)
     }
 
     override fun toString(): String {
-        return "$ID / $path / $name / ${this.lenght} / $rating / $tags / $added / $listenedTimes"
+        return "$ID / $path / $name / ${this.lenght} / $rating / $tags / $added / $listenedTimes / $isFileExist"
     }
 }
