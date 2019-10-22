@@ -29,6 +29,7 @@ interface ILYMPViewModel {
     fun testPress()
 }
 
+
 class LYMPViewModel : ILYMPViewModel, ViewModel() {
     private val TAG = "$APP_TAG/viewmodel"
 
@@ -41,6 +42,8 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
     var currentSong = MutableLiveData<Song>()
     var currentSearchTags = MutableLiveData<String>()
     val shuffle = ObservableField<Boolean>()
+    val repeat = ObservableField<RepeatState>()
+    var isShowMore = ObservableField<Boolean>(false)
 
     fun startModel() {
         model.initialize()
@@ -59,6 +62,15 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
     override fun currentSongEdit(song: Song) {
         model.saveSongToDB(song)
         setCurrentSong()
+    }
+
+    fun showMorePress() {
+        Log.i(TAG, "showMorePress")
+        if (isShowMore.get()==false) {
+            if (currentSong.value != null) {
+                isShowMore.set(true)
+            }
+        } else  isShowMore.set(false)
     }
 
     override fun nextPress() {
@@ -85,6 +97,11 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
     override fun shufflePress() {
         model.changeShuffle()
         shuffle.set(model.getShuffleStatus())
+    }
+
+    override fun repeatPress() {
+        model.changeRepeat()
+        repeat.set(model.getRepeatStatus())
     }
 
     //Вызывается вью при новом поиске. TODO Добавить сюда остальные критерии поиска.
@@ -132,10 +149,6 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
     fun songSelectByID(songID: Long) {
         model.setCurrentSongByID(songID)
         setCurrentSong()
-    }
-
-    override fun repeatPress() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun onTrackInListPress(nTrack: Int) {

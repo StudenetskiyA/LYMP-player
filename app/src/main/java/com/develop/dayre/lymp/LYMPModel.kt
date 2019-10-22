@@ -22,6 +22,7 @@ interface ILYMPModel {
     fun nextSong()
     fun prevSong()
     fun changeShuffle()
+    fun changeRepeat()
     fun clearTag()
 
     fun testAction()
@@ -29,6 +30,7 @@ interface ILYMPModel {
     fun getCurrentSongsList(): ArrayList<Song>
     fun getAllTags(): String
     fun getShuffleStatus(): Boolean
+    fun getRepeatStatus(): RepeatState
     fun getCurrentSearchTags(): Observable<String>
 }
 
@@ -41,6 +43,7 @@ class LYMPModel : ILYMPModel, BaseObservable() {
     private var helper: RealmHelper = RealmHelper(MainActivity.applicationContext())
     private var searchTags = ";"
     private var shuffleStatus: Boolean = false
+    private var repeatStatus = RepeatState.All
     private var currentSongPositionInList: Int = 0
         set(value) {
             if (value < currentSongsList.size) {
@@ -53,6 +56,10 @@ class LYMPModel : ILYMPModel, BaseObservable() {
     override fun getShuffleStatus(): Boolean {
         return shuffleStatus
     }
+    override fun getRepeatStatus(): RepeatState {
+        return repeatStatus
+    }
+
 
     override fun getAllTags(): String {
         return "rock; pop; techno; jazz; superjazz; technojazz; вскрытие души; оптимально для суицида; осень; дорога"
@@ -89,8 +96,9 @@ class LYMPModel : ILYMPModel, BaseObservable() {
         for (r in allRecord) {
             if (!allFiles.contains(r.path)) {
                 deletedSong++
-                r.isFileExist = false
-                helper.writeSong(r)
+                val w = r.copy()
+                w.isFileExist = false
+                helper.writeSong(w)
             }
         }
         //Проверяем, каких нет в базе или они помечены isFileExist=false и добавляем их.
@@ -186,6 +194,14 @@ class LYMPModel : ILYMPModel, BaseObservable() {
         shuffleStatus = !shuffleStatus
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
         Log.i(TAG, "Now shuffle is $shuffleStatus")
+    }
+    override fun changeRepeat() {
+        when (repeatStatus) {
+            RepeatState.All -> repeatStatus=RepeatState.One
+            RepeatState.One -> repeatStatus=RepeatState.Stop
+            RepeatState.Stop -> repeatStatus=RepeatState.All
+        }
+        Log.i(TAG, "Now repeat is $repeatStatus")
     }
 
     override fun testAction() {

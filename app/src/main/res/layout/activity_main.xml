@@ -5,6 +5,8 @@
 
         <import type="android.view.View" />
 
+        <import type="com.develop.dayre.lymp.RepeatState" />
+
         <variable
             name="viewmodel"
             type="com.develop.dayre.lymp.LYMPViewModel" />
@@ -15,7 +17,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <LinearLayout
+        <RelativeLayout
             android:id="@+id/main_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -28,87 +30,65 @@
                 android:orientation="vertical"
                 tools:context=".MainActivity">
 
-                <RelativeLayout
-                    android:id="@+id/footer"
+                <RelativeLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    android:id="@+id/track_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentBottom="true"
-                    android:gravity="bottom"
-                    android:orientation="vertical">
+                    android:layout_alignParentStart="true"
+                    android:orientation="horizontal"
+                    tools:context=".MainActivity">
 
-                    <Button
-                        android:id="@+id/testbutton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/testText"
-                        android:visibility="gone" />
-
-                    <Button
-                        android:id="@+id/repeatbutton"
-                        android:layout_width="wrap_content"
+                    <TextView
+                        android:id="@+id/track_info_current_song"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
-                        android:text="No repeat" />
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="10dp"
+                        android:text="Не выбран трек."
+                        android:textSize="@dimen/big_font_size" />
 
-                    <Button
-                        android:id="@+id/prevbutton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_toRightOf="@+id/repeatbutton"
-                        android:text="Prev" />
-
-                    <Button
-                        android:id="@+id/playbutton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_centerInParent="true"
-                        android:text="Play" />
-
-                    <Button
-                        android:id="@+id/nextbutton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_toRightOf="@id/playbutton"
-                        android:text="@string/nextButtonName" />
-
-                    <Button
-                        android:id="@+id/shufflebutton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                    <ImageButton
+                        android:id="@+id/showmorebutton"
+                        android:layout_width="@dimen/medium_button_size"
+                        android:layout_height="@dimen/medium_button_size"
                         android:layout_alignParentEnd="true"
-                               android:text="@{viewmodel.shuffle ? @string/shuffleButtonName : @string/noShuffleButtonName}" />
+                        android:layout_centerVertical="true"
+                        android:background="@android:color/transparent"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/editor" />
                 </RelativeLayout>
-
-                <TextView
-                    android:id="@+id/track_info_current_song"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:text="Не выбран трек."
-                    android:textSize="@dimen/tags_font_size" />
 
                 <LinearLayout
                     android:id="@+id/edit_tag"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/track_info_current_song"
-                    android:orientation="vertical">
-
+                    android:layout_below="@+id/track_title"
+                    android:orientation="vertical"
+                    android:visibility="@{viewmodel.isShowMore ? View.VISIBLE : View.GONE}">
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_above="@id/seek_bar"
+                        android:background="@android:color/black" />
                     <TextView
                         android:id="@+id/track_info_added_at"
-                        android:layout_width="fill_parent"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
                         android:lines="1"
-                        android:textAlignment="center"
-                        android:textSize="@dimen/tags_font_size" />
+                        android:text="Добавлено в"
+                        android:textSize="@dimen/small_font_size" />
 
                     <TextView
                         android:id="@+id/track_info_listened_times"
-                        android:layout_width="fill_parent"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
                         android:lines="1"
-                        android:textAlignment="center"
-                        android:textSize="@dimen/tags_font_size" />
+                        android:text="Прослушано"
+                        android:textSize="@dimen/small_font_size" />
 
                     <com.develop.dayre.tagfield.TagView
                         android:id="@+id/current_track_tags"
@@ -190,18 +170,17 @@
                     android:layout_above="@+id/footer"
                     android:layout_below="@+id/edit_tag"
                     android:orientation="vertical">
-
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_above="@id/seek_bar"
+                        android:background="@android:color/black" />
                     <TextView
                         android:id="@+id/tracks_found"
-                        android:layout_width="fill_parent"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:lines="1"
-
-                        android:textAlignment="center"
-                        android:textSize="@dimen/tags_font_size" />
-                    <!--            android:text="@{Integer.toString(viewmodel.getCurrentSongsList().size)}"-->
-
+                        android:textSize="@dimen/small_font_size"
+                        android:layout_marginStart="10dp" />
 
                     <com.develop.dayre.tagfield.TagView
                         android:id="@+id/search_track_tags"
@@ -216,6 +195,12 @@
                         app:textPaddingLeft="10dp"
                         app:textPaddingRight="10dp"
                         app:textPaddingTop="3dp" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_above="@id/seek_bar"
+                        android:background="@android:color/black" />
 
                     <ProgressBar
                         android:id="@+id/loading"
@@ -235,8 +220,104 @@
                         tools:listitem="@layout/song_in_list" />
                 </LinearLayout>
 
+                <RelativeLayout
+                    android:id="@+id/footer"
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp"
+
+                    android:layout_alignParentBottom="true"
+                    android:gravity="bottom"
+                    android:orientation="vertical">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_above="@id/seek_bar"
+                        android:background="@android:color/black" />
+
+                    <SeekBar
+                        android:id="@+id/seek_bar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_above="@id/button_bar"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginRight="5dp"
+                        android:layout_marginBottom="1dp" />
+
+                    <RelativeLayout
+                        android:id="@+id/button_bar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentBottom="true"
+                        android:gravity="bottom"
+                        android:orientation="vertical">
+
+                        <ImageButton
+                            android:id="@+id/stopbutton"
+                            android:layout_width="@dimen/medium_button_size"
+                            android:layout_height="@dimen/medium_button_size"
+                            android:layout_alignParentStart="true"
+                            android:layout_marginStart="10dp"
+                            android:layout_centerVertical="true"
+                            android:background="@android:color/transparent"
+                            android:scaleType="fitXY"
+                            android:src="@drawable/stopbutton" />
+
+                        <ImageButton
+                            android:id="@+id/prevbutton"
+                            android:layout_width="@dimen/big_button_size"
+                            android:layout_height="@dimen/big_button_size"
+                            android:layout_toStartOf="@+id/playbutton"
+                            android:background="@android:color/transparent"
+                            android:scaleType="fitXY"
+                            android:src="@drawable/prevbutton" />
+
+                        <ImageButton
+                            android:id="@+id/playbutton"
+                            android:layout_width="@dimen/big_button_size"
+                            android:layout_height="@dimen/big_button_size"
+                            android:layout_centerInParent="true"
+                            android:background="@android:color/transparent"
+                            android:scaleType="fitXY"
+                            android:src="@drawable/playbutton" />
+
+
+                        <ImageButton
+                            android:id="@+id/nextbutton"
+                            android:layout_width="@dimen/big_button_size"
+                            android:layout_height="@dimen/big_button_size"
+                            android:layout_toRightOf="@id/playbutton"
+                            android:background="@android:color/transparent"
+                            android:scaleType="fitXY"
+                            android:src="@drawable/nextbutton" />
+
+                        <ImageButton
+                            android:id="@+id/repeatbutton"
+                            android:layout_width="@dimen/medium_button_size"
+                            android:layout_height="@dimen/medium_button_size"
+                            android:layout_centerVertical="true"
+                            android:layout_toLeftOf="@+id/shufflebutton"
+                            android:background="@android:color/transparent"
+                            android:scaleType="fitXY"
+                            android:src="@{viewmodel.repeat==RepeatState.All ? @drawable/repeatall : viewmodel.repeat==RepeatState.One ? @drawable/repeatone : @drawable/repeatstop}" />
+
+                        <ImageButton
+                            android:id="@+id/shufflebutton"
+                            android:layout_width="@dimen/medium_button_size"
+                            android:layout_height="@dimen/medium_button_size"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginStart="10dp"
+                            android:background="@android:color/transparent"
+                            android:scaleType="fitXY"
+                            android:src="@{viewmodel.shuffle ? @drawable/shufflebutton : @drawable/noshufflebutton}" />
+                    </RelativeLayout>
+                </RelativeLayout>
+
             </RelativeLayout>
-        </LinearLayout>
+        </RelativeLayout>
 
         <LinearLayout
             android:id="@+id/load_view"

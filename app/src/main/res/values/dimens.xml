@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="tags_font_size">22sp</dimen>
+    <dimen name="big_font_size">22sp</dimen>
+    <dimen name="small_font_size">16sp</dimen>
+    <dimen name="medium_button_size">35dp</dimen>
+    <dimen name="big_button_size">80dp</dimen>
 </resources>

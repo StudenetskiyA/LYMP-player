@@ -93,10 +93,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createControl() {
-        testbutton.setOnClickListener {
-            Log.i(TAG, "test button pressed")
-            viewModel.testPress()
-        }
         nextbutton.setOnClickListener {
             Log.i(TAG, "next button pressed")
 //            val folderDialog = OpenFolderDialog(this)
@@ -112,6 +108,14 @@ class MainActivity : AppCompatActivity() {
         shufflebutton.setOnClickListener {
             Log.i(TAG, "shuffle button pressed")
             viewModel.shufflePress()
+        }
+        showmorebutton.setOnClickListener {
+            Log.i(TAG, "showmore button pressed")
+            viewModel.showMorePress()
+        }
+        repeatbutton.setOnClickListener {
+            Log.i(TAG, "repeat button pressed")
+            viewModel.repeatPress()
         }
         clear_tag.setOnClickListener {
             Log.i(TAG, "clear tag button pressed")
@@ -177,6 +181,8 @@ class MainActivity : AppCompatActivity() {
                 Log.i(TAG, "songs list updated")
                 adapter = SongListAdapter(it, this)
                 listView.adapter = adapter
+                val s = "${resources.getText(R.string.tracks_found)}  ${it.size}"
+                tracks_found.text = s
                 if (viewModel.currentSongsList.value != null && viewModel.currentSongsList.value!!.contains(
                         viewModel.currentSong.value
                     )
@@ -289,6 +295,7 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, LYMPService::class.java)
         bindService(intent, myConnection, Context.BIND_AUTO_CREATE)
 
+        //Надо подумать, хотим мы обновлять список файлов на диске при запуске, или при resume тоже.
         viewModel.startModel()
 
         //Нужно в Андроид 7+, запись в манифесте больше не работает.
