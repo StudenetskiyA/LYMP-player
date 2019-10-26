@@ -1,5 +1,6 @@
 package com.develop.dayre.lymp
 
+import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.databinding.ObservableField
 import androidx.lifecycle.MutableLiveData
@@ -91,9 +92,21 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
     }
 
     override fun playPress() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        Log.i(TAG, "playPress")
+        model.play()
     }
 
+    fun pausePress() {
+        Log.i(TAG, "pausePress")
+        model.pause()
+    }
+    fun stopPress() {
+        Log.i(TAG, "stopPress")
+        model.stop()
+    }
+    fun setMediaSessonCallback(mediaSessionCallback : MediaSessionCompat.Callback) {
+        model.setMediaSessonCallback(mediaSessionCallback)
+    }
     override fun shufflePress() {
         model.changeShuffle()
         shuffle.set(model.getShuffleStatus())
@@ -247,5 +260,12 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
                     Log.i(TAG, "initial load complete.")
                 }
             })
+    }
+
+    fun getMediaSessionToken() : MediaSessionCompat.Token{
+        return model.getMediaSessionToken()
+    }
+    fun getMediaSession() : MediaSessionCompat{
+        return model.mediaSession
     }
 }

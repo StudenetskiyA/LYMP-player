@@ -7,5 +7,8 @@
     <string name="added_at">Добавлен </string>
     <string name="listened_times">Прослушан раз </string>
     <string name="tracks_found">Найдено треков </string>
-
+    <string name="previous">Предыдущий </string>
+    <string name="next">Следующий </string>
+    <string name="play">Плей </string>
+    <string name="pause">Пауза </string>
 </resources>

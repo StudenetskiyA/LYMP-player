@@ -67,11 +67,13 @@
                     android:layout_below="@+id/track_title"
                     android:orientation="vertical"
                     android:visibility="@{viewmodel.isShowMore ? View.VISIBLE : View.GONE}">
+
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_above="@id/seek_bar"
                         android:background="@android:color/black" />
+
                     <TextView
                         android:id="@+id/track_info_added_at"
                         android:layout_width="match_parent"
@@ -163,43 +165,17 @@
 
                 </LinearLayout>
 
-                <LinearLayout
+                <RelativeLayout
                     android:id="@+id/search_result"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_above="@+id/footer"
                     android:layout_below="@+id/edit_tag"
                     android:orientation="vertical">
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_above="@id/seek_bar"
-                        android:background="@android:color/black" />
-                    <TextView
-                        android:id="@+id/tracks_found"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textSize="@dimen/small_font_size"
-                        android:layout_marginStart="10dp" />
-
-                    <com.develop.dayre.tagfield.TagView
-                        android:id="@+id/search_track_tags"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="3dp"
-                        android:layout_marginTop="10dp"
-                        android:layout_marginRight="3dp"
-                        app:lineMargin="5dp"
-                        app:tagMargin="3dp"
-                        app:textPaddingBottom="3dp"
-                        app:textPaddingLeft="10dp"
-                        app:textPaddingRight="10dp"
-                        app:textPaddingTop="3dp" />
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:layout_above="@id/seek_bar"
                         android:background="@android:color/black" />
 
                     <ProgressBar
@@ -208,17 +184,105 @@
                         android:layout_height="wrap_content"
                         android:visibility="@{viewmodel.isLoadingSongsList() ? View.VISIBLE : View.GONE}" />
 
+                    <LinearLayout
+                        android:id="@+id/search_bar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_alignParentBottom="true">
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="@android:color/black" />
+
+                        <RelativeLayout
+                            android:id="@+id/fast_search_bar"
+                            android:layout_height="wrap_content"
+                            android:layout_width="match_parent"
+                            android:orientation="horizontal">
+                            <ImageButton
+                                android:id="@+id/clear_search_button"
+                                android:layout_width="@dimen/medium_button_size"
+                                android:layout_height="@dimen/medium_button_size"
+                                android:background="@android:color/transparent"
+                                android:layout_alignParentStart="true"
+                                android:scaleType="fitXY"
+                                android:src="@drawable/editor" />
+                            <ImageButton
+                                android:id="@+id/test_saved_search_button"
+                                android:layout_width="@dimen/medium_button_size"
+                                android:layout_height="@dimen/medium_button_size"
+                                android:background="@android:color/transparent"
+                                android:layout_toRightOf="@+id/clear_search_button"
+                                android:scaleType="fitXY"
+                                android:src="@drawable/samplefilter" />
+                            <ImageButton
+                                android:id="@+id/add_new_search_button"
+                                android:layout_width="@dimen/medium_button_size"
+                                android:layout_height="@dimen/medium_button_size"
+                                android:background="@android:color/transparent"
+                                android:scaleType="fitXY"
+                                android:layout_alignParentEnd="true"
+                                android:src="@drawable/addnewtag" />
+                        </RelativeLayout>
+                        <com.develop.dayre.tagfield.TagView
+                            android:id="@+id/search_track_tags"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="3dp"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginRight="3dp"
+                            app:lineMargin="5dp"
+                            app:tagMargin="3dp"
+                            app:textPaddingBottom="3dp"
+                            app:textPaddingLeft="10dp"
+                            app:textPaddingRight="10dp"
+                            app:textPaddingTop="3dp" />
+                        <RelativeLayout
+                            android:id="@+id/search_advance_bar"
+                            android:layout_height="wrap_content"
+                            android:layout_width="match_parent"
+                            android:orientation="horizontal">
+                            <ImageButton
+                                android:id="@+id/andor_search_button"
+                                android:layout_width="@dimen/medium_button_size"
+                                android:layout_height="@dimen/medium_button_size"
+                                android:background="@android:color/transparent"
+                                android:layout_alignParentStart="true"
+                                android:scaleType="fitXY"
+                                android:src="@drawable/andorand" />
+                            <ImageButton
+                                android:id="@+id/sort_search_button"
+                                android:layout_width="@dimen/medium_button_size"
+                                android:layout_height="@dimen/medium_button_size"
+                                android:background="@android:color/transparent"
+                                android:layout_toRightOf="@id/andor_search_button"
+                                android:scaleType="fitXY"
+                                android:src="@drawable/sortadddate" />
+                        </RelativeLayout>
+                        <TextView
+                            android:id="@+id/tracks_found"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:textSize="@dimen/small_font_size" />
+                    </LinearLayout>
+
                     <ListView
                         android:id="@+id/current_list"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:choiceMode="singleChoice"
                         android:clickable="true"
                         android:dividerHeight="0dp"
                         android:focusable="true"
+                        android:layout_alignParentStart="true"
+                        android:layout_above="@+id/search_bar"
                         android:visibility="@{viewmodel.isLoadingSongsList() ? View.GONE : View.VISIBLE}"
                         tools:listitem="@layout/song_in_list" />
-                </LinearLayout>
+
+
+                </RelativeLayout>
 
                 <RelativeLayout
                     android:id="@+id/footer"
@@ -259,8 +323,8 @@
                             android:layout_width="@dimen/medium_button_size"
                             android:layout_height="@dimen/medium_button_size"
                             android:layout_alignParentStart="true"
-                            android:layout_marginStart="10dp"
                             android:layout_centerVertical="true"
+                            android:layout_marginStart="10dp"
                             android:background="@android:color/transparent"
                             android:scaleType="fitXY"
                             android:src="@drawable/stopbutton" />
@@ -282,7 +346,6 @@
                             android:background="@android:color/transparent"
                             android:scaleType="fitXY"
                             android:src="@drawable/playbutton" />
-
 
                         <ImageButton
                             android:id="@+id/nextbutton"

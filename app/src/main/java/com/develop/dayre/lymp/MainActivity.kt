@@ -19,11 +19,22 @@ import android.content.*
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import android.support.v4.media.session.MediaControllerCompat
+import androidx.core.app.ComponentActivity.ExtraData
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import android.R.attr.name
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import android.R.attr.name
+import android.support.v4.media.session.PlaybackStateCompat
+import android.view.View
 
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "$APP_TAG/view"
 
+    private var isPlaying = false
     private lateinit var tagView: TagView
     private lateinit var searchTagView: TagView
 
@@ -44,9 +55,24 @@ class MainActivity : AppCompatActivity() {
             serv = binder.getService()
             isBound = true
             Log.i(TAG, "Service binded.")
-            val intent = Intent(this@MainActivity, LYMPService::class.java)
-            intent.putExtra(EXTRA_COMMAND, ServiceCommand.Init)
-            startService(intent)
+            mediaController = MediaControllerCompat(
+                this@MainActivity, viewModel.getMediaSessionToken()
+            )
+
+            mediaController!!.registerCallback(
+                object : MediaControllerCompat.Callback() {
+                    override fun onPlaybackStateChanged(state : PlaybackStateCompat) {
+                        if (state == null)
+                            return
+                        val playing = (state.state == PlaybackStateCompat.STATE_PLAYING)
+                        isPlaying = !isPlaying
+                        if (isPlaying)
+                            playbutton.setImageResource(R.drawable.pause_inbar)
+                        else
+                        playbutton.setImageResource(R.drawable.playbutton)
+                    }
+                }
+            )
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
@@ -64,7 +90,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         //Вызывает вопросы
         lateinit var viewModel: LYMPViewModel
-        //Или передавать контектст при инициализации вьюмодели и модели.
+        //Или передавать контекст при инициализации вьюмодели и модели.
         //По факту он нужен только для БД.
         var instance: MainActivity? = null
 
@@ -74,6 +100,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var receiversRegistered = false
+
+    var mediaController: MediaControllerCompat? = null
 
     private fun registerReceivers(contextIn: Context) {
         if (receiversRegistered) return
@@ -95,15 +123,37 @@ class MainActivity : AppCompatActivity() {
     private fun createControl() {
         nextbutton.setOnClickListener {
             Log.i(TAG, "next button pressed")
-//            val folderDialog = OpenFolderDialog(this)
-//            folderDialog.show()
             val intent = Intent(this@MainActivity, LYMPService::class.java)
             intent.putExtra(EXTRA_COMMAND, ServiceCommand.Next)
             startService(intent)
+            if (isPlaying) {
+                mediaController?.transportControls?.stop()
+                mediaController?.transportControls?.play()
+            }
         }
         prevbutton.setOnClickListener {
-            Log.i(TAG, "next button pressed")
-            viewModel.prevPress()
+            Log.i(TAG, "prev button pressed")
+            val intent = Intent(this@MainActivity, LYMPService::class.java)
+            intent.putExtra(EXTRA_COMMAND, ServiceCommand.Prev)
+            startService(intent)
+            if (isPlaying) {
+                mediaController?.transportControls?.stop()
+                mediaController?.transportControls?.play()
+            }
+        }
+        playbutton.setOnClickListener {
+            if (!isPlaying) {
+            Log.i(TAG, "play button pressed")
+            mediaController?.transportControls?.play()}
+            else {
+                Log.i(TAG, "pause button pressed")
+                mediaController?.transportControls?.pause()
+            }
+        }
+        stopbutton.setOnClickListener {
+            Log.i(TAG, "stop button pressed")
+            if (isPlaying)
+                mediaController?.transportControls?.stop()
         }
         shufflebutton.setOnClickListener {
             Log.i(TAG, "shuffle button pressed")
@@ -157,6 +207,8 @@ class MainActivity : AppCompatActivity() {
         }
         current_list.setOnItemClickListener { parent, view, position, id ->
             viewModel.songInListPress(position)
+            if (isPlaying)
+            mediaController?.transportControls?.play()
         }
     }
 
@@ -232,7 +284,7 @@ class MainActivity : AppCompatActivity() {
         readSettings()
     }
 
-    fun grantPermission() {
+    private fun grantPermission() {
         if (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE)
             != PackageManager.PERMISSION_GRANTED) {
 
@@ -292,8 +344,6 @@ class MainActivity : AppCompatActivity() {
         createControl()
         createObservers()
         grantPermission()
-        val intent = Intent(this, LYMPService::class.java)
-        bindService(intent, myConnection, Context.BIND_AUTO_CREATE)
 
         //Надо подумать, хотим мы обновлять список файлов на диске при запуске, или при resume тоже.
         viewModel.startModel()
@@ -302,6 +352,11 @@ class MainActivity : AppCompatActivity() {
         registerReceivers(this)
 
         readSettings()
+
+        val intent = Intent(this@MainActivity, LYMPService::class.java)
+        bindService(intent, myConnection, Context.BIND_AUTO_CREATE)
+        intent.putExtra(EXTRA_COMMAND, ServiceCommand.Init)
+        startService(intent)
     }
 
     private fun buildSearchField() {

@@ -1,7 +1,15 @@
 package com.develop.dayre.lymp
 
+import android.app.PendingIntent
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Environment
 import android.os.Handler
+import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.databinding.BaseObservable
 import io.reactivex.Observable
@@ -51,6 +59,8 @@ class LYMPModel : ILYMPModel, BaseObservable() {
                 currentSong = currentSongsList[currentSongPositionInList]
             }
         }
+    lateinit var mediaSession: MediaSessionCompat
+    private lateinit var exoPlayer: MediaPlayer
 
     //Методы для обсерверов
     override fun getShuffleStatus(): Boolean {
@@ -190,6 +200,67 @@ class LYMPModel : ILYMPModel, BaseObservable() {
         }
     }
 
+    fun play() {
+        // Заполняем данные о треке
+        val metadata = metadataBuilder
+//            .putBitmap(
+//                MediaMetadataCompat.METADATA_KEY_ART,
+//                BitmapFactory.decodeResource(resources, track.bitmapResId)
+//            )
+            .putString(MediaMetadataCompat.METADATA_KEY_TITLE, currentSong?.name)
+            .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, currentSong?.name)
+            .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, currentSong?.name)
+            .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, currentSong?.lenght!!.toLong())
+            .build()
+        mediaSession.setMetadata(metadata)
+
+        // Указываем, что наше приложение теперь активный плеер и кнопки
+        // на окне блокировки должны управлять именно нами
+        mediaSession.isActive = true
+
+        // Сообщаем новое состояние
+        mediaSession.setPlaybackState(
+            stateBuilder.setState(
+                PlaybackStateCompat.STATE_PLAYING,
+                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
+            ).build()
+        )
+
+        // Загружаем URL аудио-файла в Player
+        exoPlayer = MediaPlayer.create(MainActivity.applicationContext(), Uri.parse(currentSong?.path))
+        // Запускаем воспроизведение
+        exoPlayer.start()
+    }
+
+    fun pause() {
+        // Останавливаем воспроизведение
+        exoPlayer.pause()
+
+        // Сообщаем новое состояние
+        mediaSession.setPlaybackState(
+            stateBuilder.setState(
+                PlaybackStateCompat.STATE_PAUSED,
+                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
+            ).build()
+        )
+    }
+
+    fun stop() {
+        // Останавливаем воспроизведение
+        exoPlayer.stop()
+
+        // Все, больше мы не "главный" плеер, уходим со сцены
+        mediaSession.isActive = false
+
+        // Сообщаем новое состояние
+        mediaSession.setPlaybackState(
+            stateBuilder.setState(
+                PlaybackStateCompat.STATE_STOPPED,
+                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
+            ).build()
+        )
+    }
+
     override fun changeShuffle() {
         shuffleStatus = !shuffleStatus
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
@@ -208,8 +279,40 @@ class LYMPModel : ILYMPModel, BaseObservable() {
         Log.i(TAG, "testAction")
     }
 
+    fun getMediaSessionToken(): MediaSessionCompat.Token {
+        return mediaSession.sessionToken
+    }
+//    fun getMediaSession(): MediaSessionCompat {
+//        return mediaSession
+//    }
+
+    fun setMediaSessonCallback(mediaSessionCallback : MediaSessionCompat.Callback) {
+        mediaSession.setCallback(mediaSessionCallback)
+    }
+
     override fun initialize() {
         Log.i(TAG, "initialization")
+
+        mediaSession = MediaSessionCompat(MainActivity.applicationContext(), "LYMPService")
+        //exoPlayer = MediaPlayer.create(MainActivity.applicationContext(), Uri.parse(currentSong?.path))
+        // FLAG_HANDLES_MEDIA_BUTTONS - хотим получать события от аппаратных кнопок
+        // (например, гарнитуры)
+        // FLAG_HANDLES_TRANSPORT_CONTROLS - хотим получать события от кнопок
+        // на окне блокировки
+        mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
+
+
+
+        // Укажем activity, которую запустит система, если пользователь
+        // заинтересуется подробностями данной сессии
+        mediaSession.setSessionActivity(
+            PendingIntent.getActivity(
+                MainActivity.applicationContext(),
+                0,
+                Intent(MainActivity.applicationContext(), MainActivity::class.java),
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        )
             //browseFolderForFiles()
 //        helper.clearDataBase()
 //        helper.writeSong(Song(name = "1 track"))
@@ -232,5 +335,29 @@ class LYMPModel : ILYMPModel, BaseObservable() {
 
         //currentSongPositionInList = 0 - при поиске мы не меняем трек, играет/редактируется тот же, что и был.
     }
+
+
+
+    // Закешируем билдеры
+
+    // ...метаданных трека
+    private val metadataBuilder = MediaMetadataCompat.Builder()
+
+    // ...состояния плеера
+    // Здесь мы указываем действия, которые собираемся обрабатывать в коллбэках.
+    // Например, если мы не укажем ACTION_PAUSE,
+    // то нажатие на паузу не вызовет onPause.
+    // ACTION_PLAY_PAUSE обязателен, иначе не будет работать
+    // управление с Android Wear!
+    val stateBuilder: PlaybackStateCompat.Builder = PlaybackStateCompat.Builder()
+        .setActions(
+            PlaybackStateCompat.ACTION_PLAY
+                    or PlaybackStateCompat.ACTION_STOP
+                    or PlaybackStateCompat.ACTION_PAUSE
+                    or PlaybackStateCompat.ACTION_PLAY_PAUSE
+                    or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                    or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+        )
+
 
 }
