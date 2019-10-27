@@ -190,7 +190,8 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
                 currentSongPositionInList,
                 shuffleStatus
             )
-            Log.i(TAG, "Next track ${currentSong?.name} / ${currentSong?.tags}"
+            Log.i(
+                TAG, "Next track ${currentSong?.name} / ${currentSong?.tags}"
             )
             if (isPlaying) {
                 doWithMedia("next")
@@ -205,7 +206,8 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
                 currentSongPositionInList,
                 shuffleStatus
             )
-            Log.i(TAG, "New track ${currentSong?.name} / ${currentSong?.tags}"
+            Log.i(
+                TAG, "New track ${currentSong?.name} / ${currentSong?.tags}"
             )
             if (isPlaying) {
                 doWithMedia("next")
@@ -244,7 +246,7 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
             MediaPlayer.create(MainActivity.applicationContext(), Uri.parse(currentSong?.path))
     }
 
-    private fun doWithMedia(s : String) {
+    private fun doWithMedia(s: String) {
         when (s) {
             "play" -> {
                 prepareTrackForPlayer()
@@ -268,7 +270,8 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
                     stateBuilder.setState(
                         PlaybackStateCompat.STATE_PAUSED,
                         PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
-                    ).build())
+                    ).build()
+                )
                 isPlaying = false
             }
             "next" -> {
@@ -329,16 +332,12 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
 
     fun setMediaSessonCallback(mediaSessionCallback: MediaSessionCompat.Callback) {
         mediaSession.setCallback(mediaSessionCallback)
-        val mediaButtonIntent = Intent(
-            Intent.ACTION_MEDIA_BUTTON, null, MainActivity.applicationContext(), MediaButtonReceiver::class.java
-        )
-        mediaSession.setMediaButtonReceiver(
-            PendingIntent.getBroadcast(MainActivity.applicationContext(), 0, mediaButtonIntent, 0)
-        )
     }
+
     fun setMediaControllerCallback(mediaControllerCallback: MediaControllerCompat.Callback) {
         mediaController?.registerCallback(mediaControllerCallback)
     }
+
     override fun initialize() {
         Log.i(TAG, "initialization")
         mediaSession = MediaSessionCompat(MainActivity.applicationContext(), "LYMPService")
@@ -347,7 +346,15 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
         // FLAG_HANDLES_TRANSPORT_CONTROLS - хотим получать события от кнопок
         // на окне блокировки
         mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
-
+        val mediaButtonIntent = Intent(
+            Intent.ACTION_MEDIA_BUTTON,
+            null,
+            MainActivity.applicationContext(),
+            MediaButtonReceiver::class.java
+        )
+        mediaSession.setMediaButtonReceiver(
+            PendingIntent.getBroadcast(MainActivity.applicationContext(), 0, mediaButtonIntent, 0)
+        )
         // Укажем activity, которую запустит система, если пользователь
         // заинтересуется подробностями данной сессии
         mediaSession.setSessionActivity(
@@ -358,7 +365,7 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
                 PendingIntent.FLAG_UPDATE_CURRENT
             )
         )
-   mediaController = MediaControllerCompat(
+        mediaController = MediaControllerCompat(
             MainActivity.applicationContext(), getMediaSessionToken()
         )
 
@@ -403,7 +410,7 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
                     // Например, был входящий звонок и фокус у нас отняли.
                     // Звонок закончился, фокус выдали опять
                     // и мы продолжили воспроизведение.
-                  //  mediaSessionCallback.onPlay()
+                    //  mediaSessionCallback.onPlay()
                 }
                 AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
                     // Фокус отняли, потому что какому-то приложению надо
@@ -414,12 +421,12 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
                     // но надо снизить громкость.
                     // Приложение не обязано именно снижать громкость,
                     // можно встать на паузу, что мы здесь и делаем.
-                   // mediaSessionCallback.onPause()
+                    // mediaSessionCallback.onPause()
                 }
                 else -> {
-                // Фокус совсем отняли.
-               // mediaSessionCallback.onPause()
-            }
+                    // Фокус совсем отняли.
+                    // mediaSessionCallback.onPause()
+                }
             }
         }
 }
