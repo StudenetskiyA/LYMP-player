@@ -75,27 +75,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-//    private var receiversRegistered = false
-//
-//    private fun registerReceivers(contextIn: Context) {
-//        if (receiversRegistered) return
-//
-//        val context = contextIn.applicationContext
-//        val receiver = NotificationReceiver()
-//
-//        val providerChanged = IntentFilter()
-//        providerChanged.addAction("NEXT_ACTION")
-//        context.registerReceiver(receiver, providerChanged)
-//
-//        val userPresent = IntentFilter()
-//        userPresent.addAction("android.intent.action.USER_PRESENT")
-//        context.registerReceiver(receiver, userPresent)
-//
-//
-//
-//        receiversRegistered = true
-//    }
-
     private fun createControl() {
         nextbutton.setOnClickListener {
             Log.i(TAG, "next button pressed")
@@ -311,12 +290,6 @@ class MainActivity : AppCompatActivity() {
         createControl()
         createObservers()
         grantPermission()
-
-        //Надо подумать, хотим мы обновлять список файлов на диске при запуске, или при resume тоже.
-       // viewModel.startModel()
-
-        //Нужно в Андроид 7+, запись в манифесте больше не работает.
-     //   registerReceivers(this)
 
         readSettings()
 

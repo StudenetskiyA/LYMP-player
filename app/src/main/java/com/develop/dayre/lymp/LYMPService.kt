@@ -19,10 +19,15 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.Observer
 import androidx.core.content.ContextCompat
 import androidx.media.session.MediaButtonReceiver
+import android.app.PendingIntent
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 
-const val EXTRA_COMMAND = "EXTRA_COMMAND"
 
-enum class ServiceCommand { Start, Stop, Next, Prev, Init }
+
+//const val EXTRA_COMMAND = "EXTRA_COMMAND"
+
+enum class ServiceCommand { Prev, Play, Stop, Next, Init }
 
 class LYMPService : LifecycleService() {
     private val NOTIFICATION_ID = 9999
@@ -43,8 +48,20 @@ class LYMPService : LifecycleService() {
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         Log.i(TAG, "Init service")
+        if (intent.hasExtra("ServiceCommand")) {
+            Log.i(TAG, "onStartCommand ${intent.getStringExtra("ServiceCommand")}")
+//           val command = intent.getSerializableExtra("ServiceCommand") as ServiceCommand
+//           // val command = intent.getStringExtra(EXTRA_COMMAND)
+//            Log.i(TAG, "onStartCommand $command")
+//            when (command) {
+//                ServiceCommand.Play -> viewModel.playPress()
+//                ServiceCommand.Next -> viewModel.nextPress()
+//                // ServiceCommand.Prev -> viewModel.prevPress()ServiceCommand.Prev
+//            }
+        }
         viewModel.setMediaSessonCallback(mediaSessionCallback)
         createObservers()
+
         return START_STICKY
     }
 
@@ -84,7 +101,7 @@ class LYMPService : LifecycleService() {
                 NotificationManagerCompat.from(this@LYMPService)
                     .notify(NOTIFICATION_ID, getNotification(playbackState))
                 stopForeground(false)
-               // startForeground(NOTIFICATION_ID, getNotification(playbackState))
+                // startForeground(NOTIFICATION_ID, getNotification(playbackState))
             }
             else -> {
                 // Все, можно прятать уведомление
@@ -108,62 +125,56 @@ class LYMPService : LifecycleService() {
 
         // Добавляем кнопки
         // ...на предыдущий трек
+        val intentPrev = Intent(this, LYMPService::class.java)
+        intentPrev.putExtra("ServiceCommand", "PPPPrev")
+        val pendingIntentPrev = PendingIntent.getService(
+            applicationContext, NOTIFICATION_ID, intentPrev, PendingIntent.FLAG_UPDATE_CURRENT
+        )
         builder.addAction(
             NotificationCompat.Action(
                 android.R.drawable.ic_media_previous, getString(R.string.previous),
-                MediaButtonReceiver.buildMediaButtonPendingIntent(
-                    this,
-                    PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
-                )
+                pendingIntentPrev
             )
         )
 
-        // ...play/pause
+        // ...play/pause. Интент у нас один, модель разберется.
+        val intentPlay = Intent(this, LYMPService::class.java)
+        intentPlay.putExtra("ServiceCommand", "Playyyy")
+        val pendingIntentPlay = PendingIntent.getService(
+            applicationContext, NOTIFICATION_ID+1, intentPlay, PendingIntent.FLAG_UPDATE_CURRENT
+        )
         if (playbackState == PlaybackStateCompat.STATE_PLAYING)
             builder.addAction(
                 NotificationCompat.Action(
                     android.R.drawable.ic_media_pause, getString(R.string.pause),
-                    MediaButtonReceiver.buildMediaButtonPendingIntent(
-                        this,
-                        PlaybackStateCompat.ACTION_PLAY_PAUSE
-                    )
+                    pendingIntentPlay
                 )
             )
         else
             builder.addAction(
                 NotificationCompat.Action(
                     android.R.drawable.ic_media_play, getString(R.string.play),
-                    MediaButtonReceiver.buildMediaButtonPendingIntent(
-                        this,
-                        PlaybackStateCompat.ACTION_PLAY_PAUSE
-                    )
+                    pendingIntentPlay
                 )
             )
 
         // ...на следующий трек
+        val intentNext = Intent(this, LYMPService::class.java)
+        intentNext.putExtra("ServiceCommand", "Neeext")
+        val pendingIntentNext = PendingIntent.getService(
+            applicationContext, NOTIFICATION_ID+2, intentNext, PendingIntent.FLAG_UPDATE_CURRENT
+        )
         builder.addAction(
             NotificationCompat.Action(
                 android.R.drawable.ic_media_next, getString(R.string.next),
-                MediaButtonReceiver.buildMediaButtonPendingIntent(
-                    this,
-                    PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-                )
+              pendingIntentNext
             )
         )
 
         builder.setStyle(
             androidx.media.app.NotificationCompat.MediaStyle()
-                // В компактном варианте показывать Action с данным порядковым номером.
-                // В нашем случае это play/pause.
                 .setShowActionsInCompactView(1)
-                // Отображать крестик в углу уведомления для его закрытия.
-                // Это связано с тем, что для API < 21 из-за ошибки во фреймворке
-                // пользователь не мог смахнуть уведомление foreground-сервиса
-                // даже после вызова stopForeground(false).
-                // Так что это костыль.
-                // На API >= 21 крестик не отображается, там просто смахиваем уведомление.
                 .setShowCancelButton(true)
-                // Указываем, что делать при нажатии на крестик или смахивании
                 .setCancelButtonIntent(
                     MediaButtonReceiver.buildMediaButtonPendingIntent(
                         this,
@@ -197,14 +208,13 @@ class LYMPService : LifecycleService() {
             //model.callBackAwaited - ужасный костыль, но иначе приходится либо размещать здесь логику
             //Либо происходят MediaButton не будут обрабатываться.
             override fun onPlay() {
-                toast("${viewModel.getCallBackAwaited()}")
                 Log.i(TAG, "callback onPlay")
                 if (!viewModel.getCallBackAwaited()) viewModel.playPress()
                 else viewModel.setCallBackAwaited(false)
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
             }
+
             override fun onPause() {
-                toast("${viewModel.getCallBackAwaited()}")
                 Log.i(TAG, "callback onPause")
                 if (!viewModel.getCallBackAwaited()) viewModel.playPress()
                 else viewModel.setCallBackAwaited(false)
@@ -212,7 +222,6 @@ class LYMPService : LifecycleService() {
             }
 
             override fun onStop() {
-                toast("${viewModel.getCallBackAwaited()}")
                 Log.i(TAG, "callback onStop")
                 if (!viewModel.getCallBackAwaited()) viewModel.stopPress()
                 else viewModel.setCallBackAwaited(false)
