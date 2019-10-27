@@ -1,20 +1,23 @@
 package com.develop.dayre.lymp
 
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Environment
-import android.os.Handler
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.databinding.BaseObservable
 import io.reactivex.Observable
-import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
+import android.media.AudioManager
+import android.support.v4.media.session.MediaControllerCompat
+import androidx.core.content.ContextCompat.getSystemService
+
 
 enum class RepeatState { All, One, Stop }
 enum class PlayState { Play, Stop, Pause }
@@ -42,7 +45,9 @@ interface ILYMPModel {
     fun getCurrentSearchTags(): Observable<String>
 }
 
-class LYMPModel : ILYMPModel, BaseObservable() {
+class LYMPModel(val audioManager: AudioManager) : ILYMPModel, BaseObservable() {
+   // private lateinit var audioManager: AudioManager
+    var mediaController: MediaControllerCompat? = null
     private val TAG = "$APP_TAG/model"
     private var currentSong: Song? =
         Song() //У нас бывают ситуации, когда текущий трек не в текущем листе.
@@ -61,11 +66,13 @@ class LYMPModel : ILYMPModel, BaseObservable() {
         }
     lateinit var mediaSession: MediaSessionCompat
     private lateinit var exoPlayer: MediaPlayer
+    var isPlaying = false
 
     //Методы для обсерверов
     override fun getShuffleStatus(): Boolean {
         return shuffleStatus
     }
+
     override fun getRepeatStatus(): RepeatState {
         return repeatStatus
     }
@@ -92,7 +99,7 @@ class LYMPModel : ILYMPModel, BaseObservable() {
     }
 
     //Действия
-    fun browseFolderForFiles() : Observable<Boolean> {
+    fun browseFolderForFiles(): Observable<Boolean> {
         var newSongFound = 0
         var songsRestored = 0
         var deletedSong = 0
@@ -129,7 +136,7 @@ class LYMPModel : ILYMPModel, BaseObservable() {
         // if (songsRestored!=0 || newSongFound!=0 || deletedSong!=0)
         MainActivity.applicationContext()
             .toast("Новых песен найдено - $newSongFound \r\nУдалено песен - $deletedSong \r\nВосстановленно удаленных - $songsRestored")
-      //  return Observable.just(true).delay(5, TimeUnit.SECONDS)
+        //  return Observable.just(true).delay(5, TimeUnit.SECONDS)
         return Observable.just(true)
     }
 
@@ -201,48 +208,74 @@ class LYMPModel : ILYMPModel, BaseObservable() {
     }
 
     fun play() {
-        // Заполняем данные о треке
-        val metadata = metadataBuilder
+        Log.i(TAG, "Play, isPlaying =  $isPlaying")
+        if (isPlaying) {
+            exoPlayer.pause()
+            mediaController?.transportControls?.pause()
+            // Сообщаем новое состояние
+            mediaSession.setPlaybackState(
+                stateBuilder.setState(
+                    PlaybackStateCompat.STATE_PAUSED,
+                    PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
+                ).build())
+            isPlaying = false
+        } else {
+            // Заполняем данные о треке
+            //TODO
+            val metadata = metadataBuilder
 //            .putBitmap(
 //                MediaMetadataCompat.METADATA_KEY_ART,
 //                BitmapFactory.decodeResource(resources, track.bitmapResId)
 //            )
-            .putString(MediaMetadataCompat.METADATA_KEY_TITLE, currentSong?.name)
-            .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, currentSong?.name)
-            .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, currentSong?.name)
-            .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, currentSong?.lenght!!.toLong())
-            .build()
-        mediaSession.setMetadata(metadata)
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, currentSong?.name)
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, currentSong?.name)
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, currentSong?.name)
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, currentSong?.lenght!!.toLong())
+                .build()
+            mediaSession.setMetadata(metadata)
 
-        // Указываем, что наше приложение теперь активный плеер и кнопки
-        // на окне блокировки должны управлять именно нами
-        mediaSession.isActive = true
+            //Берем аудиофокус
+            val audioFocusResult = audioManager.requestAudioFocus(
+                audioFocusChangeListener,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+            )
+            if (audioFocusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
+                return
 
-        // Сообщаем новое состояние
-        mediaSession.setPlaybackState(
-            stateBuilder.setState(
-                PlaybackStateCompat.STATE_PLAYING,
-                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
-            ).build()
-        )
+            // Указываем, что наше приложение теперь активный плеер и кнопки
+            // на окне блокировки должны управлять именно нами
+            mediaSession.isActive = true
 
-        // Загружаем URL аудио-файла в Player
-        exoPlayer = MediaPlayer.create(MainActivity.applicationContext(), Uri.parse(currentSong?.path))
-        // Запускаем воспроизведение
-        exoPlayer.start()
+            // Сообщаем новое состояние
+            mediaSession.setPlaybackState(
+                stateBuilder.setState(
+                    PlaybackStateCompat.STATE_PLAYING,
+                    PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
+                ).build()
+            )
+
+            // Загружаем URL аудио-файла в Player
+            exoPlayer =
+                MediaPlayer.create(MainActivity.applicationContext(), Uri.parse(currentSong?.path))
+            // Запускаем воспроизведение
+            exoPlayer.start()
+            mediaController?.transportControls?.play()
+            isPlaying = true
+        }
     }
 
     fun pause() {
         // Останавливаем воспроизведение
-        exoPlayer.pause()
-
-        // Сообщаем новое состояние
-        mediaSession.setPlaybackState(
-            stateBuilder.setState(
-                PlaybackStateCompat.STATE_PAUSED,
-                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
-            ).build()
-        )
+//        exoPlayer.pause()
+//      //  mediaController?.transportControls?.pause()
+//        // Сообщаем новое состояние
+//        mediaSession.setPlaybackState(
+//            stateBuilder.setState(
+//                PlaybackStateCompat.STATE_PAUSED,
+//                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
+//            ).build()
+        //)
     }
 
     fun stop() {
@@ -266,11 +299,12 @@ class LYMPModel : ILYMPModel, BaseObservable() {
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
         Log.i(TAG, "Now shuffle is $shuffleStatus")
     }
+
     override fun changeRepeat() {
         when (repeatStatus) {
-            RepeatState.All -> repeatStatus=RepeatState.One
-            RepeatState.One -> repeatStatus=RepeatState.Stop
-            RepeatState.Stop -> repeatStatus=RepeatState.All
+            RepeatState.All -> repeatStatus = RepeatState.One
+            RepeatState.One -> repeatStatus = RepeatState.Stop
+            RepeatState.Stop -> repeatStatus = RepeatState.All
         }
         Log.i(TAG, "Now repeat is $repeatStatus")
     }
@@ -282,17 +316,15 @@ class LYMPModel : ILYMPModel, BaseObservable() {
     fun getMediaSessionToken(): MediaSessionCompat.Token {
         return mediaSession.sessionToken
     }
-//    fun getMediaSession(): MediaSessionCompat {
-//        return mediaSession
-//    }
 
-    fun setMediaSessonCallback(mediaSessionCallback : MediaSessionCompat.Callback) {
+    fun setMediaSessonCallback(mediaSessionCallback: MediaSessionCompat.Callback) {
         mediaSession.setCallback(mediaSessionCallback)
     }
-
+    fun setMediaControllerCallback(mediaControllerCallback: MediaControllerCompat.Callback) {
+        mediaController?.registerCallback(mediaControllerCallback)
+    }
     override fun initialize() {
         Log.i(TAG, "initialization")
-
         mediaSession = MediaSessionCompat(MainActivity.applicationContext(), "LYMPService")
         //exoPlayer = MediaPlayer.create(MainActivity.applicationContext(), Uri.parse(currentSong?.path))
         // FLAG_HANDLES_MEDIA_BUTTONS - хотим получать события от аппаратных кнопок
@@ -300,8 +332,6 @@ class LYMPModel : ILYMPModel, BaseObservable() {
         // FLAG_HANDLES_TRANSPORT_CONTROLS - хотим получать события от кнопок
         // на окне блокировки
         mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
-
-
 
         // Укажем activity, которую запустит система, если пользователь
         // заинтересуется подробностями данной сессии
@@ -313,7 +343,24 @@ class LYMPModel : ILYMPModel, BaseObservable() {
                 PendingIntent.FLAG_UPDATE_CURRENT
             )
         )
-            //browseFolderForFiles()
+   mediaController = MediaControllerCompat(
+            MainActivity.applicationContext(), getMediaSessionToken()
+        )
+//        mediaController!!.registerCallback(
+//            object : MediaControllerCompat.Callback() {
+//                override fun onPlaybackStateChanged(state : PlaybackStateCompat) {
+//                         if (state == null)
+//                             return
+//         //           here
+////                    if (isPlaying)
+////                        playbutton.setImageResource(R.drawable.pause_inbar)
+////                    else
+////                        playbutton.setImageResource(R.drawable.playbutton)
+//                }
+//            }
+//        )
+
+        browseFolderForFiles()
 //        helper.clearDataBase()
 //        helper.writeSong(Song(name = "1 track"))
 //        helper.writeSong(Song(name = "2 track"))
@@ -337,7 +384,6 @@ class LYMPModel : ILYMPModel, BaseObservable() {
     }
 
 
-
     // Закешируем билдеры
 
     // ...метаданных трека
@@ -349,7 +395,7 @@ class LYMPModel : ILYMPModel, BaseObservable() {
     // то нажатие на паузу не вызовет onPause.
     // ACTION_PLAY_PAUSE обязателен, иначе не будет работать
     // управление с Android Wear!
-    val stateBuilder: PlaybackStateCompat.Builder = PlaybackStateCompat.Builder()
+    private val stateBuilder: PlaybackStateCompat.Builder = PlaybackStateCompat.Builder()
         .setActions(
             PlaybackStateCompat.ACTION_PLAY
                     or PlaybackStateCompat.ACTION_STOP
@@ -359,5 +405,31 @@ class LYMPModel : ILYMPModel, BaseObservable() {
                     or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
         )
 
-
+    private val audioFocusChangeListener =
+        AudioManager.OnAudioFocusChangeListener { focusChange ->
+            when (focusChange) {
+                AudioManager.AUDIOFOCUS_GAIN -> {
+                    // Фокус предоставлен.
+                    // Например, был входящий звонок и фокус у нас отняли.
+                    // Звонок закончился, фокус выдали опять
+                    // и мы продолжили воспроизведение.
+                  //  mediaSessionCallback.onPlay()
+                }
+                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                    // Фокус отняли, потому что какому-то приложению надо
+                    // коротко "крякнуть".
+                    // Например, проиграть звук уведомления или навигатору сказать
+                    // "Через 50 метров поворот направо".
+                    // В этой ситуации нам разрешено не останавливать вопроизведение,
+                    // но надо снизить громкость.
+                    // Приложение не обязано именно снижать громкость,
+                    // можно встать на паузу, что мы здесь и делаем.
+                   // mediaSessionCallback.onPause()
+                }
+                else -> {
+                // Фокус совсем отняли.
+               // mediaSessionCallback.onPause()
+            }
+            }
+        }
 }

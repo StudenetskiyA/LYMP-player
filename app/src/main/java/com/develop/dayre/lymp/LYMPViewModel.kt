@@ -1,14 +1,19 @@
 package com.develop.dayre.lymp
 
+import android.media.AudioManager
+import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.databinding.ObservableField
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.activity_main.*
 
 interface ILYMPViewModel {
     fun newSearch(tags: String = "")
@@ -30,11 +35,17 @@ interface ILYMPViewModel {
     fun testPress()
 }
 
+class MyViewModelFactory(val audioManager: AudioManager) : ViewModelProvider.Factory {
+    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+        return modelClass.getConstructor(AudioManager::class.java).newInstance(audioManager)
+    }
+}
 
-class LYMPViewModel : ILYMPViewModel, ViewModel() {
+class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     private val TAG = "$APP_TAG/viewmodel"
+    //var isPlaying = false
 
-    private var model = LYMPModel()
+    private var model = LYMPModel(audioManager)
 
     var currentSongsList =
         MutableLiveData<ArrayList<Song>>() //Локальный список, потом будет урезанная версия.
@@ -48,6 +59,8 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
 
     fun startModel() {
         model.initialize()
+
+
         startBrowseFolderForFiles()
     }
 
@@ -78,6 +91,10 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
         Log.i(TAG, "nextPress")
         model.nextSong()
         setCurrentSong()
+//        if (isPlaying) {
+//            model.stop()
+//            model.play()
+//        }
     }
 
     override fun prevPress() {
@@ -93,13 +110,14 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
 
     override fun playPress() {
         Log.i(TAG, "playPress")
-        model.play()
+            model.play()
     }
 
     fun pausePress() {
         Log.i(TAG, "pausePress")
         model.pause()
     }
+
     fun stopPress() {
         Log.i(TAG, "stopPress")
         model.stop()
@@ -107,6 +125,10 @@ class LYMPViewModel : ILYMPViewModel, ViewModel() {
     fun setMediaSessonCallback(mediaSessionCallback : MediaSessionCompat.Callback) {
         model.setMediaSessonCallback(mediaSessionCallback)
     }
+    fun setMediaControllerCallback(mediaControllerCallback: MediaControllerCompat.Callback) {
+        model.setMediaControllerCallback(mediaControllerCallback)
+    }
+
     override fun shufflePress() {
         model.changeShuffle()
         shuffle.set(model.getShuffleStatus())

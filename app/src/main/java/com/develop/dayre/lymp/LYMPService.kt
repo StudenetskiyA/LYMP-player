@@ -15,6 +15,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
 import android.graphics.Color
+import android.media.AudioManager
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.develop.dayre.lymp.ServiceCommand.*
@@ -31,6 +32,7 @@ enum class ServiceCommand { Start, Stop, Next, Prev, Init }
 class LYMPService : LifecycleService() {
     private val NOTIFICATION_ID = 9999
     private val TAG = "$APP_TAG/service"
+//    private lateinit var audioManager: AudioManager
 
     override fun onBind(intent: Intent): IBinder? {
         super.onBind(intent)
@@ -45,7 +47,10 @@ class LYMPService : LifecycleService() {
 
     private fun initService() {
         Log.i(TAG, "Try to init service")
+       //     val   audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         MainActivity.viewModel.setMediaSessonCallback(mediaSessionCallback)
+//        val mediaButtonIntent = Intent(Intent.ACTION_MEDIA_BUTTON, null, applicationContext, MediaButtonReceiver::class.java)
+//        MainActivity.viewModel.getMediaSession().setMediaButtonReceiver(PendingIntent.getBroadcast(applicationContext, 0, mediaButtonIntent, 0))
         createObservers()
     }
 
@@ -67,7 +72,7 @@ class LYMPService : LifecycleService() {
                 play()
             }
             Next -> {
-                next()
+                //next()
             }
             Prev -> {
                 prev()
@@ -76,9 +81,9 @@ class LYMPService : LifecycleService() {
         return START_STICKY
     }
 
-    private fun next() {
-        MainActivity.viewModel.nextPress()
-    }
+//    private fun next() {
+//        MainActivity.viewModel.nextPress()
+//    }
 
     private fun prev() {
         MainActivity.viewModel.prevPress()
@@ -126,9 +131,10 @@ class LYMPService : LifecycleService() {
             PlaybackStateCompat.STATE_PAUSED -> {
                 // На паузе мы перестаем быть foreground, однако оставляем уведомление,
                 // чтобы пользователь мог play нажать
-                NotificationManagerCompat.from(this@LYMPService)
-                    .notify(NOTIFICATION_ID, getNotification(playbackState))
-                stopForeground(false)
+//                NotificationManagerCompat.from(this@LYMPService)
+//                    .notify(NOTIFICATION_ID, getNotification(playbackState))
+//                stopForeground(false)
+                startForeground(NOTIFICATION_ID, getNotification(playbackState))
             }
             else -> {
                 // Все, можно прятать уведомление
@@ -151,7 +157,6 @@ class LYMPService : LifecycleService() {
         val builder = MediaStyleHelperFrom(this, MainActivity.viewModel.getMediaSession())
 
         // Добавляем кнопки
-
         // ...на предыдущий трек
         builder.addAction(
             NotificationCompat.Action(
@@ -239,21 +244,34 @@ class LYMPService : LifecycleService() {
 
     private var mediaSessionCallback: MediaSessionCompat.Callback =
         object : MediaSessionCompat.Callback() {
-            private var currentUri: Uri? = null
-
             override fun onPlay() {
-                MainActivity.viewModel.playPress()
+                Log.i(TAG, "callback onPlay")
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
             }
 
             override fun onPause() {
-                MainActivity.viewModel.pausePress()
+                Log.i(TAG, "callback onPause")
+               // MainActivity.viewModel.pausePress()
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PAUSED)
             }
 
             override fun onStop() {
-                MainActivity.viewModel.stopPress()
+                Log.i(TAG, "callback onStop")
+                //audioManager.abandonAudioFocus(audioFocusChangeListener)
+               // MainActivity.viewModel.stopPress()
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_STOPPED)
             }
+
+            override fun onSkipToNext() {
+              //  MainActivity.viewModel.nextPress()
+                refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
+            }
+
+            override fun onSkipToPrevious() {
+              //  MainActivity.viewModel.prevPress()
+                refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
+            }
         }
+
+
 }

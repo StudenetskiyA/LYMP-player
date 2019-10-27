@@ -27,6 +27,7 @@ import android.R.attr.name
 import androidx.core.content.ContextCompat.getSystemService
 import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 import android.R.attr.name
+import android.media.AudioManager
 import android.support.v4.media.session.PlaybackStateCompat
 import android.view.View
 
@@ -34,7 +35,6 @@ import android.view.View
 class MainActivity : AppCompatActivity() {
     private val TAG = "$APP_TAG/view"
 
-    private var isPlaying = false
     private lateinit var tagView: TagView
     private lateinit var searchTagView: TagView
 
@@ -55,24 +55,6 @@ class MainActivity : AppCompatActivity() {
             serv = binder.getService()
             isBound = true
             Log.i(TAG, "Service binded.")
-            mediaController = MediaControllerCompat(
-                this@MainActivity, viewModel.getMediaSessionToken()
-            )
-
-            mediaController!!.registerCallback(
-                object : MediaControllerCompat.Callback() {
-                    override fun onPlaybackStateChanged(state : PlaybackStateCompat) {
-                        if (state == null)
-                            return
-                        val playing = (state.state == PlaybackStateCompat.STATE_PLAYING)
-                        isPlaying = !isPlaying
-                        if (isPlaying)
-                            playbutton.setImageResource(R.drawable.pause_inbar)
-                        else
-                        playbutton.setImageResource(R.drawable.playbutton)
-                    }
-                }
-            )
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
@@ -101,21 +83,21 @@ class MainActivity : AppCompatActivity() {
 
     private var receiversRegistered = false
 
-    var mediaController: MediaControllerCompat? = null
+  //  var mediaController: MediaControllerCompat? = null
 
     private fun registerReceivers(contextIn: Context) {
         if (receiversRegistered) return
 
         val context = contextIn.applicationContext
-        val receiver = NotificationReceiver()
+       // val receiver = NotificationReceiver()
 
-        val providerChanged = IntentFilter()
-        providerChanged.addAction("NEXT_ACTION")
-        context.registerReceiver(receiver, providerChanged)
-
-        val userPresent = IntentFilter()
-        userPresent.addAction("android.intent.action.USER_PRESENT")
-        context.registerReceiver(receiver, userPresent)
+//        val providerChanged = IntentFilter()
+//        providerChanged.addAction("NEXT_ACTION")
+//        context.registerReceiver(receiver, providerChanged)
+//
+//        val userPresent = IntentFilter()
+//        userPresent.addAction("android.intent.action.USER_PRESENT")
+//        context.registerReceiver(receiver, userPresent)
 
         receiversRegistered = true
     }
@@ -123,37 +105,39 @@ class MainActivity : AppCompatActivity() {
     private fun createControl() {
         nextbutton.setOnClickListener {
             Log.i(TAG, "next button pressed")
-            val intent = Intent(this@MainActivity, LYMPService::class.java)
-            intent.putExtra(EXTRA_COMMAND, ServiceCommand.Next)
-            startService(intent)
-            if (isPlaying) {
-                mediaController?.transportControls?.stop()
-                mediaController?.transportControls?.play()
-            }
+            viewModel.nextPress()
+//            val intent = Intent(this@MainActivity, LYMPService::class.java)
+//            intent.putExtra(EXTRA_COMMAND, ServiceCommand.Next)
+//            startService(intent)
+//            if (viewModel.isPlaying) {
+//                mediaController?.transportControls?.stop()
+//                mediaController?.transportControls?.play()
+//            }
         }
         prevbutton.setOnClickListener {
             Log.i(TAG, "prev button pressed")
             val intent = Intent(this@MainActivity, LYMPService::class.java)
             intent.putExtra(EXTRA_COMMAND, ServiceCommand.Prev)
             startService(intent)
-            if (isPlaying) {
-                mediaController?.transportControls?.stop()
-                mediaController?.transportControls?.play()
-            }
+//            if (viewModel.isPlaying) {
+//                mediaController?.transportControls?.stop()
+//                mediaController?.transportControls?.play()
+//            }
         }
         playbutton.setOnClickListener {
-            if (!isPlaying) {
-            Log.i(TAG, "play button pressed")
-            mediaController?.transportControls?.play()}
-            else {
-                Log.i(TAG, "pause button pressed")
-                mediaController?.transportControls?.pause()
-            }
+            viewModel.playPress()
+//            if (!viewModel.isPlaying) {
+//            Log.i(TAG, "play button pressed")
+//            mediaController?.transportControls?.play()}
+//            else {
+//                Log.i(TAG, "pause button pressed")
+//                mediaController?.transportControls?.pause()
+//            }
         }
         stopbutton.setOnClickListener {
             Log.i(TAG, "stop button pressed")
-            if (isPlaying)
-                mediaController?.transportControls?.stop()
+//            if (viewModel.isPlaying)
+//                mediaController?.transportControls?.stop()
         }
         shufflebutton.setOnClickListener {
             Log.i(TAG, "shuffle button pressed")
@@ -207,15 +191,16 @@ class MainActivity : AppCompatActivity() {
         }
         current_list.setOnItemClickListener { parent, view, position, id ->
             viewModel.songInListPress(position)
-            if (isPlaying)
-            mediaController?.transportControls?.play()
+//            if (viewModel.isPlaying)
+//            mediaController?.transportControls?.play()
         }
     }
 
     private fun createView() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         //Получаем инстанс, а не создаем новый - актуально при перезапуске приложения, повороте экрана и т.д.
-        viewModel = ViewModelProviders.of(this).get(LYMPViewModel::class.java)
+        val viewModelFactory = MyViewModelFactory(getSystemService(Context.AUDIO_SERVICE) as AudioManager)
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(LYMPViewModel::class.java)
         binding.viewmodel = viewModel
         binding.executePendingBindings()
 
@@ -275,6 +260,16 @@ class MainActivity : AppCompatActivity() {
                     .apply()
                 buildSearchField()
             })
+
+        viewModel.setMediaControllerCallback( object : MediaControllerCompat.Callback() {
+            override fun onPlaybackStateChanged(state : PlaybackStateCompat) {
+                Log.i(TAG,"PlayState changed.")
+                if (state.state==PlaybackStateCompat.STATE_PLAYING)
+                    playbutton.setImageResource(R.drawable.pause_inbar)
+                else
+                    playbutton.setImageResource(R.drawable.playbutton)
+            }
+        })
     }
 
     override fun onResume() {
@@ -341,12 +336,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         settings = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE)
         createView()
+        viewModel.startModel()
         createControl()
         createObservers()
         grantPermission()
 
         //Надо подумать, хотим мы обновлять список файлов на диске при запуске, или при resume тоже.
-        viewModel.startModel()
+       // viewModel.startModel()
 
         //Нужно в Андроид 7+, запись в манифесте больше не работает.
         registerReceivers(this)
