@@ -22,6 +22,15 @@ import androidx.core.content.ContextCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.media.AudioManager
 import android.support.v4.media.session.PlaybackStateCompat
+import android.app.PendingIntent
+import androidx.media.session.MediaButtonReceiver
+import android.content.Intent
+import androidx.core.app.ComponentActivity.ExtraData
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import android.R.attr.name
+
+
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "$APP_TAG/view"
@@ -80,15 +89,17 @@ class MainActivity : AppCompatActivity() {
         if (receiversRegistered) return
 
         val context = contextIn.applicationContext
-       // val receiver = NotificationReceiver()
+        val receiver = NotificationReceiver()
 
-//        val providerChanged = IntentFilter()
-//        providerChanged.addAction("NEXT_ACTION")
-//        context.registerReceiver(receiver, providerChanged)
-//
-//        val userPresent = IntentFilter()
-//        userPresent.addAction("android.intent.action.USER_PRESENT")
-//        context.registerReceiver(receiver, userPresent)
+        val providerChanged = IntentFilter()
+        providerChanged.addAction("NEXT_ACTION")
+        context.registerReceiver(receiver, providerChanged)
+
+        val userPresent = IntentFilter()
+        userPresent.addAction("android.intent.action.USER_PRESENT")
+        context.registerReceiver(receiver, userPresent)
+
+
 
         receiversRegistered = true
     }

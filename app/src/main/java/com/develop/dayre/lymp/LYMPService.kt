@@ -19,6 +19,10 @@ import androidx.lifecycle.Observer
 import androidx.core.content.ContextCompat
 import androidx.media.session.MediaButtonReceiver
 
+const val EXTRA_COMMAND = "EXTRA_COMMAND"
+
+enum class ServiceCommand { Start, Stop, Next, Prev, Init }
+
 class LYMPService : LifecycleService() {
     private val NOTIFICATION_ID = 9999
     private val TAG = "$APP_TAG/service"

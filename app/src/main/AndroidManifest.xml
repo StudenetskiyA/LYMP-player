@@ -20,11 +20,14 @@
         android:theme="@style/AppTheme">
         <service
             android:name=".LYMPService"
-            android:enabled="true" >
+            android:enabled="true" />
+        <receiver android:name="com.develop.dayre.lymp.NotificationReceiver">
             <intent-filter>
-                <action android:name="android.media.browse.MediaBrowserService"/>
+                <action android:name="NEXT_ACTION" />
+                <action android:name="PLAY_ACTION" />
+                <action android:name="PREV_ACTION" />
             </intent-filter>
-        </service>
+        </receiver>
 
         <activity android:name=".MainActivity">
             <intent-filter>

@@ -17,6 +17,7 @@ import kotlin.collections.ArrayList
 import android.media.AudioManager
 import android.support.v4.media.session.MediaControllerCompat
 import androidx.core.content.ContextCompat.getSystemService
+import androidx.media.session.MediaButtonReceiver
 
 
 enum class RepeatState { All, One, Stop }
@@ -328,6 +329,12 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
 
     fun setMediaSessonCallback(mediaSessionCallback: MediaSessionCompat.Callback) {
         mediaSession.setCallback(mediaSessionCallback)
+        val mediaButtonIntent = Intent(
+            Intent.ACTION_MEDIA_BUTTON, null, MainActivity.applicationContext(), MediaButtonReceiver::class.java
+        )
+        mediaSession.setMediaButtonReceiver(
+            PendingIntent.getBroadcast(MainActivity.applicationContext(), 0, mediaButtonIntent, 0)
+        )
     }
     fun setMediaControllerCallback(mediaControllerCallback: MediaControllerCompat.Callback) {
         mediaController?.registerCallback(mediaControllerCallback)
