@@ -45,8 +45,7 @@ interface ILYMPModel {
     fun getCurrentSearchTags(): Observable<String>
 }
 
-class LYMPModel(val audioManager: AudioManager) : ILYMPModel, BaseObservable() {
-   // private lateinit var audioManager: AudioManager
+class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObservable() {
     var mediaController: MediaControllerCompat? = null
     private val TAG = "$APP_TAG/model"
     private var currentSong: Song? =
@@ -158,6 +157,7 @@ class LYMPModel(val audioManager: AudioManager) : ILYMPModel, BaseObservable() {
 
     fun setPositionInList(position: Int) {
         currentSongPositionInList = position
+        if (isPlaying) doWithMedia("next")
     }
 
     override fun clearTag() {
@@ -189,10 +189,11 @@ class LYMPModel(val audioManager: AudioManager) : ILYMPModel, BaseObservable() {
                 currentSongPositionInList,
                 shuffleStatus
             )
-            Log.i(
-                TAG, "Next track ${currentSong?.name} / " +
-                        "${currentSong?.tags}"
+            Log.i(TAG, "Next track ${currentSong?.name} / ${currentSong?.tags}"
             )
+            if (isPlaying) {
+                doWithMedia("next")
+            }
         }
     }
 
@@ -203,95 +204,103 @@ class LYMPModel(val audioManager: AudioManager) : ILYMPModel, BaseObservable() {
                 currentSongPositionInList,
                 shuffleStatus
             )
-            Log.i(TAG, "Next track name ${currentSong?.name}")
+            Log.i(TAG, "New track ${currentSong?.name} / ${currentSong?.tags}"
+            )
+            if (isPlaying) {
+                doWithMedia("next")
+            }
+        }
+    }
+
+    private fun prepareTrackForPlayer() {
+        val metadata = metadataBuilder
+//            .putBitmap(
+//                MediaMetadataCompat.METADATA_KEY_ART,
+//                BitmapFactory.decodeResource(resources, track.bitmapResId)
+//            )
+            .putString(MediaMetadataCompat.METADATA_KEY_TITLE, currentSong?.name)
+            .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, currentSong?.name)
+            .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, currentSong?.name)
+            .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, currentSong?.lenght!!.toLong())
+            .build()
+        mediaSession.setMetadata(metadata)
+
+        //Берем аудиофокус
+        val audioFocusResult = audioManager.requestAudioFocus(
+            audioFocusChangeListener,
+            AudioManager.STREAM_MUSIC,
+            AudioManager.AUDIOFOCUS_GAIN
+        )
+        if (audioFocusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
+            return
+
+        // Указываем, что наше приложение теперь активный плеер и кнопки
+        // на окне блокировки должны управлять именно нами
+        mediaSession.isActive = true
+
+        // Загружаем URL аудио-файла в Player
+        exoPlayer =
+            MediaPlayer.create(MainActivity.applicationContext(), Uri.parse(currentSong?.path))
+    }
+
+    private fun doWithMedia(s : String) {
+        when (s) {
+            "play" -> {
+                prepareTrackForPlayer()
+                // Запускаем воспроизведение
+                exoPlayer.start()
+                mediaController?.transportControls?.play()
+                // Сообщаем новое состояние
+                mediaSession.setPlaybackState(
+                    stateBuilder.setState(
+                        PlaybackStateCompat.STATE_PLAYING,
+                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
+                    ).build()
+                )
+                isPlaying = true
+            }
+            "pause" -> {
+                exoPlayer.pause()
+                mediaController?.transportControls?.pause()
+                // Сообщаем новое состояние
+                mediaSession.setPlaybackState(
+                    stateBuilder.setState(
+                        PlaybackStateCompat.STATE_PAUSED,
+                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
+                    ).build())
+                isPlaying = false
+            }
+            "next" -> {
+                exoPlayer.stop()
+                doWithMedia("play")
+            }
+            "stop" -> {
+                // Останавливаем воспроизведение
+                exoPlayer.stop()
+                // Все, больше мы не "главный" плеер, уходим со сцены
+                mediaSession.isActive = false
+                // Сообщаем новое состояние
+                mediaSession.setPlaybackState(
+                    stateBuilder.setState(
+                        PlaybackStateCompat.STATE_STOPPED,
+                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
+                    ).build()
+                )
+            }
         }
     }
 
     fun play() {
         Log.i(TAG, "Play, isPlaying =  $isPlaying")
         if (isPlaying) {
-            exoPlayer.pause()
-            mediaController?.transportControls?.pause()
-            // Сообщаем новое состояние
-            mediaSession.setPlaybackState(
-                stateBuilder.setState(
-                    PlaybackStateCompat.STATE_PAUSED,
-                    PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
-                ).build())
-            isPlaying = false
+            doWithMedia("pause")
         } else {
-            // Заполняем данные о треке
-            //TODO
-            val metadata = metadataBuilder
-//            .putBitmap(
-//                MediaMetadataCompat.METADATA_KEY_ART,
-//                BitmapFactory.decodeResource(resources, track.bitmapResId)
-//            )
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, currentSong?.name)
-                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, currentSong?.name)
-                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, currentSong?.name)
-                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, currentSong?.lenght!!.toLong())
-                .build()
-            mediaSession.setMetadata(metadata)
-
-            //Берем аудиофокус
-            val audioFocusResult = audioManager.requestAudioFocus(
-                audioFocusChangeListener,
-                AudioManager.STREAM_MUSIC,
-                AudioManager.AUDIOFOCUS_GAIN
-            )
-            if (audioFocusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
-                return
-
-            // Указываем, что наше приложение теперь активный плеер и кнопки
-            // на окне блокировки должны управлять именно нами
-            mediaSession.isActive = true
-
-            // Сообщаем новое состояние
-            mediaSession.setPlaybackState(
-                stateBuilder.setState(
-                    PlaybackStateCompat.STATE_PLAYING,
-                    PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
-                ).build()
-            )
-
-            // Загружаем URL аудио-файла в Player
-            exoPlayer =
-                MediaPlayer.create(MainActivity.applicationContext(), Uri.parse(currentSong?.path))
-            // Запускаем воспроизведение
-            exoPlayer.start()
-            mediaController?.transportControls?.play()
-            isPlaying = true
+            doWithMedia("play")
         }
     }
 
-    fun pause() {
-        // Останавливаем воспроизведение
-//        exoPlayer.pause()
-//      //  mediaController?.transportControls?.pause()
-//        // Сообщаем новое состояние
-//        mediaSession.setPlaybackState(
-//            stateBuilder.setState(
-//                PlaybackStateCompat.STATE_PAUSED,
-//                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
-//            ).build()
-        //)
-    }
-
     fun stop() {
-        // Останавливаем воспроизведение
-        exoPlayer.stop()
-
-        // Все, больше мы не "главный" плеер, уходим со сцены
-        mediaSession.isActive = false
-
-        // Сообщаем новое состояние
-        mediaSession.setPlaybackState(
-            stateBuilder.setState(
-                PlaybackStateCompat.STATE_STOPPED,
-                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
-            ).build()
-        )
+        if (isPlaying) doWithMedia("stop")
     }
 
     override fun changeShuffle() {
@@ -301,10 +310,10 @@ class LYMPModel(val audioManager: AudioManager) : ILYMPModel, BaseObservable() {
     }
 
     override fun changeRepeat() {
-        when (repeatStatus) {
-            RepeatState.All -> repeatStatus = RepeatState.One
-            RepeatState.One -> repeatStatus = RepeatState.Stop
-            RepeatState.Stop -> repeatStatus = RepeatState.All
+        repeatStatus = when (repeatStatus) {
+            RepeatState.All -> RepeatState.One
+            RepeatState.One -> RepeatState.Stop
+            RepeatState.Stop -> RepeatState.All
         }
         Log.i(TAG, "Now repeat is $repeatStatus")
     }
@@ -326,7 +335,6 @@ class LYMPModel(val audioManager: AudioManager) : ILYMPModel, BaseObservable() {
     override fun initialize() {
         Log.i(TAG, "initialization")
         mediaSession = MediaSessionCompat(MainActivity.applicationContext(), "LYMPService")
-        //exoPlayer = MediaPlayer.create(MainActivity.applicationContext(), Uri.parse(currentSong?.path))
         // FLAG_HANDLES_MEDIA_BUTTONS - хотим получать события от аппаратных кнопок
         // (например, гарнитуры)
         // FLAG_HANDLES_TRANSPORT_CONTROLS - хотим получать события от кнопок
@@ -346,31 +354,8 @@ class LYMPModel(val audioManager: AudioManager) : ILYMPModel, BaseObservable() {
    mediaController = MediaControllerCompat(
             MainActivity.applicationContext(), getMediaSessionToken()
         )
-//        mediaController!!.registerCallback(
-//            object : MediaControllerCompat.Callback() {
-//                override fun onPlaybackStateChanged(state : PlaybackStateCompat) {
-//                         if (state == null)
-//                             return
-//         //           here
-////                    if (isPlaying)
-////                        playbutton.setImageResource(R.drawable.pause_inbar)
-////                    else
-////                        playbutton.setImageResource(R.drawable.playbutton)
-//                }
-//            }
-//        )
 
         browseFolderForFiles()
-//        helper.clearDataBase()
-//        helper.writeSong(Song(name = "1 track"))
-//        helper.writeSong(Song(name = "2 track"))
-//        helper.writeSong(Song(name = "3 track"))
-//        helper.writeSong(Song(path = "subfolder",name = "1 track"))
-//        helper.writeSong(Song(name = "Русский track"))
-//        helper.writeSong(Song(name = "Еще один track"))
-//        helper.writeSong(Song(name = "Трек с очень-очень длинным именем, прям куда деваться"))
-//        helper.writeSong(Song(name = "Без тегов"))
-//        helper.writeSong(Song(name = "Все теги"))
         createCurrentList()
     }
 
@@ -379,8 +364,6 @@ class LYMPModel(val audioManager: AudioManager) : ILYMPModel, BaseObservable() {
         currentSongsList =
             ArrayList(helper.getSongsFromDBToCurrentSongsList(getListFromString(searchTags)))
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
-
-        //currentSongPositionInList = 0 - при поиске мы не меняем трек, играет/редактируется тот же, что и был.
     }
 
 

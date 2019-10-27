@@ -20,21 +20,13 @@ import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.support.v4.media.session.MediaControllerCompat
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import android.R.attr.name
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import android.R.attr.name
 import android.media.AudioManager
 import android.support.v4.media.session.PlaybackStateCompat
-import android.view.View
-
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "$APP_TAG/view"
-
+    lateinit var viewModel: LYMPViewModel
+    var serv: LYMPService? = null
     private lateinit var tagView: TagView
     private lateinit var searchTagView: TagView
 
@@ -43,7 +35,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var listView: ListView
 
     private lateinit var settings: SharedPreferences
-    var serv: LYMPService? = null
+
     var isBound = false
 
     private val myConnection = object : ServiceConnection {
@@ -70,10 +62,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        //Вызывает вопросы
-        lateinit var viewModel: LYMPViewModel
+        //TODO
+
         //Или передавать контекст при инициализации вьюмодели и модели.
         //По факту он нужен только для БД.
+        //И еще в сервисе. В этом пока проблема.
         var instance: MainActivity? = null
 
         fun applicationContext(): Context {
@@ -82,8 +75,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var receiversRegistered = false
-
-  //  var mediaController: MediaControllerCompat? = null
 
     private fun registerReceivers(contextIn: Context) {
         if (receiversRegistered) return
@@ -106,38 +97,17 @@ class MainActivity : AppCompatActivity() {
         nextbutton.setOnClickListener {
             Log.i(TAG, "next button pressed")
             viewModel.nextPress()
-//            val intent = Intent(this@MainActivity, LYMPService::class.java)
-//            intent.putExtra(EXTRA_COMMAND, ServiceCommand.Next)
-//            startService(intent)
-//            if (viewModel.isPlaying) {
-//                mediaController?.transportControls?.stop()
-//                mediaController?.transportControls?.play()
-//            }
         }
         prevbutton.setOnClickListener {
             Log.i(TAG, "prev button pressed")
-            val intent = Intent(this@MainActivity, LYMPService::class.java)
-            intent.putExtra(EXTRA_COMMAND, ServiceCommand.Prev)
-            startService(intent)
-//            if (viewModel.isPlaying) {
-//                mediaController?.transportControls?.stop()
-//                mediaController?.transportControls?.play()
-//            }
+            viewModel.prevPress()
         }
         playbutton.setOnClickListener {
             viewModel.playPress()
-//            if (!viewModel.isPlaying) {
-//            Log.i(TAG, "play button pressed")
-//            mediaController?.transportControls?.play()}
-//            else {
-//                Log.i(TAG, "pause button pressed")
-//                mediaController?.transportControls?.pause()
-//            }
         }
         stopbutton.setOnClickListener {
             Log.i(TAG, "stop button pressed")
-//            if (viewModel.isPlaying)
-//                mediaController?.transportControls?.stop()
+            viewModel.stopPress()
         }
         shufflebutton.setOnClickListener {
             Log.i(TAG, "shuffle button pressed")
@@ -191,8 +161,6 @@ class MainActivity : AppCompatActivity() {
         }
         current_list.setOnItemClickListener { parent, view, position, id ->
             viewModel.songInListPress(position)
-//            if (viewModel.isPlaying)
-//            mediaController?.transportControls?.play()
         }
     }
 
@@ -351,7 +319,6 @@ class MainActivity : AppCompatActivity() {
 
         val intent = Intent(this@MainActivity, LYMPService::class.java)
         bindService(intent, myConnection, Context.BIND_AUTO_CREATE)
-        intent.putExtra(EXTRA_COMMAND, ServiceCommand.Init)
         startService(intent)
     }
 

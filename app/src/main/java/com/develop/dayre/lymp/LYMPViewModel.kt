@@ -91,10 +91,6 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         Log.i(TAG, "nextPress")
         model.nextSong()
         setCurrentSong()
-//        if (isPlaying) {
-//            model.stop()
-//            model.play()
-//        }
     }
 
     override fun prevPress() {
@@ -113,15 +109,11 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
             model.play()
     }
 
-    fun pausePress() {
-        Log.i(TAG, "pausePress")
-        model.pause()
-    }
-
     fun stopPress() {
         Log.i(TAG, "stopPress")
         model.stop()
     }
+
     fun setMediaSessonCallback(mediaSessionCallback : MediaSessionCompat.Callback) {
         model.setMediaSessonCallback(mediaSessionCallback)
     }

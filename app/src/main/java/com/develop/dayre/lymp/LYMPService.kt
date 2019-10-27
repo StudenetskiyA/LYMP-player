@@ -3,11 +3,8 @@ package com.develop.dayre.lymp
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
-import android.net.Uri
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
@@ -15,24 +12,17 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
 import android.graphics.Color
-import android.media.AudioManager
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.develop.dayre.lymp.ServiceCommand.*
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.Observer
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.media.session.MediaButtonReceiver
-
-const val EXTRA_COMMAND = "EXTRA_COMMAND"
-
-enum class ServiceCommand { Start, Stop, Next, Prev, Init }
 
 class LYMPService : LifecycleService() {
     private val NOTIFICATION_ID = 9999
     private val TAG = "$APP_TAG/service"
-//    private lateinit var audioManager: AudioManager
+    private val viewModel = MainActivity.instance?.viewModel!!
 
     override fun onBind(intent: Intent): IBinder? {
         super.onBind(intent)
@@ -45,67 +35,22 @@ class LYMPService : LifecycleService() {
         }
     }
 
-    private fun initService() {
-        Log.i(TAG, "Try to init service")
-       //     val   audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        MainActivity.viewModel.setMediaSessonCallback(mediaSessionCallback)
-//        val mediaButtonIntent = Intent(Intent.ACTION_MEDIA_BUTTON, null, applicationContext, MediaButtonReceiver::class.java)
-//        MainActivity.viewModel.getMediaSession().setMediaButtonReceiver(PendingIntent.getBroadcast(applicationContext, 0, mediaButtonIntent, 0))
-        createObservers()
-    }
-
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-
-        val command = intent.getSerializableExtra(EXTRA_COMMAND) as ServiceCommand
-
-        //Proceed command
-        Log.i(APP_TAG, "command = $command")
-        when (command) {
-            Init -> {
-                initService()
-            }
-            Stop -> {
-                stop()
-            }
-            Start -> {
-                play()
-            }
-            Next -> {
-                //next()
-            }
-            Prev -> {
-                prev()
-            }
-        }
+        Log.i(TAG, "Init service")
+        viewModel.setMediaSessonCallback(mediaSessionCallback)
+        createObservers()
         return START_STICKY
     }
 
-//    private fun next() {
-//        MainActivity.viewModel.nextPress()
-//    }
-
-    private fun prev() {
-        MainActivity.viewModel.prevPress()
-    }
-
-    private fun play() {
-
-    }
-
-    private fun stop() {
-
-    }
-
     private fun createObservers() {
-        //TODO Observe play status to change play/pause icon
-        MainActivity.viewModel.currentSong.observe(this,
+        viewModel.currentSong.observe(this,
             Observer<Song> {
                 Log.i(TAG, "current song updated")
                 val settings = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE)
                 settings.edit().putString(
                     APP_PREFERENCES_SELECT_SONG,
-                    MainActivity.viewModel.currentSong.value?.ID.toString()
+                    viewModel.currentSong.value?.ID.toString()
                 ).apply()
             })
     }
@@ -154,7 +99,7 @@ class LYMPService : LifecycleService() {
                 ""
             }
 
-        val builder = MediaStyleHelperFrom(this, MainActivity.viewModel.getMediaSession())
+        val builder = MediaStyleHelperFrom(this, viewModel.getMediaSession())
 
         // Добавляем кнопки
         // ...на предыдущий трек
@@ -222,7 +167,7 @@ class LYMPService : LifecycleService() {
                 )
                 // Передаем токен. Это важно для Android Wear. Если токен не передать,
                 // кнопка на Android Wear будет отображаться, но не будет ничего делать
-                .setMediaSession(MainActivity.viewModel.getMediaSessionToken())
+                .setMediaSession(viewModel.getMediaSessionToken())
         )
 
         builder.setSmallIcon(R.mipmap.ic_launcher)
@@ -251,27 +196,23 @@ class LYMPService : LifecycleService() {
 
             override fun onPause() {
                 Log.i(TAG, "callback onPause")
-               // MainActivity.viewModel.pausePress()
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PAUSED)
             }
 
             override fun onStop() {
                 Log.i(TAG, "callback onStop")
-                //audioManager.abandonAudioFocus(audioFocusChangeListener)
-               // MainActivity.viewModel.stopPress()
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_STOPPED)
             }
 
             override fun onSkipToNext() {
-              //  MainActivity.viewModel.nextPress()
+                Log.i(TAG, "callback onNext")
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
             }
 
             override fun onSkipToPrevious() {
-              //  MainActivity.viewModel.prevPress()
+                Log.i(TAG, "callback onPrev")
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
             }
         }
-
 
 }
