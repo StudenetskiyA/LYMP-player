@@ -197,13 +197,14 @@ class LYMPService : LifecycleService() {
             //model.callBackAwaited - ужасный костыль, но иначе приходится либо размещать здесь логику
             //Либо происходят MediaButton не будут обрабатываться.
             override fun onPlay() {
+                toast("${viewModel.getCallBackAwaited()}")
                 Log.i(TAG, "callback onPlay")
                 if (!viewModel.getCallBackAwaited()) viewModel.playPress()
                 else viewModel.setCallBackAwaited(false)
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
             }
-
             override fun onPause() {
+                toast("${viewModel.getCallBackAwaited()}")
                 Log.i(TAG, "callback onPause")
                 if (!viewModel.getCallBackAwaited()) viewModel.playPress()
                 else viewModel.setCallBackAwaited(false)
@@ -211,6 +212,7 @@ class LYMPService : LifecycleService() {
             }
 
             override fun onStop() {
+                toast("${viewModel.getCallBackAwaited()}")
                 Log.i(TAG, "callback onStop")
                 if (!viewModel.getCallBackAwaited()) viewModel.stopPress()
                 else viewModel.setCallBackAwaited(false)
@@ -218,16 +220,20 @@ class LYMPService : LifecycleService() {
             }
 
             override fun onSkipToNext() {
+                //Мы не бросаем событие PlaybackStateCompat.STATE_SKIPPING_TO_NEXT
+                //Поэтому проверка не нужна. Если начнем - надо добавить.
                 Log.i(TAG, "callback onNext")
-                if (!viewModel.getCallBackAwaited()) viewModel.nextPress()
-                else viewModel.setCallBackAwaited(false)
+                viewModel.nextPress()
+                viewModel.playPress()
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
             }
 
             override fun onSkipToPrevious() {
+                //Мы не бросаем событие PlaybackStateCompat.STATE_SKIPPING_TO_NEXT
+                //Поэтому проверка не нужна. Если начнем - надо добавить.
                 Log.i(TAG, "callback onPrev")
-                if (!viewModel.getCallBackAwaited()) viewModel.prevPress()
-                else viewModel.setCallBackAwaited(false)
+                viewModel.prevPress()
+                viewModel.playPress()
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
             }
         }

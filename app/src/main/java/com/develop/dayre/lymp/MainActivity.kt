@@ -22,15 +22,7 @@ import androidx.core.content.ContextCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.media.AudioManager
 import android.support.v4.media.session.PlaybackStateCompat
-import android.app.PendingIntent
-import androidx.media.session.MediaButtonReceiver
 import android.content.Intent
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import android.R.attr.name
-
-
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "$APP_TAG/view"
@@ -83,26 +75,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private var receiversRegistered = false
-
-    private fun registerReceivers(contextIn: Context) {
-        if (receiversRegistered) return
-
-        val context = contextIn.applicationContext
-        val receiver = NotificationReceiver()
-
-        val providerChanged = IntentFilter()
-        providerChanged.addAction("NEXT_ACTION")
-        context.registerReceiver(receiver, providerChanged)
-
-        val userPresent = IntentFilter()
-        userPresent.addAction("android.intent.action.USER_PRESENT")
-        context.registerReceiver(receiver, userPresent)
-
-
-
-        receiversRegistered = true
-    }
+//    private var receiversRegistered = false
+//
+//    private fun registerReceivers(contextIn: Context) {
+//        if (receiversRegistered) return
+//
+//        val context = contextIn.applicationContext
+//        val receiver = NotificationReceiver()
+//
+//        val providerChanged = IntentFilter()
+//        providerChanged.addAction("NEXT_ACTION")
+//        context.registerReceiver(receiver, providerChanged)
+//
+//        val userPresent = IntentFilter()
+//        userPresent.addAction("android.intent.action.USER_PRESENT")
+//        context.registerReceiver(receiver, userPresent)
+//
+//
+//
+//        receiversRegistered = true
+//    }
 
     private fun createControl() {
         nextbutton.setOnClickListener {
@@ -254,7 +246,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         Log.i(TAG, "onResume")
-        registerReceivers(this)
+        //registerReceivers(this)
         readSettings()
     }
 
@@ -324,7 +316,7 @@ class MainActivity : AppCompatActivity() {
        // viewModel.startModel()
 
         //Нужно в Андроид 7+, запись в манифесте больше не работает.
-        registerReceivers(this)
+     //   registerReceivers(this)
 
         readSettings()
 
