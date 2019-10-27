@@ -18,6 +18,9 @@ import android.media.AudioManager
 import android.support.v4.media.session.MediaControllerCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.media.session.MediaButtonReceiver
+import android.content.ComponentName
+
+
 
 
 enum class RepeatState { All, One, Stop }
@@ -47,7 +50,8 @@ interface ILYMPModel {
 }
 
 class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObservable() {
-    var mediaController: MediaControllerCompat? = null
+    var callBackAwaited : Boolean = false
+    private var mediaController: MediaControllerCompat? = null
     private val TAG = "$APP_TAG/model"
     private var currentSong: Song? =
         Song() //У нас бывают ситуации, когда текущий трек не в текущем листе.
@@ -76,7 +80,6 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
     override fun getRepeatStatus(): RepeatState {
         return repeatStatus
     }
-
 
     override fun getAllTags(): String {
         return "rock; pop; techno; jazz; superjazz; technojazz; вскрытие души; оптимально для суицида; осень; дорога"
@@ -234,6 +237,9 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
             AudioManager.STREAM_MUSIC,
             AudioManager.AUDIOFOCUS_GAIN
         )
+//        val mRemoteControlResponder =
+//            ComponentName(MainActivity.applicationContext().packageName, RemoteControl::class.java!!.name)
+//        audioManager.registerMediaButtonEventReceiver(mRemoteControlResponder)
         if (audioFocusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
             return
 
@@ -247,6 +253,7 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
     }
 
     private fun doWithMedia(s: String) {
+        callBackAwaited = true
         when (s) {
             "play" -> {
                 prepareTrackForPlayer()
@@ -332,6 +339,9 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
 
     fun setMediaSessonCallback(mediaSessionCallback: MediaSessionCompat.Callback) {
         mediaSession.setCallback(mediaSessionCallback)
+//        val mRemoteControlResponder =
+//            ComponentName(MainActivity.applicationContext().packageName, RemoteControl::class.java!!.name)
+//        audioManager.registerMediaButtonEventReceiver(mRemoteControlResponder)
     }
 
     fun setMediaControllerCallback(mediaControllerCallback: MediaControllerCompat.Callback) {
@@ -379,6 +389,8 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
             ArrayList(helper.getSongsFromDBToCurrentSongsList(getListFromString(searchTags)))
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
     }
+
+
 
 
     // Закешируем билдеры

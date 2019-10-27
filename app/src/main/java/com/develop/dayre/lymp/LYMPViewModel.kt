@@ -104,6 +104,12 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         model.clearTag()
     }
 
+    fun getCallBackAwaited() : Boolean {
+        return model.callBackAwaited
+    }
+    fun setCallBackAwaited(value :Boolean) {
+        model.callBackAwaited = value
+    }
     override fun playPress() {
         Log.i(TAG, "playPress")
             model.play()

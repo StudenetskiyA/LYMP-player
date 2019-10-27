@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat
 import android.graphics.Color
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.Observer
 import androidx.core.content.ContextCompat
@@ -80,10 +81,10 @@ class LYMPService : LifecycleService() {
             PlaybackStateCompat.STATE_PAUSED -> {
                 // На паузе мы перестаем быть foreground, однако оставляем уведомление,
                 // чтобы пользователь мог play нажать
-//                NotificationManagerCompat.from(this@LYMPService)
-//                    .notify(NOTIFICATION_ID, getNotification(playbackState))
-//                stopForeground(false)
-                startForeground(NOTIFICATION_ID, getNotification(playbackState))
+                NotificationManagerCompat.from(this@LYMPService)
+                    .notify(NOTIFICATION_ID, getNotification(playbackState))
+                stopForeground(false)
+               // startForeground(NOTIFICATION_ID, getNotification(playbackState))
             }
             else -> {
                 // Все, можно прятать уведомление
@@ -193,28 +194,40 @@ class LYMPService : LifecycleService() {
 
     private var mediaSessionCallback: MediaSessionCompat.Callback =
         object : MediaSessionCompat.Callback() {
+            //model.callBackAwaited - ужасный костыль, но иначе приходится либо размещать здесь логику
+            //Либо происходят MediaButton не будут обрабатываться.
             override fun onPlay() {
                 Log.i(TAG, "callback onPlay")
+                if (!viewModel.getCallBackAwaited()) viewModel.playPress()
+                else viewModel.setCallBackAwaited(false)
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
             }
 
             override fun onPause() {
                 Log.i(TAG, "callback onPause")
+                if (!viewModel.getCallBackAwaited()) viewModel.playPress()
+                else viewModel.setCallBackAwaited(false)
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PAUSED)
             }
 
             override fun onStop() {
                 Log.i(TAG, "callback onStop")
+                if (!viewModel.getCallBackAwaited()) viewModel.stopPress()
+                else viewModel.setCallBackAwaited(false)
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_STOPPED)
             }
 
             override fun onSkipToNext() {
                 Log.i(TAG, "callback onNext")
+                if (!viewModel.getCallBackAwaited()) viewModel.nextPress()
+                else viewModel.setCallBackAwaited(false)
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
             }
 
             override fun onSkipToPrevious() {
                 Log.i(TAG, "callback onPrev")
+                if (!viewModel.getCallBackAwaited()) viewModel.prevPress()
+                else viewModel.setCallBackAwaited(false)
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
             }
         }

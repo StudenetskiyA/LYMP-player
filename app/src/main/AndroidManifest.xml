@@ -21,13 +21,6 @@
         <service
             android:name=".LYMPService"
             android:enabled="true" />
-        <receiver android:name="com.develop.dayre.lymp.NotificationReceiver">
-            <intent-filter>
-                <action android:name="NEXT_ACTION" />
-                <action android:name="PLAY_ACTION" />
-                <action android:name="PREV_ACTION" />
-            </intent-filter>
-        </receiver>
 
         <activity android:name=".MainActivity">
             <intent-filter>
