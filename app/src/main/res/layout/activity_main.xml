@@ -10,6 +10,9 @@
         <variable
             name="viewmodel"
             type="com.develop.dayre.lymp.LYMPViewModel" />
+        <variable
+            name="model"
+            type="com.develop.dayre.lymp.LYMPModel" />
     </data>
 
     <LinearLayout
@@ -47,6 +50,8 @@
                         android:layout_centerVertical="true"
                         android:layout_marginStart="10dp"
                         android:text="Не выбран трек."
+                        android:singleLine="true"
+                        android:textStyle="bold|italic"
                         android:textSize="@dimen/big_font_size" />
 
                     <ImageButton
@@ -307,7 +312,7 @@
                         android:layout_marginLeft="5dp"
                         android:layout_marginTop="5dp"
                         android:layout_marginRight="5dp"
-                        android:layout_marginBottom="1dp" />
+                        android:layout_marginBottom="1dp"/>
 
                     <RelativeLayout
                         android:id="@+id/button_bar"

@@ -26,10 +26,15 @@ import android.media.AudioManager
 import android.support.v4.media.session.PlaybackStateCompat
 import android.content.Intent
 import android.os.Handler
+import android.os.SystemClock
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.SeekBar
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "$APP_TAG/view"
@@ -41,9 +46,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: SongListAdapter
     private lateinit var listView: ListView
+    private lateinit var seekBar: SeekBar
 
     private lateinit var settings: SharedPreferences
-
+    private lateinit var mLastPlaybackState : PlaybackStateCompat
     var isBound = false
 
     private val myConnection = object : ServiceConnection {
@@ -216,6 +222,7 @@ class MainActivity : AppCompatActivity() {
         listView = findViewById(R.id.current_list)
         tagView = findViewById(R.id.current_track_tags)
         searchTagView = findViewById(R.id.search_track_tags)
+        seekBar = findViewById(R.id.seek_bar)
     }
 
     private fun createObservers() {
@@ -274,6 +281,9 @@ class MainActivity : AppCompatActivity() {
         viewModel.setMediaControllerCallback(object : MediaControllerCompat.Callback() {
             override fun onPlaybackStateChanged(state: PlaybackStateCompat) {
                 Log.i(TAG, "PlayState changed.")
+                mLastPlaybackState = state
+                scheduleSeekbarUpdate()
+                Log.i(TAG, "Position = ${state.position}")
                 if (state.state == PlaybackStateCompat.STATE_PLAYING)
                     playbutton.setImageResource(R.drawable.pause_inbar)
                 else
@@ -419,5 +429,39 @@ class MainActivity : AppCompatActivity() {
         viewModel.newSearch(search)
     }
 
+    private fun updateProgress() {
+        var currentPosition = mLastPlaybackState.position
+        if (mLastPlaybackState.state == PlaybackStateCompat.STATE_PLAYING) {
+            val timeDelta = SystemClock.elapsedRealtime() -
+                    mLastPlaybackState.lastPositionUpdateTime
+            currentPosition +=  (timeDelta * mLastPlaybackState.playbackSpeed).toLong()
+        }
+        seekBar.max = viewModel.getCurrentTrackDuration()
+        seekBar.progress =  currentPosition.toInt()
+      //  Log.i(TAG, "Update seekbar ${currentPosition.toInt()} / ${viewModel.getCurrentTrackDuration()}")
+    }
 
+    fun scheduleSeekbarUpdate() {
+        stopSeekbarUpdate()
+        if (!mExecutorService.isShutdown) {
+            mScheduleFuture = mExecutorService.scheduleAtFixedRate(
+                {
+                        mHandler.post {updateProgress()}
+                }, PROGRESS_UPDATE_INITIAL_INTERVAL,
+                    PROGRESS_UPDATE_INTERNAL, TimeUnit.MILLISECONDS)
+        }
+    }
+
+     private fun stopSeekbarUpdate() {
+        if (mScheduleFuture != null) {
+            mScheduleFuture!!.cancel(false)
+        }
+    }
+
+    private val mHandler = Handler()
+
+    private val mExecutorService =
+        Executors.newSingleThreadScheduledExecutor()
+
+    private var mScheduleFuture:ScheduledFuture<*>? = null
 }

@@ -73,6 +73,10 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         model.testAction()
     }
 
+    fun getCurrentTrackDuration() : Int{
+        return model.duration.get()!!
+    }
+
     override fun currentSongEdit(song: Song) {
         model.saveSongToDB(song)
         setCurrentSong()
@@ -104,7 +108,7 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         model.clearTag()
     }
 
-    fun getIsPlaying() : Boolean {
+    fun getIsPlaying() : PlayState {
         return model.isPlaying
     }
     fun getCallBackAwaited() : Boolean {

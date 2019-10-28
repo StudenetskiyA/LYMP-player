@@ -19,8 +19,7 @@ import android.support.v4.media.session.MediaControllerCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.media.session.MediaButtonReceiver
 import android.content.ComponentName
-
-
+import androidx.databinding.ObservableField
 
 
 enum class RepeatState { All, One, Stop }
@@ -49,7 +48,8 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         }
     lateinit var mediaSession: MediaSessionCompat
     private lateinit var exoPlayer: MediaPlayer
-    var isPlaying = false
+    val duration = ObservableField<Int>()
+    var isPlaying = PlayState.Stop
     var allTags = ""
 
     //Методы для обсерверов
@@ -141,7 +141,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
 
     fun setPositionInList(position: Int) {
         currentSongPositionInList = position
-        if (isPlaying) doWithMedia("next")
+        if (isPlaying==PlayState.Play) doWithMedia("next")
     }
 
      fun clearTag() {
@@ -176,9 +176,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             Log.i(
                 TAG, "Next track ${currentSong?.name} / ${currentSong?.tags}"
             )
-            if (isPlaying) {
                 doWithMedia("next")
-            }
         }
     }
 
@@ -192,10 +190,13 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             Log.i(
                 TAG, "New track ${currentSong?.name} / ${currentSong?.tags}"
             )
-            if (isPlaying) {
+
                 doWithMedia("next")
-            }
         }
+    }
+
+    private fun prepareTrackLoadToPlayer() {
+
     }
 
     private fun prepareTrackForPlayer() {
@@ -210,7 +211,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, currentSong?.lenght!!.toLong())
             .build()
         mediaSession.setMetadata(metadata)
-
         //Берем аудиофокус
         val audioFocusResult = audioManager.requestAudioFocus(
             audioFocusChangeListener,
@@ -236,18 +236,21 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         callBackAwaited = true
         when (s) {
             "play" -> {
-                prepareTrackForPlayer()
+                if (isPlaying!=PlayState.Pause)
+                    prepareTrackForPlayer()
+                        //  prepareTrackLoadToPlayer()
                 // Запускаем воспроизведение
                 exoPlayer.start()
+                duration.set(exoPlayer.duration)
                 mediaController?.transportControls?.play()
                 // Сообщаем новое состояние
                 mediaSession.setPlaybackState(
                     stateBuilder.setState(
                         PlaybackStateCompat.STATE_PLAYING,
-                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
+                        exoPlayer.currentPosition.toLong(), 1f
                     ).build()
                 )
-                isPlaying = true
+                isPlaying = PlayState.Play
             }
             "pause" -> {
                 exoPlayer.pause()
@@ -256,25 +259,45 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
                 mediaSession.setPlaybackState(
                     stateBuilder.setState(
                         PlaybackStateCompat.STATE_PAUSED,
-                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
+                        exoPlayer.currentPosition.toLong(), 1f
                     ).build()
                 )
-                isPlaying = false
+                isPlaying = PlayState.Pause
             }
             "next" -> {
                 exoPlayer.stop()
-                doWithMedia("play")
+                if (isPlaying==PlayState.Pause || isPlaying == PlayState.Stop) {
+                    Log.i(TAG, "next/here")
+                    //Новый файл не загружаем в плеер,
+                    prepareTrackForPlayer()
+                    //Если на паузе мы меняем трек - новый не запускается, прогресс старого сбрасывается.
+                    isPlaying = PlayState.Stop
+                    // Сообщаем новое состояние
+                    mediaController?.transportControls?.skipToNext()
+                    mediaSession.setPlaybackState(
+                        stateBuilder.setState(
+                            PlaybackStateCompat.STATE_SKIPPING_TO_NEXT,
+                            0, 1f
+                        ).build()
+                    )
+                    //mediaSession.isActive = false
+                }
+                else {
+                    isPlaying = PlayState.Stop
+                    doWithMedia("play")
+                }
             }
             "stop" -> {
                 // Останавливаем воспроизведение
                 exoPlayer.stop()
+                isPlaying = PlayState.Stop
                 // Все, больше мы не "главный" плеер, уходим со сцены
                 mediaSession.isActive = false
                 // Сообщаем новое состояние
                 mediaSession.setPlaybackState(
                     stateBuilder.setState(
                         PlaybackStateCompat.STATE_STOPPED,
-                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1f
+                        0, 1f
                     ).build()
                 )
             }
@@ -283,7 +306,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
 
     fun play() {
         Log.i(TAG, "Play, isPlaying =  $isPlaying")
-        if (isPlaying) {
+        if (isPlaying==PlayState.Play) {
             doWithMedia("pause")
         } else {
             doWithMedia("play")
@@ -291,7 +314,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     }
 
     fun stop() {
-        if (isPlaying) doWithMedia("stop")
+        if (isPlaying!=PlayState.Stop) doWithMedia("stop")
     }
 
      fun changeShuffle() {

@@ -7,5 +7,7 @@ const val APP_PREFERENCES = "mysettings"
 const val APP_PREFERENCES_SELECT_SONG = "selectsong"
 const val APP_PREFERENCES_CURRENT_SEARCH = "currentsearch"
 const val APP_PREFERENCES_ALL_TAGS = "alltags"
+const val PROGRESS_UPDATE_INTERNAL: Long = 1000
+const val PROGRESS_UPDATE_INITIAL_INTERVAL: Long = 100
 
 
