@@ -21,24 +21,16 @@ class RealmHelper(context: Context) {
     }
 
     fun writeSong(song: Song) {
-        if (getSongByPath(song.path)!=null)
         realm.executeTransaction {
             realm.insertOrUpdate(song)
         }
-        else {
-            val lastID = getLastID()
-            song.ID=lastID+1
-            realm.executeTransaction {
-                realm.insertOrUpdate(song)
-            }
-        }
     }
 
-    private fun getLastID():Long {
-        return if ( realm.where(Song::class.java).count()!=0.toLong()) {
-            realm.where(Song::class.java).max("ID").toLong()
-        } else 0
-    }
+//    private fun getLastID():Long {
+//        return if ( realm.where(Song::class.java).count()!=0.toLong()) {
+//            realm.where(Song::class.java).max("ID").toLong()
+//        } else 0
+//    }
 
     fun getSongsFromDBToCurrentSongsList(
         tags: List<String>,
@@ -52,7 +44,9 @@ class RealmHelper(context: Context) {
                     it.tags.split(SPACE_IN_LINK).intersect(tags.asIterable()).isNotEmpty()
                 }
             else
-                getAllSongsFileExist().filter { it.tags.split(SPACE_IN_LINK).toMutableList().containsAll(tags) }
+                getAllSongsFileExist().filter {
+                    it.tags.split(SPACE_IN_LINK).toMutableList().containsAll(tags)
+                }
         } else getAllSongsFileExist()
 
         result = result?.filter { it.name.contains(searchName) }
@@ -73,7 +67,7 @@ class RealmHelper(context: Context) {
         return ArrayList<Song>()
     }
 
-     fun getAllSongsFileExist(): ArrayList<Song> {
+    fun getAllSongsFileExist(): ArrayList<Song> {
         val result = ArrayList<Song>()
 
         val resultRealm = realm.where(Song::class.java).equalTo("isFileExist", true).findAll()
@@ -96,7 +90,7 @@ class RealmHelper(context: Context) {
         else null
     }
 
-    fun getSongByID(songID: Long): Song? {
+    fun getSongByID(songID: String): Song? {
         return if (realm.where(Song::class.java).equalTo("ID", songID).count() > 0)
             realm.where(Song::class.java).equalTo("ID", songID).findFirst()
         else null
@@ -108,7 +102,7 @@ class RealmHelper(context: Context) {
         Realm.init(context)
         val config = RealmConfiguration.Builder()
             .name("lymp.realm")
-            .schemaVersion(3)
+            .schemaVersion(4)
             .deleteRealmIfMigrationNeeded() // todo remove for production
             .build()
         Realm.setDefaultConfiguration(config)

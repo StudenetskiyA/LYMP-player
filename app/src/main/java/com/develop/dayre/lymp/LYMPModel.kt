@@ -111,7 +111,9 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
         val allFiles = getFilesListInFolderAndSubFolder(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "mp3"
         )
+        Log.i(TAG,"/browse - File found ${allFiles.size}")
         val allRecord = helper.getAllSongsFileExist()
+        Log.i(TAG,"/browse - Record with isExist found ${allRecord.size}")
         //Проверяем, каких файлов больше физически нет и помечаем их как отсутствующие, из базы не удаляем.
         for (r in allRecord) {
             if (!allFiles.contains(r.path)) {
@@ -123,20 +125,22 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
         }
         //Проверяем, каких нет в базе или они помечены isFileExist=false и добавляем их.
         for (f in allFiles) {
-            val s = helper.getSongByPath(f)
+            val s = helper.getSongByID(getHashFromNameAndSize(f.getNameFromPath(), getFileSize(f)))
             if (s == null) {
                 newSongFound++
-                helper.writeSong(Song(name = f.getNameFromPath(), path = f))
+                helper.writeSong(Song(ID = getHashFromNameAndSize(f.getNameFromPath(), getFileSize(f)), name = f.getNameFromPath(), path = f, isFileExist = true))
             }
             if (s != null && !s.isFileExist) {
                 songsRestored++
                 s.isFileExist = true
+                s.path = f
                 helper.writeSong(s)
             }
         }
         //И уведомление с результатами
         //Вообще, наверное, не правильно в модели использовать контекст активити. Но пока сделаю так.
         // if (songsRestored!=0 || newSongFound!=0 || deletedSong!=0)
+        Log.i(TAG,"Новых песен найдено - $newSongFound \r\nУдалено песен - $deletedSong \r\nВосстановленно удаленных - $songsRestored")
         MainActivity.applicationContext()
             .toast("Новых песен найдено - $newSongFound \r\nУдалено песен - $deletedSong \r\nВосстановленно удаленных - $songsRestored")
         //  return Observable.just(true).delay(5, TimeUnit.SECONDS)
@@ -151,7 +155,7 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
         }
     }
 
-    fun setCurrentSongByID(songID: Long) {
+    fun setCurrentSongByID(songID: String) {
         val s = helper.getSongByID(songID)
         if (s != null && currentSongsList.contains(s)) {
             currentSong = s

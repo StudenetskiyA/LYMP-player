@@ -18,7 +18,7 @@ class RealmTests {
     private val tag = "$APP_TAG/tests"
     private var realm : Realm
     private var helper : RealmHelper
-    private val data = Song(1,"", "TestName", 100, 2, "rock" )
+    private val data = Song("1","", "TestName", 100, 2, "rock" )
 
     init {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
@@ -72,11 +72,11 @@ class RealmTests {
         assertNull(result)
     }
 
-//    @Test
-//    fun printAllBase() {
-//        val dataRead = realm.where(Song::class.java).findAll()
-//        for (data in  dataRead) {
-//            Log.i(tag, data.toString())
-//        }
-//    }
+    @Test
+    fun printAllBase() {
+        val dataRead = realm.where(Song::class.java).findAll()
+        for (data in  dataRead) {
+            Log.i(tag, data.toString())
+        }
+    }
 }

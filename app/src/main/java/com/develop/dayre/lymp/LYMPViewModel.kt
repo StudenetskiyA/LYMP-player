@@ -182,7 +182,7 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     }
 
     //Используется для выбора песни не из текущего листа. Например, при загрузке из настроек.
-    fun songSelectByID(songID: Long) {
+    fun songSelectByID(songID: String) {
         model.setCurrentSongByID(songID)
         setCurrentSong()
     }

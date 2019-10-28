@@ -1,10 +1,19 @@
 package com.develop.dayre.lymp
 
 import android.content.Context
-import android.util.Log
 import android.view.Gravity
 import android.widget.Toast
 import java.io.File
+import org.apache.commons.codec.digest.DigestUtils
+
+fun getHashFromNameAndSize(name: String, size : Long) : String{
+    return DigestUtils.md5Hex("$name , $size")
+}
+
+fun getFileSize(path : String) : Long {
+    val file = File(path)
+    return file.length()
+}
 
 // This is an extension method for easy Toast call
 fun Context.toast(message: CharSequence) {

@@ -9,7 +9,7 @@ class SongOrNull(var song:Song, var isNull:Boolean=false)
 @RealmClass
 open class Song(
     @PrimaryKey
-    var ID : Long = 0,
+    var ID : String = "0", //md5-hash from name without extension and size
     var path : String = "", //Полный путь, включая имя и расширение
     var name : String = "no name",
     var lenght : Int = 0,

@@ -24,4 +24,32 @@ class FileWorkTests {
             Log.i(TAG, "Нет доступа к директории.")
         }
     }
+
+    @Test
+    fun getFileSizeTest() {
+        val f = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
+        Log.i(TAG, "browse folder ${f.canonicalPath}, exist = ${f.exists()}, canRead = ${f.canRead()}")
+
+        if (f.exists() && f.isDirectory && f.canRead()) {
+            val find = getFilesListInFolderAndSubFolder(f,"mp3")
+            for (i in find)
+                Log.i(TAG, "$i , size = ${getFileSize(i)}")
+        } else {
+            Log.i(TAG, "Нет доступа к директории.")
+        }
+    }
+
+    @Test
+    fun getHashFromNameAndSizeTest() {
+        val f = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
+        Log.i(TAG, "browse folder ${f.canonicalPath}, exist = ${f.exists()}, canRead = ${f.canRead()}")
+
+        if (f.exists() && f.isDirectory && f.canRead()) {
+            val find = getFilesListInFolderAndSubFolder(f,"mp3")
+            for (i in find)
+                Log.i(TAG, "$i , hash = ${getHashFromNameAndSize(i,getFileSize(i))}")
+        } else {
+            Log.i(TAG, "Нет доступа к директории.")
+        }
+    }
 }

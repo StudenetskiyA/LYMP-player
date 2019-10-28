@@ -340,7 +340,7 @@ class MainActivity : AppCompatActivity() {
     private fun readSettings() {
         if (settings.contains(APP_PREFERENCES_SELECT_SONG)) {
             val t = settings.getString(APP_PREFERENCES_SELECT_SONG, "0")
-            viewModel.songSelectByID(t.toLong())
+            viewModel.songSelectByID(t)
         }
         var search = ""
         if (settings.contains(APP_PREFERENCES_CURRENT_SEARCH)) {
