@@ -65,7 +65,7 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     }
 
     fun getAllTags(): String {
-        return model.getAllTags()
+        return model.allTags
     }
 
     override fun testPress() {
@@ -290,5 +290,9 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     }
     fun getMediaSession() : MediaSessionCompat{
         return model.mediaSession
+    }
+
+    fun setAllTagsFromSettings(t: String) {
+        model.setAllTagsFromSettings(t)
     }
 }

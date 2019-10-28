@@ -111,11 +111,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
-
-                        android:rating="1"
-                        android:stepSize="1"
-                        android:visibility="gone" />
-                    <!--            android:numStars="@{viewmodel.getCurrentSong().rating}"-->
+                        android:numStars="@{viewmodel.getCurrentSong().rating}"
+                        android:stepSize="1" />
+                    <!--            -->
 
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -123,7 +121,7 @@
                         android:orientation="horizontal">
 
                         <ImageButton
-                            android:id="@+id/addtag"
+                            android:id="@+id/addnewtagbutton"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentStart="true"
@@ -134,7 +132,7 @@
                             android:id="@+id/deltag"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_toRightOf="@id/addtag"
+                            android:layout_toRightOf="@id/addnewtagbutton"
                             android:background="@android:color/transparent"
                             android:src="@drawable/deltag" />
 
@@ -199,7 +197,8 @@
                             android:id="@+id/fast_search_bar"
                             android:layout_height="wrap_content"
                             android:layout_width="match_parent"
-                            android:orientation="horizontal">
+                            android:orientation="horizontal"
+                            android:visibility="gone">
                             <ImageButton
                                 android:id="@+id/clear_search_button"
                                 android:layout_width="@dimen/medium_button_size"

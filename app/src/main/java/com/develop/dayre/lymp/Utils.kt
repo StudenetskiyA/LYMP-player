@@ -1,7 +1,15 @@
 package com.develop.dayre.lymp
 
+import android.app.Activity
 import android.content.Context
+import android.content.res.Resources
+import android.os.Handler
+import android.provider.Settings.System.getString
 import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.Toast
 import java.io.File
 import org.apache.commons.codec.digest.DigestUtils
@@ -98,5 +106,39 @@ fun getPrevPositionInList(shuffledList: ArrayList<Int>, currentPosition: Int, sh
         } else {
             shuffledList[cp-1]
         }
+    }
+}
+
+object UIHelper {
+
+    fun hideSoftKeyboard(activity: Activity?) {
+        if (activity != null) {
+            val inputManager =
+                activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            if (activity.currentFocus != null) {
+                inputManager.hideSoftInputFromWindow(activity.currentFocus!!.windowToken, 0)
+                inputManager.hideSoftInputFromInputMethod(
+                    activity.currentFocus!!.windowToken,
+                    0
+                )
+            }
+        }
+    }
+
+    fun hideSoftKeyboard(view: View?) {
+        if (view != null) {
+            val inputManager =
+                view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            inputManager.hideSoftInputFromWindow(view.windowToken, 0)
+        }
+    }
+
+    fun showKeyboard(activityContext: Context, editText: EditText) {
+        editText.requestFocus()
+        Handler().postDelayed({
+            val inputMethodManager =
+                activityContext.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            inputMethodManager.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT)
+        }, 50)
     }
 }

@@ -11,4 +11,8 @@
     <string name="next">Следующий </string>
     <string name="play">Плей </string>
     <string name="pause">Пауза </string>
+    <string name="validation_empty">Некорректный ввод </string>
+    <string name="enter_new_tag">Создание нового тега</string>
+    <string name="enter_new_tag_message">Введите название нового тега.</string>
+
 </resources>

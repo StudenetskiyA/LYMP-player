@@ -28,28 +28,7 @@ enum class PlayState { Play, Stop, Pause }
 enum class SortState { ByName, ByAdded, ByListened }
 enum class TagsFlag { Or, And }
 
-interface ILYMPModel {
-    fun initialize()
-
-    fun newSearch(tags: String): Observable<ArrayList<Song>>
-
-    fun saveSongToDB(song: Song)
-    fun nextSong()
-    fun prevSong()
-    fun changeShuffle()
-    fun changeRepeat()
-    fun clearTag()
-
-    fun testAction()
-    fun getCurrentSong(): Observable<SongOrNull>
-    fun getCurrentSongsList(): ArrayList<Song>
-    fun getAllTags(): String
-    fun getShuffleStatus(): Boolean
-    fun getRepeatStatus(): RepeatState
-    fun getCurrentSearchTags(): Observable<String>
-}
-
-class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObservable() {
+class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     var callBackAwaited : Boolean = false
     private var mediaController: MediaControllerCompat? = null
     private val TAG = "$APP_TAG/model"
@@ -71,25 +50,22 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
     lateinit var mediaSession: MediaSessionCompat
     private lateinit var exoPlayer: MediaPlayer
     var isPlaying = false
+    var allTags = ""
 
     //Методы для обсерверов
-    override fun getShuffleStatus(): Boolean {
+     fun getShuffleStatus(): Boolean {
         return shuffleStatus
     }
 
-    override fun getRepeatStatus(): RepeatState {
+     fun getRepeatStatus(): RepeatState {
         return repeatStatus
     }
 
-    override fun getAllTags(): String {
-        return "rock; pop; techno; jazz; superjazz; technojazz; вскрытие души; оптимально для суицида; осень; дорога"
-    }
-
-    override fun getCurrentSongsList(): ArrayList<Song> {
+     fun getCurrentSongsList(): ArrayList<Song> {
         return currentSongsList
     }
 
-    override fun getCurrentSong(): Observable<SongOrNull> {
+     fun getCurrentSong(): Observable<SongOrNull> {
         return if (currentSongPositionInList < currentSongsList.size && currentSongPositionInList >= 0)
             Observable.just(SongOrNull(currentSongsList[currentSongPositionInList]))
 
@@ -97,7 +73,7 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
         else Observable.just(SongOrNull(Song(), true))
     }
 
-    override fun getCurrentSearchTags(): Observable<String> {
+     fun getCurrentSearchTags(): Observable<String> {
         return Observable.just(searchTags)
     }
 
@@ -168,7 +144,7 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
         if (isPlaying) doWithMedia("next")
     }
 
-    override fun clearTag() {
+     fun clearTag() {
         val song = currentSong?.copy()
         if (song != null) {
             song.tags = ";"
@@ -177,7 +153,7 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
         }
     }
 
-    override fun newSearch(tags: String): Observable<ArrayList<Song>> {
+     fun newSearch(tags: String): Observable<ArrayList<Song>> {
         Log.i(TAG, "new search")
         searchTags = tags
         createCurrentList()
@@ -185,12 +161,12 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
         return Observable.just(currentSongsList)
     }
 
-    override fun saveSongToDB(song: Song) {
+     fun saveSongToDB(song: Song) {
         helper.writeSong(song)
         Log.i(TAG, "Song with name ${song.name} and tags ${song.tags} saved to DB")
     }
 
-    override fun nextSong() {
+     fun nextSong() {
         if (currentSongsList.isNotEmpty()) {
             currentSongPositionInList = getNextPositionInList(
                 currentSongsShuffledListNumber,
@@ -206,7 +182,7 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
         }
     }
 
-    override fun prevSong() {
+     fun prevSong() {
         if (currentSongsList.isNotEmpty()) {
             currentSongPositionInList = getPrevPositionInList(
                 currentSongsShuffledListNumber,
@@ -318,13 +294,13 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
         if (isPlaying) doWithMedia("stop")
     }
 
-    override fun changeShuffle() {
+     fun changeShuffle() {
         shuffleStatus = !shuffleStatus
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
         Log.i(TAG, "Now shuffle is $shuffleStatus")
     }
 
-    override fun changeRepeat() {
+     fun changeRepeat() {
         repeatStatus = when (repeatStatus) {
             RepeatState.All -> RepeatState.One
             RepeatState.One -> RepeatState.Stop
@@ -333,7 +309,7 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
         Log.i(TAG, "Now repeat is $repeatStatus")
     }
 
-    override fun testAction() {
+     fun testAction() {
         Log.i(TAG, "testAction")
     }
 
@@ -352,7 +328,7 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
         mediaController?.registerCallback(mediaControllerCallback)
     }
 
-    override fun initialize() {
+     fun initialize() {
         Log.i(TAG, "initialization")
         mediaSession = MediaSessionCompat(MainActivity.applicationContext(), "LYMPService")
         // FLAG_HANDLES_MEDIA_BUTTONS - хотим получать события от аппаратных кнопок
@@ -394,7 +370,13 @@ class LYMPModel(private val audioManager: AudioManager) : ILYMPModel, BaseObserv
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
     }
 
-
+    fun setAllTagsFromSettings(t: String) {
+        allTags = t
+    }
+//     fun getAllTags(): String {
+//        return allTags
+//        //return "rock; pop; techno; jazz; superjazz; technojazz; вскрытие души; оптимально для суицида; осень; дорога"
+//    }
 
 
     // Закешируем билдеры

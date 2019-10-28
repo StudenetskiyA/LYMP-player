@@ -1,6 +1,8 @@
 package com.develop.dayre.lymp
 
 import android.Manifest
+import android.app.Activity
+import android.app.AlertDialog
 import com.develop.dayre.tagfield.TagView
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +25,11 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.media.AudioManager
 import android.support.v4.media.session.PlaybackStateCompat
 import android.content.Intent
+import android.os.Handler
+import android.view.View
+import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "$APP_TAG/view"
@@ -76,6 +83,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createControl() {
+        addnewtagbutton.setOnClickListener {
+            //Show enter field
+            val input = EditText(this)
+            val alert = AlertDialog.Builder(this)
+            with(alert) {
+                setTitle(resources.getText(R.string.enter_new_tag))
+                setMessage(resources.getText(R.string.enter_new_tag_message))
+                setView(input)
+                setPositiveButton("ОК") { _, _ ->
+                    val result = input.text.toString()
+                    Log.i(TAG, "New tag name entered $result")
+                    UIHelper.hideSoftKeyboard(input)
+                    //TODO Check input
+                    val newTags = "${viewModel.getAllTags()}; $result"
+                    settings.edit()
+                        .putString(APP_PREFERENCES_ALL_TAGS, newTags)
+                        .apply()
+                    viewModel.setAllTagsFromSettings(newTags)
+                    buildLinkField()
+                    buildSearchField()
+                }
+                setNegativeButton("Отмена") { _, _ ->
+                    UIHelper.hideSoftKeyboard(input)
+                }
+            }
+            val dialog = alert.create()
+            dialog.setOnShowListener {
+                UIHelper.showKeyboard(this, input)
+            }
+
+            dialog.show()
+        }
         nextbutton.setOnClickListener {
             Log.i(TAG, "next button pressed")
             viewModel.nextPress()
@@ -150,7 +189,8 @@ class MainActivity : AppCompatActivity() {
     private fun createView() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         //Получаем инстанс, а не создаем новый - актуально при перезапуске приложения, повороте экрана и т.д.
-        val viewModelFactory = MyViewModelFactory(getSystemService(Context.AUDIO_SERVICE) as AudioManager)
+        val viewModelFactory =
+            MyViewModelFactory(getSystemService(Context.AUDIO_SERVICE) as AudioManager)
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(LYMPViewModel::class.java)
         binding.viewmodel = viewModel
         binding.executePendingBindings()
@@ -188,9 +228,10 @@ class MainActivity : AppCompatActivity() {
             Observer<Song> {
                 Log.i(TAG, "current song updated")
                 track_info_current_song.text = viewModel.currentSong.value?.name
-                track_info_added_at.text = viewModel.currentSong.value?.added
+                track_info_added_at.text =
+                    "${resources.getText(R.string.added_at)} ${viewModel.currentSong.value?.added}"
                 track_info_listened_times.text =
-                    viewModel.currentSong.value?.listenedTimes.toString()
+                    "${resources.getText(R.string.listened_times)} ${viewModel.currentSong.value?.listenedTimes}"
 
                 if (viewModel.currentSongsList.value != null && viewModel.currentSongsList.value!!.contains(
                         viewModel.currentSong.value
@@ -212,10 +253,10 @@ class MainActivity : AppCompatActivity() {
                 buildSearchField()
             })
 
-        viewModel.setMediaControllerCallback( object : MediaControllerCompat.Callback() {
-            override fun onPlaybackStateChanged(state : PlaybackStateCompat) {
-                Log.i(TAG,"PlayState changed.")
-                if (state.state==PlaybackStateCompat.STATE_PLAYING)
+        viewModel.setMediaControllerCallback(object : MediaControllerCompat.Callback() {
+            override fun onPlaybackStateChanged(state: PlaybackStateCompat) {
+                Log.i(TAG, "PlayState changed.")
+                if (state.state == PlaybackStateCompat.STATE_PLAYING)
                     playbutton.setImageResource(R.drawable.pause_inbar)
                 else
                     playbutton.setImageResource(R.drawable.playbutton)
@@ -231,8 +272,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun grantPermission() {
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE)
-            != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
 
             // Permission is not granted
             // Should we show an explanation?
@@ -257,11 +299,15 @@ class MainActivity : AppCompatActivity() {
                 // result of the request.
             }
         } else {
-            Log.i(TAG,"Permission has already been granted")
+            Log.i(TAG, "Permission has already been granted")
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         when (requestCode) {
             MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE -> {
                 // If request is cancelled, the result arrays are empty.
@@ -338,6 +384,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun readSettings() {
+        //Я решил хранить все теги в настроках, не в БД. Пока так кажется проще, может потом передумаю.
+        if (settings.contains(APP_PREFERENCES_ALL_TAGS)) {
+            val t = settings.getString(APP_PREFERENCES_ALL_TAGS, "")
+            viewModel.setAllTagsFromSettings(t)
+        }
+
         if (settings.contains(APP_PREFERENCES_SELECT_SONG)) {
             val t = settings.getString(APP_PREFERENCES_SELECT_SONG, "0")
             viewModel.songSelectByID(t)
@@ -348,4 +400,6 @@ class MainActivity : AppCompatActivity() {
         }
         viewModel.newSearch(search)
     }
+
+
 }
