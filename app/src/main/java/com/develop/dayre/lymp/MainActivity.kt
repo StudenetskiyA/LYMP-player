@@ -162,7 +162,7 @@ class MainActivity : AppCompatActivity() {
                 viewModel.currentSongEdit(cs)
             }
         }
-        tagView.setOnTagDeleteListener { position, tag ->
+        tagView.setOnTagLongClickListener { position, tag ->
             Toast.makeText(
                 this@MainActivity,
                 "delete tag id = " + tag.id + " position =" + position,

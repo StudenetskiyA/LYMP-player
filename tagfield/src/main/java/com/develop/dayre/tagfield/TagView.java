@@ -39,6 +39,7 @@ public class TagView extends RelativeLayout {
     private List<Tag> mTags = new ArrayList<>();
     private LayoutInflater mInflater;
     private OnTagClickListener mClickListener;
+    private OnTagLongClickListener mLongClickListener;
     private OnTagDeleteListener mDeleteListener;
 
     public TagView(Context context) {
@@ -162,6 +163,15 @@ public class TagView extends RelativeLayout {
                     if (mClickListener != null) {
                         mClickListener.onTagClick(position, tag);
                     }
+                }
+            });
+            tagLayout.setOnLongClickListener(new OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    if (mLongClickListener != null) {
+                        mLongClickListener.onTagLongClick(position, tag);
+                    }
+                    return true;
                 }
             });
             // calculate　of tag layout width
@@ -332,7 +342,9 @@ public class TagView extends RelativeLayout {
     public void setOnTagClickListener(OnTagClickListener clickListener) {
         mClickListener = clickListener;
     }
-
+    public void setOnTagLongClickListener(OnTagLongClickListener longClickListener) {
+        mLongClickListener = longClickListener;
+    }
     public void setOnTagDeleteListener(OnTagDeleteListener deleteListener) {
         mDeleteListener = deleteListener;
     }
