@@ -163,11 +163,29 @@ class MainActivity : AppCompatActivity() {
             }
         }
         tagView.setOnTagLongClickListener { position, tag ->
-            Toast.makeText(
-                this@MainActivity,
-                "delete tag id = " + tag.id + " position =" + position,
-                Toast.LENGTH_SHORT
-            ).show()
+            //Show enter field
+            val alert = AlertDialog.Builder(this)
+            with(alert) {
+                val tagClicked = getListFromString(viewModel.getAllTags())[position]
+                setTitle(resources.getText(R.string.delete_tag_alert_title))
+                setMessage("${resources.getText(R.string.delete_tag_alert)} $tagClicked ?")
+                setPositiveButton("ОК") { _, _ ->
+                    val list = ArrayList(getListFromString(viewModel.getAllTags()))
+                    list.remove(tagClicked)
+                    val newTags = getStringFromList(list)
+                    settings.edit()
+                        .putString(APP_PREFERENCES_ALL_TAGS, newTags)
+                        .apply()
+                    viewModel.setAllTagsFromSettings(newTags)
+                    buildLinkField()
+                    buildSearchField()
+                }
+                setNegativeButton("Отмена") { _, _ ->
+                }
+            }
+            val dialog = alert.create()
+
+            dialog.show()
         }
         searchTagView.setOnTagClickListener { position, _ ->
             val cs = viewModel.currentSearchTags.value!!
