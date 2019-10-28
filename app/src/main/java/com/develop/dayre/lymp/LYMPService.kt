@@ -1,8 +1,6 @@
 package com.develop.dayre.lymp
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.os.Binder
@@ -19,14 +17,9 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.Observer
 import androidx.core.content.ContextCompat
 import androidx.media.session.MediaButtonReceiver
-import android.app.PendingIntent
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 
 
-
-//const val EXTRA_COMMAND = "EXTRA_COMMAND"
-
+const val SERVICE_COMMAND = "LYMP_SERVICE_COMMAND"
 enum class ServiceCommand { Prev, Play, Stop, Next, Init }
 
 class LYMPService : LifecycleService() {
@@ -48,21 +41,25 @@ class LYMPService : LifecycleService() {
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         Log.i(TAG, "Init service")
-        if (intent.hasExtra("ServiceCommand")) {
-            Log.i(TAG, "onStartCommand ${intent.getStringExtra("ServiceCommand")}")
-//           val command = intent.getSerializableExtra("ServiceCommand") as ServiceCommand
-//           // val command = intent.getStringExtra(EXTRA_COMMAND)
-//            Log.i(TAG, "onStartCommand $command")
-//            when (command) {
-//                ServiceCommand.Play -> viewModel.playPress()
-//                ServiceCommand.Next -> viewModel.nextPress()
-//                // ServiceCommand.Prev -> viewModel.prevPress()ServiceCommand.Prev
-//            }
-        }
         viewModel.setMediaSessonCallback(mediaSessionCallback)
-        createObservers()
 
-        return START_STICKY
+        if (intent.hasExtra(SERVICE_COMMAND)) {
+            val command = intent.getSerializableExtra(SERVICE_COMMAND) as ServiceCommand
+            Log.i(TAG, "onStartCommand $command")
+            when (command) {
+                ServiceCommand.Play -> viewModel.playPress()
+                ServiceCommand.Next -> {
+                    viewModel.nextPress()
+                    viewModel.playPress()
+                }
+                ServiceCommand.Prev -> {
+                    viewModel.prevPress()
+                    viewModel.playPress()
+                }
+            }
+        }
+        createObservers()
+        return Service.START_REDELIVER_INTENT
     }
 
     private fun createObservers() {
@@ -96,12 +93,12 @@ class LYMPService : LifecycleService() {
                 startForeground(NOTIFICATION_ID, getNotification(playbackState))
             }
             PlaybackStateCompat.STATE_PAUSED -> {
-                // На паузе мы перестаем быть foreground, однако оставляем уведомление,
-                // чтобы пользователь мог play нажать
-                NotificationManagerCompat.from(this@LYMPService)
-                    .notify(NOTIFICATION_ID, getNotification(playbackState))
-                stopForeground(false)
-                // startForeground(NOTIFICATION_ID, getNotification(playbackState))
+//                // На паузе мы перестаем быть foreground, однако оставляем уведомление,
+//                // чтобы пользователь мог play нажать
+//                NotificationManagerCompat.from(this@LYMPService)
+//                    .notify(NOTIFICATION_ID, getNotification(playbackState))
+//                stopForeground(false)
+                startForeground(NOTIFICATION_ID, getNotification(playbackState))
             }
             else -> {
                 // Все, можно прятать уведомление
@@ -126,7 +123,7 @@ class LYMPService : LifecycleService() {
         // Добавляем кнопки
         // ...на предыдущий трек
         val intentPrev = Intent(this, LYMPService::class.java)
-        intentPrev.putExtra("ServiceCommand", "PPPPrev")
+        intentPrev.putExtra(SERVICE_COMMAND, ServiceCommand.Prev)
         val pendingIntentPrev = PendingIntent.getService(
             applicationContext, NOTIFICATION_ID, intentPrev, PendingIntent.FLAG_UPDATE_CURRENT
         )
@@ -139,7 +136,7 @@ class LYMPService : LifecycleService() {
 
         // ...play/pause. Интент у нас один, модель разберется.
         val intentPlay = Intent(this, LYMPService::class.java)
-        intentPlay.putExtra("ServiceCommand", "Playyyy")
+        intentPlay.putExtra(SERVICE_COMMAND, ServiceCommand.Play)
         val pendingIntentPlay = PendingIntent.getService(
             applicationContext, NOTIFICATION_ID+1, intentPlay, PendingIntent.FLAG_UPDATE_CURRENT
         )
@@ -160,7 +157,7 @@ class LYMPService : LifecycleService() {
 
         // ...на следующий трек
         val intentNext = Intent(this, LYMPService::class.java)
-        intentNext.putExtra("ServiceCommand", "Neeext")
+        intentNext.putExtra(SERVICE_COMMAND, ServiceCommand.Next)
         val pendingIntentNext = PendingIntent.getService(
             applicationContext, NOTIFICATION_ID+2, intentNext, PendingIntent.FLAG_UPDATE_CURRENT
         )
@@ -211,14 +208,19 @@ class LYMPService : LifecycleService() {
                 Log.i(TAG, "callback onPlay")
                 if (!viewModel.getCallBackAwaited()) viewModel.playPress()
                 else viewModel.setCallBackAwaited(false)
+                if (viewModel.getIsPlaying())
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
+                else  refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PAUSED)
             }
 
             override fun onPause() {
                 Log.i(TAG, "callback onPause")
                 if (!viewModel.getCallBackAwaited()) viewModel.playPress()
                 else viewModel.setCallBackAwaited(false)
-                refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PAUSED)
+                if (viewModel.getIsPlaying())
+                refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
+                else  refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PAUSED)
+               // refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PAUSED)
             }
 
             override fun onStop() {

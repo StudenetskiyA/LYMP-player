@@ -85,6 +85,7 @@ class MainActivity : AppCompatActivity() {
             viewModel.prevPress()
         }
         playbutton.setOnClickListener {
+            Log.i(TAG, "play button pressed")
             viewModel.playPress()
         }
         stopbutton.setOnClickListener {

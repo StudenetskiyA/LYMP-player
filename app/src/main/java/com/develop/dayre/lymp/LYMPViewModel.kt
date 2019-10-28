@@ -104,6 +104,9 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         model.clearTag()
     }
 
+    fun getIsPlaying() : Boolean {
+        return model.isPlaying
+    }
     fun getCallBackAwaited() : Boolean {
         return model.callBackAwaited
     }
