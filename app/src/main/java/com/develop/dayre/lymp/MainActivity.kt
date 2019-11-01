@@ -3,6 +3,8 @@ package com.develop.dayre.lymp
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.PendingIntent
+import android.appwidget.AppWidgetManager
 import com.develop.dayre.tagfield.TagView
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
@@ -25,6 +27,7 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.media.AudioManager
 import android.support.v4.media.session.PlaybackStateCompat
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.os.Handler
 import android.os.SystemClock
 import android.view.View
@@ -32,13 +35,16 @@ import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.SeekBar
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
+
+
     private val TAG = "$APP_TAG/view"
-    lateinit var viewModel: LYMPViewModel
+
     var serv: LYMPService? = null
     private lateinit var tagView: TagView
     private lateinit var searchTagView: TagView
@@ -48,8 +54,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var listView: ListView
     private lateinit var seekBar: SeekBar
 
+
     private lateinit var settings: SharedPreferences
-    private lateinit var mLastPlaybackState : PlaybackStateCompat
+    private var mLastPlaybackStatePosition : Int = 0//PlaybackStateCompat
     var isBound = false
 
     private val myConnection = object : ServiceConnection {
@@ -71,24 +78,22 @@ class MainActivity : AppCompatActivity() {
 
     private val MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 0
 
-    init {
-        instance = this
-    }
+//    init {
+//        instance = this
+//    }
+
+    lateinit var viewModel: LYMPViewModel
 
     companion object {
-        //TODO
+        //var instance: MainActivity? = null
 
-        //Или передавать контекст при инициализации вьюмодели и модели.
-        //По факту он нужен только для БД.
-        //И еще в сервисе. В этом пока проблема.
-        var instance: MainActivity? = null
-
-        fun applicationContext(): Context {
-            return instance!!.applicationContext
-        }
+//        fun applicationContext(): Context {
+//            return instance!!.applicationContext
+//        }
     }
 
     private fun createControl() {
+        Log.i(TAG, "createControl")
         addnewtagbutton.setOnClickListener {
             //Show enter field
             val input = EditText(this)
@@ -135,6 +140,10 @@ class MainActivity : AppCompatActivity() {
         }
         stopbutton.setOnClickListener {
             Log.i(TAG, "stop button pressed")
+            Intent().also { intent ->
+                intent.action = WIDGET_ACTION_PLAY_PAUSE
+                sendBroadcast(intent)
+            }
             viewModel.stopPress()
         }
         shufflebutton.setOnClickListener {
@@ -208,14 +217,39 @@ class MainActivity : AppCompatActivity() {
         current_list.setOnItemClickListener { parent, view, position, id ->
             viewModel.songInListPress(position)
         }
+        seekBar.setOnSeekBarChangeListener( object : SeekBar.OnSeekBarChangeListener {
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                Log.i(TAG,"seekBar onStartTrackingTouch")
+            }
+
+            override fun onProgressChanged(seekBar:SeekBar,progress:Int,fromUser: Boolean) {
+                if (fromUser) {
+                    Log.i(TAG,"seekBar onProgressChanged by user")
+                    //seek here
+                    viewModel.jumpToPosition(progress)
+                }
+            }
+        })
     }
 
     private fun createView() {
+        Log.i(TAG, "createView")
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         //Получаем инстанс, а не создаем новый - актуально при перезапуске приложения, повороте экрана и т.д.
-        val viewModelFactory =
-            MyViewModelFactory(getSystemService(Context.AUDIO_SERVICE) as AudioManager)
-        viewModel = ViewModelProviders.of(this, viewModelFactory).get(LYMPViewModel::class.java)
+        val application = application
+        if (application !is App) {
+            throw RuntimeException("Application in not implemented IModulePlayer.Application")
+        }
+
+
+        App.instance.setAppContext(this)
+        App.instance.setViewModel(getSystemService(Context.AUDIO_SERVICE) as AudioManager)
+
+        viewModel = App.instance.getAppViewModel()
+        viewModel.startModel()
         binding.viewmodel = viewModel
         binding.executePendingBindings()
 
@@ -226,6 +260,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createObservers() {
+        Log.i(TAG, "createObservers")
         adapter = SongListAdapter(ArrayList(listOf(Song())), this)
         binding.currentList.adapter = adapter
 
@@ -281,9 +316,9 @@ class MainActivity : AppCompatActivity() {
         viewModel.setMediaControllerCallback(object : MediaControllerCompat.Callback() {
             override fun onPlaybackStateChanged(state: PlaybackStateCompat) {
                 Log.i(TAG, "PlayState changed.")
-                mLastPlaybackState = state
+                mLastPlaybackStatePosition = state.position.toInt()
                 scheduleSeekbarUpdate()
-                Log.i(TAG, "Position = ${state.position}")
+                Log.i(TAG, "Position = $mLastPlaybackStatePosition")
                 if (state.state == PlaybackStateCompat.STATE_PLAYING)
                     playbutton.setImageResource(R.drawable.pause_inbar)
                 else
@@ -295,9 +330,13 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         Log.i(TAG, "onResume")
-        //registerReceivers(this)
         readSettings()
     }
+
+//    override fun onStart() {
+//        super.onStart()
+//
+//    }
 
     private fun grantPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -359,9 +398,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.i(TAG,"onCreate")
         settings = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE)
         createView()
-        viewModel.startModel()
         createControl()
         createObservers()
         grantPermission()
@@ -371,6 +410,12 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this@MainActivity, LYMPService::class.java)
         bindService(intent, myConnection, Context.BIND_AUTO_CREATE)
         startService(intent)
+
+        val br = WidgetBroadcastReceiver()
+        val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION).apply {
+            addAction(WIDGET_ACTION_PLAY_PAUSE)
+        }
+        registerReceiver(br, filter)
     }
 
     private fun buildSearchField() {
@@ -429,15 +474,16 @@ class MainActivity : AppCompatActivity() {
         viewModel.newSearch(search)
     }
 
+    //For SeekBar
     private fun updateProgress() {
-        var currentPosition = mLastPlaybackState.position
-        if (mLastPlaybackState.state == PlaybackStateCompat.STATE_PLAYING) {
-            val timeDelta = SystemClock.elapsedRealtime() -
-                    mLastPlaybackState.lastPositionUpdateTime
-            currentPosition +=  (timeDelta * mLastPlaybackState.playbackSpeed).toLong()
+        var currentPosition = mLastPlaybackStatePosition
+        if (viewModel.getIsPlaying()==PlayState.Play) {
+            val timeDelta = SystemClock.elapsedRealtime() -  mLastPlaybackStatePosition
+                 //   mLastPlaybackState.lastPositionUpdateTime
+            currentPosition +=  (timeDelta * 1).toInt()
         }
         seekBar.max = viewModel.getCurrentTrackDuration()
-        seekBar.progress =  currentPosition.toInt()
+        seekBar.progress =  currentPosition
       //  Log.i(TAG, "Update seekbar ${currentPosition.toInt()} / ${viewModel.getCurrentTrackDuration()}")
     }
 
@@ -464,4 +510,5 @@ class MainActivity : AppCompatActivity() {
         Executors.newSingleThreadScheduledExecutor()
 
     private var mScheduleFuture:ScheduledFuture<*>? = null
+
 }

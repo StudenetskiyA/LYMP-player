@@ -1,5 +1,6 @@
 package com.develop.dayre.lymp
 
+import android.app.Application
 import android.media.AudioManager
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
@@ -41,11 +42,11 @@ class MyViewModelFactory(val audioManager: AudioManager) : ViewModelProvider.Fac
     }
 }
 
-class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
+class LYMPViewModel(application: Application, audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     private val TAG = "$APP_TAG/viewmodel"
     //var isPlaying = false
 
-    private var model = LYMPModel(audioManager)
+    private var model = LYMPModel(application,audioManager)
 
     var currentSongsList =
         MutableLiveData<ArrayList<Song>>() //Локальный список, потом будет урезанная версия.
@@ -59,8 +60,6 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
 
     fun startModel() {
         model.initialize()
-
-
         startBrowseFolderForFiles()
     }
 
@@ -89,6 +88,10 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
                 isShowMore.set(true)
             }
         } else  isShowMore.set(false)
+    }
+
+    fun jumpToPosition(position : Int){
+        model.jumpToPosition(position)
     }
 
     override fun nextPress() {

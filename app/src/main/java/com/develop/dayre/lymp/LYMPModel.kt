@@ -1,9 +1,9 @@
 package com.develop.dayre.lymp
 
+import android.app.Application
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Environment
@@ -18,7 +18,6 @@ import android.media.AudioManager
 import android.support.v4.media.session.MediaControllerCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.media.session.MediaButtonReceiver
-import android.content.ComponentName
 import androidx.databinding.ObservableField
 
 
@@ -27,7 +26,7 @@ enum class PlayState { Play, Stop, Pause }
 enum class SortState { ByName, ByAdded, ByListened }
 enum class TagsFlag { Or, And }
 
-class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
+class LYMPModel(private val application: Application, private val audioManager: AudioManager) : BaseObservable() {
     var callBackAwaited : Boolean = false
     private var mediaController: MediaControllerCompat? = null
     private val TAG = "$APP_TAG/model"
@@ -35,7 +34,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         Song() //У нас бывают ситуации, когда текущий трек не в текущем листе.
     private var currentSongsList = ArrayList<Song>()
     private var currentSongsShuffledListNumber = ArrayList<Int>()
-    private var helper: RealmHelper = RealmHelper(MainActivity.applicationContext())
+    private var helper: RealmHelper = RealmHelper(App.instance.context)
     private var searchTags = ";"
     private var shuffleStatus: Boolean = false
     private var repeatStatus = RepeatState.All
@@ -117,7 +116,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         //Вообще, наверное, не правильно в модели использовать контекст активити. Но пока сделаю так.
         // if (songsRestored!=0 || newSongFound!=0 || deletedSong!=0)
         Log.i(TAG,"Новых песен найдено - $newSongFound \r\nУдалено песен - $deletedSong \r\nВосстановленно удаленных - $songsRestored")
-        MainActivity.applicationContext()
+        App.instance.context
             .toast("Новых песен найдено - $newSongFound \r\nУдалено песен - $deletedSong \r\nВосстановленно удаленных - $songsRestored")
         //  return Observable.just(true).delay(5, TimeUnit.SECONDS)
         return Observable.just(true)
@@ -229,7 +228,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
 
         // Загружаем URL аудио-файла в Player
         exoPlayer =
-            MediaPlayer.create(MainActivity.applicationContext(), Uri.parse(currentSong?.path))
+            MediaPlayer.create(App.instance.context, Uri.parse(currentSong?.path))
     }
 
     private fun doWithMedia(s: String) {
@@ -353,7 +352,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
 
      fun initialize() {
         Log.i(TAG, "initialization")
-        mediaSession = MediaSessionCompat(MainActivity.applicationContext(), "LYMPService")
+        mediaSession = MediaSessionCompat(App.instance.context, "LYMPService")
         // FLAG_HANDLES_MEDIA_BUTTONS - хотим получать события от аппаратных кнопок
         // (например, гарнитуры)
         // FLAG_HANDLES_TRANSPORT_CONTROLS - хотим получать события от кнопок
@@ -362,24 +361,24 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         val mediaButtonIntent = Intent(
             Intent.ACTION_MEDIA_BUTTON,
             null,
-            MainActivity.applicationContext(),
+            App.instance.context,
             MediaButtonReceiver::class.java
         )
         mediaSession.setMediaButtonReceiver(
-            PendingIntent.getBroadcast(MainActivity.applicationContext(), 0, mediaButtonIntent, 0)
+            PendingIntent.getBroadcast(App.instance.context, 0, mediaButtonIntent, 0)
         )
         // Укажем activity, которую запустит система, если пользователь
         // заинтересуется подробностями данной сессии
         mediaSession.setSessionActivity(
             PendingIntent.getActivity(
-                MainActivity.applicationContext(),
+                App.instance.context,
                 0,
-                Intent(MainActivity.applicationContext(), MainActivity::class.java),
+                Intent(App.instance.context, MainActivity::class.java),
                 PendingIntent.FLAG_UPDATE_CURRENT
             )
         )
         mediaController = MediaControllerCompat(
-            MainActivity.applicationContext(), getMediaSessionToken()
+            App.instance.context, getMediaSessionToken()
         )
 
         browseFolderForFiles()
@@ -396,11 +395,18 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     fun setAllTagsFromSettings(t: String) {
         allTags = t
     }
-//     fun getAllTags(): String {
-//        return allTags
-//        //return "rock; pop; techno; jazz; superjazz; technojazz; вскрытие души; оптимально для суицида; осень; дорога"
-//    }
 
+    fun jumpToPosition(position: Int) {
+        Log.i(TAG,"Seek to position $position")
+        exoPlayer.seekTo(position)
+//        mediaController?.transportControls?.seekTo(position.toLong())
+//        mediaSession.setPlaybackState(
+//            stateBuilder.setState(
+//                PlaybackStateCompat.STATE_REWINDING,
+//                position.toLong(), 1f
+//            ).build()
+//        )
+    }
 
     // Закешируем билдеры
 
@@ -408,11 +414,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     private val metadataBuilder = MediaMetadataCompat.Builder()
 
     // ...состояния плеера
-    // Здесь мы указываем действия, которые собираемся обрабатывать в коллбэках.
-    // Например, если мы не укажем ACTION_PAUSE,
-    // то нажатие на паузу не вызовет onPause.
-    // ACTION_PLAY_PAUSE обязателен, иначе не будет работать
-    // управление с Android Wear!
     private val stateBuilder: PlaybackStateCompat.Builder = PlaybackStateCompat.Builder()
         .setActions(
             PlaybackStateCompat.ACTION_PLAY

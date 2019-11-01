@@ -25,7 +25,8 @@ enum class ServiceCommand { Prev, Play, Stop, Next, Init }
 class LYMPService : LifecycleService() {
     private val NOTIFICATION_ID = 9999
     private val TAG = "$APP_TAG/service"
-    private val viewModel = MainActivity.instance?.viewModel!!
+    //private val viewModel = MainActivity.instance?.viewModel!!
+    private lateinit var viewModel : LYMPViewModel
 
     override fun onBind(intent: Intent): IBinder? {
         super.onBind(intent)
@@ -60,6 +61,16 @@ class LYMPService : LifecycleService() {
         }
         createObservers()
         return Service.START_REDELIVER_INTENT
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        val application = application
+        if (application !is App) {
+            throw RuntimeException("Application in not implemented IModulePlayer.Application")
+        }
+
+        viewModel = App.instance.viewModel
     }
 
     private fun createObservers() {
