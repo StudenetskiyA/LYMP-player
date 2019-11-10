@@ -1,8 +1,6 @@
 package com.develop.dayre.lymp
 
-import android.app.Application
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
 import android.net.Uri
@@ -16,7 +14,6 @@ import io.reactivex.Observable
 import kotlin.collections.ArrayList
 import android.media.AudioManager
 import android.support.v4.media.session.MediaControllerCompat
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.media.session.MediaButtonReceiver
 import androidx.databinding.ObservableField
 
@@ -146,6 +143,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             currentSong = s
             currentSongPositionInList = currentSongsList.indexOf(s)
         }
+        prepareTrackForPlayer()
     }
 
     fun setPositionInList(position: Int) {
@@ -232,6 +230,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         // Загружаем URL аудио-файла в Player
         exoPlayer =
             MediaPlayer.create(App.instance.context, Uri.parse(currentSong?.path))
+        duration.set(exoPlayer.duration)
         exoPlayer.setOnCompletionListener {
             Log.i(TAG, "Track complete")
             when (repeatStatus) {
@@ -261,7 +260,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
                 //  prepareTrackLoadToPlayer()
                 // Запускаем воспроизведение
                 exoPlayer.start()
-                duration.set(exoPlayer.duration)
                 mediaController?.transportControls?.play()
                 // Сообщаем новое состояние
                 mediaSession.setPlaybackState(
