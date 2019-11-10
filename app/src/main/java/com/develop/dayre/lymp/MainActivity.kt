@@ -1,10 +1,7 @@
 package com.develop.dayre.lymp
 
 import android.Manifest
-import android.app.Activity
 import android.app.AlertDialog
-import android.app.PendingIntent
-import android.appwidget.AppWidgetManager
 import com.develop.dayre.tagfield.TagView
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
@@ -14,7 +11,6 @@ import android.util.Log
 import android.widget.ListView
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.ViewModelProviders
 import kotlinx.android.synthetic.main.activity_main.*
 import com.develop.dayre.lymp.databinding.ActivityMainBinding
 import com.develop.dayre.tagfield.Tag
@@ -51,7 +47,6 @@ class MainActivity : AppCompatActivity() {
 
 
     private lateinit var settings: SharedPreferences
-   // private lateinit var mLastPlaybackState : PlaybackStateCompat
     private var mLastPlaybackStatePosition : Int = 0
     private var mLastPlaybackStatePositionTime : Int = 0
     var isBound = false
@@ -125,16 +120,7 @@ class MainActivity : AppCompatActivity() {
         }
         stopbutton.setOnClickListener {
             Log.i(TAG, "stop button pressed")
-//            Intent().also { intent ->
-//                intent.action = WIDGET_ACTION_PLAY_PAUSE
-//                sendBroadcast(intent)
-//            }
-
-//            //Send broadcast to widget
-//            val ws = WidgetState("New station from LYMP", "New artist from LYMP", "New song", false, "")
-//            val pi = getIntentBroadcast(App.instance.context, WIDGET_ACTION_PLAY_PAUSE,ws)
-//            sendBroadcast(pi)
-////           // viewModel.stopPress()
+            viewModel.stopPress()
         }
 
         shufflebutton.setOnClickListener {
@@ -385,7 +371,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.i(TAG,"onCreate")
-        settings = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE)
+        App.instance.setSettings(getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE))
+        settings = App.instance.appSettings
         createView()
         createControl()
         createObservers()
@@ -451,6 +438,19 @@ class MainActivity : AppCompatActivity() {
         if (settings.contains(APP_PREFERENCES_CURRENT_SEARCH)) {
             search = settings.getString(APP_PREFERENCES_CURRENT_SEARCH, "")!!
         }
+
+        if (settings.contains(APP_PREFERENCES_SHUFFLE)) {
+            val shuffle = settings.getBoolean(APP_PREFERENCES_SHUFFLE, false)
+            if (shuffle) viewModel.setShuffle(true)
+        }
+        if (settings.contains(APP_PREFERENCES_REPEAT)) {
+            when (settings.getInt(APP_PREFERENCES_REPEAT, 0)) {
+                0 -> viewModel.setRepeat(RepeatState.All)
+               1 -> viewModel.setRepeat(RepeatState.One)
+               2 -> viewModel.setRepeat(RepeatState.Stop)
+           }
+        }
+
         viewModel.newSearch(search)
     }
 

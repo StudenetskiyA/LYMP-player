@@ -27,7 +27,7 @@ enum class SortState { ByName, ByAdded, ByListened }
 enum class TagsFlag { Or, And }
 
 class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
-    var callBackAwaited : Boolean = false
+    var callBackAwaited: Boolean = false
     private var mediaController: MediaControllerCompat? = null
     private val TAG = "$APP_TAG/model"
     private var currentSong: Song? =
@@ -52,19 +52,19 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     var allTags = ""
 
     //Методы для обсерверов
-     fun getShuffleStatus(): Boolean {
+    fun getShuffleStatus(): Boolean {
         return shuffleStatus
     }
 
-     fun getRepeatStatus(): RepeatState {
+    fun getRepeatStatus(): RepeatState {
         return repeatStatus
     }
 
-     fun getCurrentSongsList(): ArrayList<Song> {
+    fun getCurrentSongsList(): ArrayList<Song> {
         return currentSongsList
     }
 
-     fun getCurrentSong(): Observable<SongOrNull> {
+    fun getCurrentSong(): Observable<SongOrNull> {
         return if (currentSongPositionInList < currentSongsList.size && currentSongPositionInList >= 0)
             Observable.just(SongOrNull(currentSongsList[currentSongPositionInList]))
 
@@ -72,7 +72,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         else Observable.just(SongOrNull(Song(), true))
     }
 
-     fun getCurrentSearchTags(): Observable<String> {
+    fun getCurrentSearchTags(): Observable<String> {
         return Observable.just(searchTags)
     }
 
@@ -86,9 +86,9 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         val allFiles = getFilesListInFolderAndSubFolder(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "mp3"
         )
-        Log.i(TAG,"/browse - File found ${allFiles.size}")
+        Log.i(TAG, "/browse - File found ${allFiles.size}")
         val allRecord = helper.getAllSongsFileExist()
-        Log.i(TAG,"/browse - Record with isExist found ${allRecord.size}")
+        Log.i(TAG, "/browse - Record with isExist found ${allRecord.size}")
         //Проверяем, каких файлов больше физически нет и помечаем их как отсутствующие, из базы не удаляем.
         for (r in allRecord) {
             if (!allFiles.contains(r.path)) {
@@ -103,7 +103,14 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             val s = helper.getSongByID(getHashFromNameAndSize(f.getNameFromPath(), getFileSize(f)))
             if (s == null) {
                 newSongFound++
-                helper.writeSong(Song(ID = getHashFromNameAndSize(f.getNameFromPath(), getFileSize(f)), name = f.getNameFromPath(), path = f, isFileExist = true))
+                helper.writeSong(
+                    Song(
+                        ID = getHashFromNameAndSize(
+                            f.getNameFromPath(),
+                            getFileSize(f)
+                        ), name = f.getNameFromPath(), path = f, isFileExist = true
+                    )
+                )
             }
             if (s != null && !s.isFileExist) {
                 songsRestored++
@@ -115,7 +122,10 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         //И уведомление с результатами
         //Вообще, наверное, не правильно в модели использовать контекст активити. Но пока сделаю так.
         // if (songsRestored!=0 || newSongFound!=0 || deletedSong!=0)
-        Log.i(TAG,"Новых песен найдено - $newSongFound \r\nУдалено песен - $deletedSong \r\nВосстановленно удаленных - $songsRestored")
+        Log.i(
+            TAG,
+            "Новых песен найдено - $newSongFound \r\nУдалено песен - $deletedSong \r\nВосстановленно удаленных - $songsRestored"
+        )
         App.instance.context
             .toast("Новых песен найдено - $newSongFound \r\nУдалено песен - $deletedSong \r\nВосстановленно удаленных - $songsRestored")
         //  return Observable.just(true).delay(5, TimeUnit.SECONDS)
@@ -140,10 +150,10 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
 
     fun setPositionInList(position: Int) {
         currentSongPositionInList = position
-        if (isPlaying==PlayState.Play) doWithMedia("next")
+        if (isPlaying == PlayState.Play) doWithMedia("next")
     }
 
-     fun clearTag() {
+    fun clearTag() {
         val song = currentSong?.copy()
         if (song != null) {
             song.tags = ";"
@@ -152,7 +162,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         }
     }
 
-     fun newSearch(tags: String): Observable<ArrayList<Song>> {
+    fun newSearch(tags: String): Observable<ArrayList<Song>> {
         Log.i(TAG, "new search")
         searchTags = tags
         createCurrentList()
@@ -160,12 +170,12 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         return Observable.just(currentSongsList)
     }
 
-     fun saveSongToDB(song: Song) {
+    fun saveSongToDB(song: Song) {
         helper.writeSong(song)
         Log.i(TAG, "Song with name ${song.name} and tags ${song.tags} saved to DB")
     }
 
-     fun nextSong() {
+    fun nextSong() {
         if (currentSongsList.isNotEmpty()) {
             currentSongPositionInList = getNextPositionInList(
                 currentSongsShuffledListNumber,
@@ -175,11 +185,11 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             Log.i(
                 TAG, "Next track ${currentSong?.name} / ${currentSong?.tags}"
             )
-                doWithMedia("next")
+            doWithMedia("next")
         }
     }
 
-     fun prevSong() {
+    fun prevSong() {
         if (currentSongsList.isNotEmpty()) {
             currentSongPositionInList = getPrevPositionInList(
                 currentSongsShuffledListNumber,
@@ -190,12 +200,8 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
                 TAG, "New track ${currentSong?.name} / ${currentSong?.tags}"
             )
 
-                doWithMedia("next")
+            doWithMedia("next")
         }
-    }
-
-    private fun prepareTrackLoadToPlayer() {
-
     }
 
     private fun prepareTrackForPlayer() {
@@ -216,9 +222,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             AudioManager.STREAM_MUSIC,
             AudioManager.AUDIOFOCUS_GAIN
         )
-//        val mRemoteControlResponder =
-//            ComponentName(MainActivity.applicationContext().packageName, RemoteControl::class.java!!.name)
-//        audioManager.registerMediaButtonEventReceiver(mRemoteControlResponder)
         if (audioFocusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
             return
 
@@ -229,15 +232,33 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         // Загружаем URL аудио-файла в Player
         exoPlayer =
             MediaPlayer.create(App.instance.context, Uri.parse(currentSong?.path))
+        exoPlayer.setOnCompletionListener {
+            Log.i(TAG, "Track complete")
+            when (repeatStatus) {
+                RepeatState.All -> {
+                    nextSong()
+                    App.instance.viewModel.setCurrentSong()
+                }
+                RepeatState.One -> {
+                    stop()
+                    play()
+                    App.instance.viewModel.setCurrentSong()
+                }
+                RepeatState.Stop -> {
+                    stop()
+                    App.instance.viewModel.setCurrentSong()
+                }
+            }
+        }
     }
 
     private fun doWithMedia(s: String) {
         callBackAwaited = true
         when (s) {
             "play" -> {
-                if (isPlaying!=PlayState.Pause)
+                if (isPlaying != PlayState.Pause)
                     prepareTrackForPlayer()
-                        //  prepareTrackLoadToPlayer()
+                //  prepareTrackLoadToPlayer()
                 // Запускаем воспроизведение
                 exoPlayer.start()
                 duration.set(exoPlayer.duration)
@@ -265,7 +286,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             }
             "next" -> {
                 exoPlayer.stop()
-                if (isPlaying==PlayState.Pause || isPlaying == PlayState.Stop) {
+                if (isPlaying == PlayState.Pause || isPlaying == PlayState.Stop) {
                     Log.i(TAG, "next/here")
                     //Новый файл не загружаем в плеер,
                     prepareTrackForPlayer()
@@ -280,8 +301,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
                         ).build()
                     )
                     //mediaSession.isActive = false
-                }
-                else {
+                } else {
                     isPlaying = PlayState.Stop
                     doWithMedia("play")
                 }
@@ -305,7 +325,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
 
     fun play() {
         Log.i(TAG, "Play, isPlaying =  $isPlaying")
-        if (isPlaying==PlayState.Play) {
+        if (isPlaying == PlayState.Play) {
             doWithMedia("pause")
         } else {
             doWithMedia("play")
@@ -313,25 +333,40 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     }
 
     fun stop() {
-        if (isPlaying!=PlayState.Stop) doWithMedia("stop")
+        if (isPlaying != PlayState.Stop) doWithMedia("stop")
     }
 
-     fun changeShuffle() {
+    fun changeShuffle() {
         shuffleStatus = !shuffleStatus
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
+        App.instance.appSettings.edit()
+            .putBoolean(APP_PREFERENCES_SHUFFLE, shuffleStatus)
+            .apply()
         Log.i(TAG, "Now shuffle is $shuffleStatus")
     }
 
-     fun changeRepeat() {
-        repeatStatus = when (repeatStatus) {
-            RepeatState.All -> RepeatState.One
-            RepeatState.One -> RepeatState.Stop
-            RepeatState.Stop -> RepeatState.All
+    fun changeRepeat() {
+        var rs = 0
+        when (repeatStatus) {
+            RepeatState.All -> {
+                repeatStatus = RepeatState.One
+                rs=1
+            }
+            RepeatState.One -> {
+                repeatStatus = RepeatState.Stop
+                rs = 2
+            }
+            RepeatState.Stop -> {
+                repeatStatus = RepeatState.All
+            }
         }
+        App.instance.appSettings.edit()
+            .putInt(APP_PREFERENCES_REPEAT, rs)
+            .apply()
         Log.i(TAG, "Now repeat is $repeatStatus")
     }
 
-     fun testAction() {
+    fun testAction() {
         Log.i(TAG, "testAction")
     }
 
@@ -341,16 +376,13 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
 
     fun setMediaSessonCallback(mediaSessionCallback: MediaSessionCompat.Callback) {
         mediaSession.setCallback(mediaSessionCallback)
-//        val mRemoteControlResponder =
-//            ComponentName(MainActivity.applicationContext().packageName, RemoteControl::class.java!!.name)
-//        audioManager.registerMediaButtonEventReceiver(mRemoteControlResponder)
     }
 
     fun setMediaControllerCallback(mediaControllerCallback: MediaControllerCompat.Callback) {
         mediaController?.registerCallback(mediaControllerCallback)
     }
 
-     fun initialize() {
+    fun initialize() {
         Log.i(TAG, "initialization")
         mediaSession = MediaSessionCompat(App.instance.context, "LYMPService")
         // FLAG_HANDLES_MEDIA_BUTTONS - хотим получать события от аппаратных кнопок
@@ -397,15 +429,16 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     }
 
     fun jumpToPosition(position: Int) {
-        Log.i(TAG,"Seek to position $position")
+        Log.i(TAG, "Seek to position $position")
         exoPlayer.seekTo(position)
-//        mediaController?.transportControls?.seekTo(position.toLong())
-//        mediaSession.setPlaybackState(
-//            stateBuilder.setState(
-//                PlaybackStateCompat.STATE_REWINDING,
-//                position.toLong(), 1f
-//            ).build()
-//        )
+    }
+
+    fun setShuffleStatus(newShuffleStatus: Boolean) {
+        shuffleStatus = newShuffleStatus
+    }
+
+    fun setRepeatStatus(newRepeatStatus: RepeatState) {
+        repeatStatus = newRepeatStatus
     }
 
     // Закешируем билдеры
@@ -448,6 +481,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
                 else -> {
                     // Фокус совсем отняли.
                     // mediaSessionCallback.onPause()
+
                 }
             }
         }

@@ -231,7 +231,6 @@ class LYMPService : LifecycleService() {
                 if (viewModel.getIsPlaying()==PlayState.Play)
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
                 else  refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PAUSED)
-               // refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PAUSED)
             }
 
             override fun onStop() {
@@ -252,11 +251,12 @@ class LYMPService : LifecycleService() {
             }
 
             override fun onSkipToPrevious() {
-                //Мы не бросаем событие PlaybackStateCompat.STATE_SKIPPING_TO_NEXT
-                //Поэтому проверка не нужна. Если начнем - надо добавить.
                 Log.i(TAG, "callback onPrev")
-                viewModel.prevPress()
-                viewModel.playPress()
+                if (!viewModel.getCallBackAwaited()) {
+                    viewModel.prevPress()
+                    viewModel.playPress()
+                }
+                else viewModel.setCallBackAwaited(false)
                 refreshNotificationAndForegroundStatus(PlaybackStateCompat.STATE_PLAYING)
             }
         }

@@ -141,6 +141,17 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         shuffle.set(model.getShuffleStatus())
     }
 
+    //Для восстановления из настроек
+    fun setShuffle(newShuffleStatus : Boolean) {
+        model.setShuffleStatus(newShuffleStatus)
+        shuffle.set(model.getShuffleStatus())
+    }
+    fun setRepeat(newRepeatStatus : RepeatState) {
+        model.setRepeatStatus(newRepeatStatus)
+        repeat.set(model.getRepeatStatus())
+    }
+
+
     override fun repeatPress() {
         model.changeRepeat()
         repeat.set(model.getRepeatStatus())
@@ -242,7 +253,7 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     }
 
     //Используется, когда у нас будет меняться текущий выбранный трек и надо подгрузить информацию о новом.
-    private fun setCurrentSong() {
+    public fun setCurrentSong() {
         model.getCurrentSong()
             .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
