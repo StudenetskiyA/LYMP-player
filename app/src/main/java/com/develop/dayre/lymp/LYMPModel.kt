@@ -114,7 +114,11 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
                         ID = getHashFromNameAndSize(
                             f.getNameFromPath(),
                             getFileSize(f)
-                        ), name = f.getNameFromPath(), path = f, isFileExist = true , added = dateTime
+                        ),
+                        name = f.getNameFromPath(),
+                        path = f,
+                        isFileExist = true,
+                        added = dateTime
                     )
                 )
             }
@@ -182,8 +186,14 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         Log.i(TAG, "Song with name ${song.name} and tags ${song.tags} saved to DB")
     }
 
-    fun nextSong() {
+    fun nextSong(doNotIncreaseListenedTimes: Boolean = false) {
         if (currentSongsList.isNotEmpty()) {
+            if (!doNotIncreaseListenedTimes && currentSong != null && (exoPlayer.currentPosition * 2) > exoPlayer.duration) {
+                val cs = currentSong!!.copy()
+                cs.listenedTimes += 0.5
+                helper.writeSong(cs)
+            }
+
             currentSongPositionInList = getNextPositionInList(
                 currentSongsShuffledListNumber,
                 currentSongPositionInList,
@@ -198,6 +208,11 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
 
     fun prevSong() {
         if (currentSongsList.isNotEmpty()) {
+            if (currentSong != null && (exoPlayer.currentPosition * 2) > exoPlayer.duration) {
+                val cs = currentSong!!.copy()
+                cs.listenedTimes += 0.5
+                helper.writeSong(cs)
+            }
             currentSongPositionInList = getPrevPositionInList(
                 currentSongsShuffledListNumber,
                 currentSongPositionInList,
@@ -237,15 +252,20 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         mediaSession.isActive = true
 
         // Загружаем URL аудио-файла в Player
-        if (currentSong!=null && currentSong?.path!="") {
+        if (currentSong != null && currentSong?.path != "") {
             exoPlayer =
                 MediaPlayer.create(App.instance.context, Uri.parse(currentSong?.path))
             duration.set(exoPlayer.duration)
             exoPlayer.setOnCompletionListener {
                 Log.i(TAG, "Track complete")
+                if (currentSong != null) {
+                    val cs = currentSong!!.copy()
+                    cs.listenedTimes++
+                    helper.writeSong(cs)
+                }
                 when (repeatStatus) {
                     RepeatState.All -> {
-                        nextSong()
+                        nextSong(true)
                         App.instance.viewModel.setCurrentSong()
                     }
                     RepeatState.One -> {
@@ -359,7 +379,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         when (repeatStatus) {
             RepeatState.All -> {
                 repeatStatus = RepeatState.One
-                rs=1
+                rs = 1
             }
             RepeatState.One -> {
                 repeatStatus = RepeatState.Stop
@@ -380,7 +400,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         when (sortStatus) {
             SortState.ByName -> {
                 sortStatus = SortState.ByListened
-                ss=1
+                ss = 1
             }
             SortState.ByListened -> {
                 sortStatus = SortState.ByAdded
@@ -452,7 +472,12 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     //Private
     private fun createCurrentList() {
         currentSongsList =
-            ArrayList(helper.getSongsFromDBToCurrentSongsList(getListFromString(searchTags),sort = sortStatus))
+            ArrayList(
+                helper.getSongsFromDBToCurrentSongsList(
+                    getListFromString(searchTags),
+                    sort = sortStatus
+                )
+            )
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
     }
 

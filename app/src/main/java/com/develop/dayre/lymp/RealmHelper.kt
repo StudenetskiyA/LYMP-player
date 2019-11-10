@@ -53,7 +53,7 @@ class RealmHelper(context: Context) {
 
         result = when (sort) {
             ByName -> result?.sortedBy { it.name }
-            ByListened -> result?.sortedBy { it.listenedTimes }
+            ByListened -> result?.sortedByDescending { it.listenedTimes }
             else -> {
                 result?.sortedBy { it.added }
             }
