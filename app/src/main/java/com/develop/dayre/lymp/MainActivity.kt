@@ -8,8 +8,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
-import android.widget.ListView
-import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import kotlinx.android.synthetic.main.activity_main.*
 import com.develop.dayre.lymp.databinding.ActivityMainBinding
@@ -25,8 +23,7 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.content.Intent
 import android.os.Handler
 import android.os.SystemClock
-import android.widget.EditText
-import android.widget.SeekBar
+import android.widget.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -220,6 +217,20 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+
+        ratingBar.onRatingBarChangeListener =
+            RatingBar.OnRatingBarChangeListener { _, rating, _ ->
+                val cs = viewModel.currentSong.value?.copy()
+                if (cs != null) {
+                    cs.rating = rating.toInt()
+                    viewModel.currentSongEdit(cs)
+                }
+            }
+        ratingBarInSearch.onRatingBarChangeListener =
+            RatingBar.OnRatingBarChangeListener { _, rating, _ ->
+                viewModel.setSearchRating(rating.toInt())
+                viewModel.newSearch()
+            }
     }
 
     private fun createView() {
@@ -277,8 +288,8 @@ class MainActivity : AppCompatActivity() {
                     "${resources.getText(R.string.added_at)} ${viewModel.currentSong.value?.added}"
                 track_info_listened_times.text =
                     "${resources.getText(R.string.listened_times)} ${viewModel.currentSong.value?.listenedTimes}"
-
-                if (viewModel.currentSongsList.value != null && viewModel.currentSongsList.value!!.contains(
+                ratingBar.rating = if (viewModel.currentSong.value?.rating!=null) viewModel.currentSong.value?.rating!!.toFloat() else 0f
+                    if (viewModel.currentSongsList.value != null && viewModel.currentSongsList.value!!.contains(
                         viewModel.currentSong.value
                     )
                 ) {

@@ -38,6 +38,8 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     private var shuffleStatus: Boolean = false
     private var repeatStatus = RepeatState.All
     private var sortStatus = SortState.ByName
+    private var searchMinRating = 0
+
     private var currentSongPositionInList: Int = 0
         set(value) {
             if (value < currentSongsList.size) {
@@ -173,17 +175,17 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         }
     }
 
-    fun newSearch(tags: String): Observable<ArrayList<Song>> {
+    fun newSearch(tags: String = ""): Observable<ArrayList<Song>> {
         Log.i(TAG, "new search")
+        if (tags!="")
         searchTags = tags
         createCurrentList()
-        //  return Observable.just(currentSongsList).delay(5, TimeUnit.SECONDS)
         return Observable.just(currentSongsList)
     }
 
     fun saveSongToDB(song: Song) {
         helper.writeSong(song)
-        Log.i(TAG, "Song with name ${song.name} and tags ${song.tags} saved to DB")
+        Log.i(TAG, "Song with name ${song.name}, tags ${song.tags} and rating ${song.rating} saved to DB")
     }
 
     fun nextSong(doNotIncreaseListenedTimes: Boolean = false) {
@@ -475,7 +477,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             ArrayList(
                 helper.getSongsFromDBToCurrentSongsList(
                     getListFromString(searchTags),
-                    sort = sortStatus
+                    sort = sortStatus, minRating = searchMinRating
                 )
             )
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
@@ -501,6 +503,10 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     fun setSortStatus(newSortStatus: SortState) {
         sortStatus = newSortStatus
         createCurrentList()
+    }
+
+    fun setSearchRating(rating: Int) {
+        searchMinRating = rating
     }
 
     private val metadataBuilder = MediaMetadataCompat.Builder()

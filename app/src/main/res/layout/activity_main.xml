@@ -117,13 +117,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
-                        android:numStars="@{viewmodel.getCurrentSong().rating}"
+
                         android:stepSize="1" />
-                    <!--            -->
+                    <!--android:numStars="@{viewmodel.getCurrentSong().rating}" - doesn't work            -->
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="-18dp"
                         android:orientation="horizontal">
 
                         <ImageButton
@@ -264,6 +265,19 @@
                                 android:layout_toRightOf="@id/andor_search_button"
                                 android:scaleType="fitXY"
                                 android:src="@{viewmodel.sort==SortState.ByName ? @drawable/sortbyname : viewmodel.sort==SortState.ByListened ? @drawable/sortbylistened : @drawable/sortbydate}"/>
+                            <RatingBar
+                                android:id="@+id/ratingBarInSearch"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentRight="true"
+                                android:layout_centerVertical="true"
+                                style="?android:attr/ratingBarStyleIndicator"
+                                android:transformPivotX="0dp"
+                                android:transformPivotY="0dp"
+                                android:isIndicator="false"
+                                android:numStars="@{viewmodel.getCurrentSong().rating}"
+                                android:stepSize="1" />
+
                         </RelativeLayout>
                         <TextView
                             android:id="@+id/tracks_found"

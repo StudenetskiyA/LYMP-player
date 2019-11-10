@@ -36,7 +36,8 @@ class RealmHelper(context: Context) {
         tags: List<String>,
         tagsFlag: TagsFlag = Or,
         sort: SortState = ByName,
-        searchName: String = ""
+        searchName: String = "",
+        minRating: Int = 0
     ): ArrayList<Song> {
         var result: List<Song>? = if (tags.isNotEmpty()) {
             if (tagsFlag == Or)
@@ -50,6 +51,8 @@ class RealmHelper(context: Context) {
         } else getAllSongsFileExist()
 
         result = result?.filter { it.name.contains(searchName) }
+        result = result?.filter { it.rating>=minRating }
+
 
         result = when (sort) {
             ByName -> result?.sortedBy { it.name }

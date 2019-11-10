@@ -13,7 +13,6 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 
 interface ILYMPViewModel {
-    fun newSearch(tags: String = "")
     fun nextPress()
     fun prevPress()
     fun playPress()
@@ -155,7 +154,7 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     }
 
     //Вызывается вью при новом поиске. TODO Добавить сюда остальные критерии поиска.
-    override fun newSearch(tags: String) {
+    fun newSearch(tags: String = "") {
         Log.i(TAG, "load songs")
         isLoadingSongsList.set(true)
 
@@ -308,5 +307,9 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
 
     fun setAllTagsFromSettings(t: String) {
         model.setAllTagsFromSettings(t)
+    }
+
+    fun setSearchRating(rating: Int) {
+        model.setSearchRating(rating)
     }
 }
