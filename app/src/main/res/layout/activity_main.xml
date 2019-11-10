@@ -6,6 +6,7 @@
         <import type="android.view.View" />
 
         <import type="com.develop.dayre.lymp.RepeatState" />
+        <import type="com.develop.dayre.lymp.SortState" />
 
         <variable
             name="viewmodel"
@@ -262,7 +263,7 @@
                                 android:background="@android:color/transparent"
                                 android:layout_toRightOf="@id/andor_search_button"
                                 android:scaleType="fitXY"
-                                android:src="@drawable/sortadddate" />
+                                android:src="@{viewmodel.sort==SortState.ByName ? @drawable/sortbyname : viewmodel.sort==SortState.ByListened ? @drawable/sortbylistened : @drawable/sortbydate}"/>
                         </RelativeLayout>
                         <TextView
                             android:id="@+id/tracks_found"

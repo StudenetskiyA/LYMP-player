@@ -1,20 +1,16 @@
 package com.develop.dayre.lymp
 
-import android.app.Application
 import android.media.AudioManager
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
-import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.databinding.ObservableField
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.activity_main.*
 
 interface ILYMPViewModel {
     fun newSearch(tags: String = "")
@@ -36,12 +32,6 @@ interface ILYMPViewModel {
     fun testPress()
 }
 
-class MyViewModelFactory(val audioManager: AudioManager) : ViewModelProvider.Factory {
-    override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-        return modelClass.getConstructor(AudioManager::class.java).newInstance(audioManager)
-    }
-}
-
 class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     private val TAG = "$APP_TAG/viewmodel"
 
@@ -55,6 +45,7 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     var currentSearchTags = MutableLiveData<String>()
     val shuffle = ObservableField<Boolean>()
     val repeat = ObservableField<RepeatState>()
+    val sort = ObservableField<SortState>()
     var isShowMore = ObservableField<Boolean>(false)
 
     fun startModel() {
@@ -140,6 +131,14 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         model.changeShuffle()
         shuffle.set(model.getShuffleStatus())
     }
+    override fun repeatPress() {
+        model.changeRepeat()
+        repeat.set(model.getRepeatStatus())
+    }
+    fun sortPress() {
+        model.changeSort()
+        sort.set(model.getSortStatus())
+    }
 
     //Для восстановления из настроек
     fun setShuffle(newShuffleStatus : Boolean) {
@@ -150,11 +149,9 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         model.setRepeatStatus(newRepeatStatus)
         repeat.set(model.getRepeatStatus())
     }
-
-
-    override fun repeatPress() {
-        model.changeRepeat()
-        repeat.set(model.getRepeatStatus())
+    fun setSort(newSortStatus : SortState) {
+        model.setSortStatus(newSortStatus)
+        sort.set(model.getSortStatus())
     }
 
     //Вызывается вью при новом поиске. TODO Добавить сюда остальные критерии поиска.

@@ -127,6 +127,14 @@ class MainActivity : AppCompatActivity() {
             Log.i(TAG, "shuffle button pressed")
             viewModel.shufflePress()
         }
+        sort_search_button.setOnClickListener {
+            Log.i(TAG, "sort button pressed")
+            viewModel.sortPress()
+            viewModel.newSearch(viewModel.currentSearchTags.value!!)
+            App.instance.context
+                .toast("Sort status set ${viewModel.sort.get()}")
+
+        }
         showmorebutton.setOnClickListener {
             Log.i(TAG, "showmore button pressed")
             viewModel.showMorePress()
@@ -449,6 +457,13 @@ class MainActivity : AppCompatActivity() {
                1 -> viewModel.setRepeat(RepeatState.One)
                2 -> viewModel.setRepeat(RepeatState.Stop)
            }
+        }
+        if (settings.contains(APP_PREFERENCES_SORT)) {
+            when (settings.getInt(APP_PREFERENCES_SORT, 0)) {
+                0 -> viewModel.setSort(SortState.ByName)
+                1 -> viewModel.setSort(SortState.ByListened)
+                2 -> viewModel.setSort(SortState.ByAdded)
+            }
         }
 
         viewModel.newSearch(search)
