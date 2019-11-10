@@ -42,11 +42,10 @@ class MyViewModelFactory(val audioManager: AudioManager) : ViewModelProvider.Fac
     }
 }
 
-class LYMPViewModel(application: Application, audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
+class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     private val TAG = "$APP_TAG/viewmodel"
-    //var isPlaying = false
 
-    private var model = LYMPModel(application,audioManager)
+    private var model = LYMPModel(audioManager)
 
     var currentSongsList =
         MutableLiveData<ArrayList<Song>>() //Локальный список, потом будет урезанная версия.

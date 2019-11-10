@@ -9,7 +9,6 @@ class App : Application() {
         val instance = App()
     }
 
-    //val viewModel : LYMPViewModel by lazy {LYMPViewModel(this, getSystemService(Context.AUDIO_SERVICE) as AudioManager)}
     lateinit var viewModel : LYMPViewModel
     lateinit var context : Context
 
@@ -18,7 +17,7 @@ class App : Application() {
     }
 
     fun setViewModel(am : AudioManager) {
-        viewModel= LYMPViewModel(this, am)
+        viewModel= LYMPViewModel( am)
     }
 
     fun setAppContext(_context: Context) {

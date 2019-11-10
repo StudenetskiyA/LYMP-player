@@ -27,15 +27,10 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.media.AudioManager
 import android.support.v4.media.session.PlaybackStateCompat
 import android.content.Intent
-import android.net.ConnectivityManager
 import android.os.Handler
 import android.os.SystemClock
-import android.view.View
-import android.view.WindowManager
-import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.SeekBar
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -56,7 +51,9 @@ class MainActivity : AppCompatActivity() {
 
 
     private lateinit var settings: SharedPreferences
-    private var mLastPlaybackStatePosition : Int = 0//PlaybackStateCompat
+   // private lateinit var mLastPlaybackState : PlaybackStateCompat
+    private var mLastPlaybackStatePosition : Int = 0
+    private var mLastPlaybackStatePositionTime : Int = 0
     var isBound = false
 
     private val myConnection = object : ServiceConnection {
@@ -78,19 +75,7 @@ class MainActivity : AppCompatActivity() {
 
     private val MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 0
 
-//    init {
-//        instance = this
-//    }
-
     lateinit var viewModel: LYMPViewModel
-
-    companion object {
-        //var instance: MainActivity? = null
-
-//        fun applicationContext(): Context {
-//            return instance!!.applicationContext
-//        }
-    }
 
     private fun createControl() {
         Log.i(TAG, "createControl")
@@ -140,12 +125,18 @@ class MainActivity : AppCompatActivity() {
         }
         stopbutton.setOnClickListener {
             Log.i(TAG, "stop button pressed")
-            Intent().also { intent ->
-                intent.action = WIDGET_ACTION_PLAY_PAUSE
-                sendBroadcast(intent)
-            }
-            viewModel.stopPress()
+//            Intent().also { intent ->
+//                intent.action = WIDGET_ACTION_PLAY_PAUSE
+//                sendBroadcast(intent)
+//            }
+
+//            //Send broadcast to widget
+//            val ws = WidgetState("New station from LYMP", "New artist from LYMP", "New song", false, "")
+//            val pi = getIntentBroadcast(App.instance.context, WIDGET_ACTION_PLAY_PAUSE,ws)
+//            sendBroadcast(pi)
+////           // viewModel.stopPress()
         }
+
         shufflebutton.setOnClickListener {
             Log.i(TAG, "shuffle button pressed")
             viewModel.shufflePress()
@@ -229,6 +220,8 @@ class MainActivity : AppCompatActivity() {
                 if (fromUser) {
                     Log.i(TAG,"seekBar onProgressChanged by user")
                     //seek here
+                    mLastPlaybackStatePosition = progress
+                    mLastPlaybackStatePositionTime = SystemClock.elapsedRealtime().toInt()
                     viewModel.jumpToPosition(progress)
                 }
             }
@@ -244,10 +237,8 @@ class MainActivity : AppCompatActivity() {
             throw RuntimeException("Application in not implemented IModulePlayer.Application")
         }
 
-
         App.instance.setAppContext(this)
         App.instance.setViewModel(getSystemService(Context.AUDIO_SERVICE) as AudioManager)
-
         viewModel = App.instance.getAppViewModel()
         viewModel.startModel()
         binding.viewmodel = viewModel
@@ -317,8 +308,8 @@ class MainActivity : AppCompatActivity() {
             override fun onPlaybackStateChanged(state: PlaybackStateCompat) {
                 Log.i(TAG, "PlayState changed.")
                 mLastPlaybackStatePosition = state.position.toInt()
+                mLastPlaybackStatePositionTime =  SystemClock.elapsedRealtime().toInt()
                 scheduleSeekbarUpdate()
-                Log.i(TAG, "Position = $mLastPlaybackStatePosition")
                 if (state.state == PlaybackStateCompat.STATE_PLAYING)
                     playbutton.setImageResource(R.drawable.pause_inbar)
                 else
@@ -332,11 +323,6 @@ class MainActivity : AppCompatActivity() {
         Log.i(TAG, "onResume")
         readSettings()
     }
-
-//    override fun onStart() {
-//        super.onStart()
-//
-//    }
 
     private fun grantPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -410,12 +396,6 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this@MainActivity, LYMPService::class.java)
         bindService(intent, myConnection, Context.BIND_AUTO_CREATE)
         startService(intent)
-
-        val br = WidgetBroadcastReceiver()
-        val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION).apply {
-            addAction(WIDGET_ACTION_PLAY_PAUSE)
-        }
-        registerReceiver(br, filter)
     }
 
     private fun buildSearchField() {
@@ -476,20 +456,20 @@ class MainActivity : AppCompatActivity() {
 
     //For SeekBar
     private fun updateProgress() {
-        var currentPosition = mLastPlaybackStatePosition
+        var currentPosition:Int = mLastPlaybackStatePosition
         if (viewModel.getIsPlaying()==PlayState.Play) {
-            val timeDelta = SystemClock.elapsedRealtime() -  mLastPlaybackStatePosition
-                 //   mLastPlaybackState.lastPositionUpdateTime
+            val timeDelta = SystemClock.elapsedRealtime() -  mLastPlaybackStatePositionTime
             currentPosition +=  (timeDelta * 1).toInt()
         }
         seekBar.max = viewModel.getCurrentTrackDuration()
         seekBar.progress =  currentPosition
-      //  Log.i(TAG, "Update seekbar ${currentPosition.toInt()} / ${viewModel.getCurrentTrackDuration()}")
+        Log.i(TAG, "Update seekbar $currentPosition / ${viewModel.getCurrentTrackDuration()}")
     }
 
     fun scheduleSeekbarUpdate() {
         stopSeekbarUpdate()
         if (!mExecutorService.isShutdown) {
+            Log.i(TAG,"sheduleSeekbarUpdate")
             mScheduleFuture = mExecutorService.scheduleAtFixedRate(
                 {
                         mHandler.post {updateProgress()}

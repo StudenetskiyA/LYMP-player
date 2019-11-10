@@ -26,7 +26,7 @@ enum class PlayState { Play, Stop, Pause }
 enum class SortState { ByName, ByAdded, ByListened }
 enum class TagsFlag { Or, And }
 
-class LYMPModel(private val application: Application, private val audioManager: AudioManager) : BaseObservable() {
+class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     var callBackAwaited : Boolean = false
     private var mediaController: MediaControllerCompat? = null
     private val TAG = "$APP_TAG/model"

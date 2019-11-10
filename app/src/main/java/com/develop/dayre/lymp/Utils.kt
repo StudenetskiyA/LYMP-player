@@ -1,7 +1,9 @@
 package com.develop.dayre.lymp
 
 import android.app.Activity
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Handler
 import android.view.Gravity
 import android.view.View
@@ -51,6 +53,7 @@ fun getFilesListInFolderAndSubFolder(path : File,endWith : String) : ArrayList<S
 //    }
 //    return find
 //}
+
 
 fun getStringFromList(list : ArrayList<String>) : String{
     var result = "$SPACE_IN_LINK"
