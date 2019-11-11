@@ -5,7 +5,6 @@ import android.util.Log
 import io.realm.Realm
 import io.realm.RealmConfiguration
 
-import com.develop.dayre.lymp.TagsFlag.*
 import com.develop.dayre.lymp.SortState.*
 
 class RealmHelper(context: Context) {
@@ -34,13 +33,13 @@ class RealmHelper(context: Context) {
 
     fun getSongsFromDBToCurrentSongsList(
         tags: List<String>,
-        tagsFlag: TagsFlag = Or,
+        andOrFlag: AndOrState = AndOrState.Or,
         sort: SortState = ByName,
         searchName: String = "",
         minRating: Int = 0
     ): ArrayList<Song> {
         var result: List<Song>? = if (tags.isNotEmpty()) {
-            if (tagsFlag == Or)
+            if (andOrFlag == AndOrState.Or)
                 getAllSongsFileExist().filter {
                     it.tags.split(SPACE_IN_LINK).intersect(tags.asIterable()).isNotEmpty()
                 }

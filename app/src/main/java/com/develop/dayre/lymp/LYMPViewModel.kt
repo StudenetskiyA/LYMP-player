@@ -45,6 +45,7 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     val shuffle = ObservableField<Boolean>()
     val repeat = ObservableField<RepeatState>()
     val sort = ObservableField<SortState>()
+    val andOr = ObservableField<AndOrState>()
     var isShowMore = ObservableField<Boolean>(false)
 
     fun startModel() {
@@ -68,6 +69,7 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     override fun currentSongEdit(song: Song) {
         model.saveSongToDB(song)
         setCurrentSong()
+        newSearch()
     }
 
     fun showMorePress() {
@@ -137,6 +139,16 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     fun sortPress() {
         model.changeSort()
         sort.set(model.getSortStatus())
+        newSearch()
+    }
+    fun andOrPress() {
+        model.changeAndOr()
+        andOr.set(model.getAndOrStatus())
+        newSearch()
+    }
+    fun setSearchRating(rating: Int) {
+        model.setSearchRating(rating)
+        newSearch()
     }
 
     //Для восстановления из настроек
@@ -151,6 +163,10 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     fun setSort(newSortStatus : SortState) {
         model.setSortStatus(newSortStatus)
         sort.set(model.getSortStatus())
+    }
+    fun setAndOr(newAndOrStatus : AndOrState) {
+        model.setAndOrStatus(newAndOrStatus)
+        andOr.set(model.getAndOrStatus())
     }
 
     //Вызывается вью при новом поиске. TODO Добавить сюда остальные критерии поиска.
@@ -185,12 +201,6 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     //Выбор песни из текущего листа по номеру в листе. Например, при нажатии на трек в списке.
     fun songInListPress(positionInList: Int) {
         model.setPositionInList(positionInList)
-        setCurrentSong()
-    }
-
-    //Используется для выбора песни не из текущего листа. Например, при загрузке из настроек.
-    fun songSelect(songName: String) {
-        model.setCurrentSong(songName)
         setCurrentSong()
     }
 
@@ -307,9 +317,5 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
 
     fun setAllTagsFromSettings(t: String) {
         model.setAllTagsFromSettings(t)
-    }
-
-    fun setSearchRating(rating: Int) {
-        model.setSearchRating(rating)
     }
 }

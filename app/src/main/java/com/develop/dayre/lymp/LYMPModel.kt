@@ -23,7 +23,7 @@ import java.util.*
 enum class RepeatState { All, One, Stop }
 enum class PlayState { Play, Stop, Pause }
 enum class SortState { ByName, ByAdded, ByListened }
-enum class TagsFlag { Or, And }
+enum class AndOrState { Or, And }
 
 class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     var callBackAwaited: Boolean = false
@@ -38,6 +38,8 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     private var shuffleStatus: Boolean = false
     private var repeatStatus = RepeatState.All
     private var sortStatus = SortState.ByName
+    private var andOrStatus = AndOrState.Or
+
     private var searchMinRating = 0
 
     private var currentSongPositionInList: Int = 0
@@ -57,18 +59,14 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     fun getShuffleStatus(): Boolean {
         return shuffleStatus
     }
-
     fun getRepeatStatus(): RepeatState {
         return repeatStatus
     }
-
     fun getSortStatus(): SortState {
         return sortStatus
     }
-
-
-    fun getCurrentSongsList(): ArrayList<Song> {
-        return currentSongsList
+    fun getAndOrStatus(): AndOrState {
+        return andOrStatus
     }
 
     fun getCurrentSong(): Observable<SongOrNull> {
@@ -78,7 +76,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         //In Rx2 I can't do Observable.just(null)!
         else Observable.just(SongOrNull(Song(), true))
     }
-
     fun getCurrentSearchTags(): Observable<String> {
         return Observable.just(searchTags)
     }
@@ -151,7 +148,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             currentSongPositionInList = currentSongsList.indexOf(s)
         }
     }
-
     fun setCurrentSongByID(songID: String) {
         val s = helper.getSongByID(songID)
         if (s != null && currentSongsList.contains(s)) {
@@ -160,7 +156,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         }
         prepareTrackForPlayer()
     }
-
     fun setPositionInList(position: Int) {
         currentSongPositionInList = position
         if (isPlaying == PlayState.Play) doWithMedia("next")
@@ -207,7 +202,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             doWithMedia("next")
         }
     }
-
     fun prevSong() {
         if (currentSongsList.isNotEmpty()) {
             if (currentSong != null && (exoPlayer.currentPosition * 2) > exoPlayer.duration) {
@@ -283,7 +277,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             }
         }
     }
-
     private fun doWithMedia(s: String) {
         callBackAwaited = true
         when (s) {
@@ -375,8 +368,8 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             .apply()
         Log.i(TAG, "Now shuffle is $shuffleStatus")
     }
-
     fun changeRepeat() {
+        //TODO
         var rs = 0
         when (repeatStatus) {
             RepeatState.All -> {
@@ -396,8 +389,8 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             .apply()
         Log.i(TAG, "Now repeat is $repeatStatus")
     }
-
     fun changeSort() {
+        //TODO
         var ss = 0
         when (sortStatus) {
             SortState.ByName -> {
@@ -418,6 +411,44 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         createCurrentList()
         Log.i(TAG, "Now sortStatus is $sortStatus")
     }
+    fun changeAndOr() {
+        andOrStatus =
+        when (andOrStatus) {
+            AndOrState.Or -> {
+                 AndOrState.And
+            }
+            AndOrState.And -> {
+                AndOrState.Or
+            }
+        }
+        App.instance.appSettings.edit()
+            .putInt(APP_PREFERENCES_ANDOR, andOrStatus.ordinal)
+            .apply()
+        createCurrentList()
+        Log.i(TAG, "Now andOrStatus is $andOrStatus")
+    }
+    fun setShuffleStatus(newShuffleStatus: Boolean) {
+        shuffleStatus = newShuffleStatus
+    }
+    fun setRepeatStatus(newRepeatStatus: RepeatState) {
+        repeatStatus = newRepeatStatus
+    }
+    fun setSortStatus(newSortStatus: SortState) {
+        sortStatus = newSortStatus
+        createCurrentList()
+    }
+    fun setAndOrStatus(newAndOrStatus: AndOrState) {
+        andOrStatus = newAndOrStatus
+        createCurrentList()
+    }
+    fun setSearchRating(rating: Int) {
+        searchMinRating = rating
+        App.instance.appSettings.edit()
+            .putInt(APP_PREFERENCES_SEARCH_MIN_RATING, searchMinRating)
+            .apply()
+        createCurrentList()
+    }
+
 
     fun testAction() {
         Log.i(TAG, "testAction")
@@ -477,7 +508,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             ArrayList(
                 helper.getSongsFromDBToCurrentSongsList(
                     getListFromString(searchTags),
-                    sort = sortStatus, minRating = searchMinRating
+                    sort = sortStatus, minRating = searchMinRating, andOrFlag = andOrStatus
                 )
             )
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
@@ -490,23 +521,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     fun jumpToPosition(position: Int) {
         Log.i(TAG, "Seek to position $position")
         exoPlayer.seekTo(position)
-    }
-
-    fun setShuffleStatus(newShuffleStatus: Boolean) {
-        shuffleStatus = newShuffleStatus
-    }
-
-    fun setRepeatStatus(newRepeatStatus: RepeatState) {
-        repeatStatus = newRepeatStatus
-    }
-
-    fun setSortStatus(newSortStatus: SortState) {
-        sortStatus = newSortStatus
-        createCurrentList()
-    }
-
-    fun setSearchRating(rating: Int) {
-        searchMinRating = rating
     }
 
     private val metadataBuilder = MediaMetadataCompat.Builder()
