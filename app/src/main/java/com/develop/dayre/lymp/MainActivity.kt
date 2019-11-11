@@ -120,6 +120,16 @@ class MainActivity : AppCompatActivity() {
             viewModel.stopPress()
         }
 
+        clear_search_button.setOnClickListener {
+            Log.i(TAG, "clear search button pressed")
+            ratingBarInSearch.rating=0f
+            viewModel.setSearchRating(0, true)
+            viewModel.newSearch(clearSearch = true)
+
+            App.instance.context
+                .toast("Clear search")
+        }
+
         shufflebutton.setOnClickListener {
             Log.i(TAG, "shuffle button pressed")
             viewModel.shufflePress()

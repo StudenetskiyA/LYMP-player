@@ -141,13 +141,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         return Observable.just(true)
     }
 
-    fun setCurrentSong(songName: String) {
-        val s = helper.getSongByName(songName)
-        if (s != null && currentSongsList.contains(s)) {
-            currentSong = s
-            currentSongPositionInList = currentSongsList.indexOf(s)
-        }
-    }
     fun setCurrentSongByID(songID: String) {
         val s = helper.getSongByID(songID)
         if (s != null && currentSongsList.contains(s)) {
@@ -172,7 +165,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
 
     fun newSearch(tags: String = ""): Observable<ArrayList<Song>> {
         Log.i(TAG, "new search")
-        if (tags!="")
         searchTags = tags
         createCurrentList()
         return Observable.just(currentSongsList)
@@ -441,12 +433,12 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         andOrStatus = newAndOrStatus
         createCurrentList()
     }
-    fun setSearchRating(rating: Int) {
+    fun setSearchRating(rating: Int, withoutNewSearch: Boolean = false) {
         searchMinRating = rating
         App.instance.appSettings.edit()
             .putInt(APP_PREFERENCES_SEARCH_MIN_RATING, searchMinRating)
             .apply()
-        createCurrentList()
+        if (!withoutNewSearch) createCurrentList()
     }
 
 

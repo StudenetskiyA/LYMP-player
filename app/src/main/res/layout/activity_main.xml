@@ -209,14 +209,6 @@
                             android:orientation="horizontal"
                             android:visibility="gone">
                             <ImageButton
-                                android:id="@+id/clear_search_button"
-                                android:layout_width="@dimen/medium_button_size"
-                                android:layout_height="@dimen/medium_button_size"
-                                android:background="@android:color/transparent"
-                                android:layout_alignParentStart="true"
-                                android:scaleType="fitXY"
-                                android:src="@drawable/editor" />
-                            <ImageButton
                                 android:id="@+id/test_saved_search_button"
                                 android:layout_width="@dimen/medium_button_size"
                                 android:layout_height="@dimen/medium_button_size"
@@ -267,6 +259,23 @@
                                 android:layout_toRightOf="@id/andor_search_button"
                                 android:scaleType="fitXY"
                                 android:src="@{viewmodel.sort==SortState.ByName ? @drawable/sortbyname : viewmodel.sort==SortState.ByListened ? @drawable/sortbylistened : @drawable/sortbydate}"/>
+                            <ImageButton
+                                android:id="@+id/withnotags_search_button"
+                                android:layout_width="@dimen/medium_button_size"
+                                android:layout_height="@dimen/medium_button_size"
+                                android:background="@android:color/transparent"
+                                android:layout_toRightOf="@id/sort_search_button"
+                                android:scaleType="fitXY"
+                                android:src="@drawable/searchwithnotags"/>
+                            <ImageButton
+                                android:id="@+id/clear_search_button"
+                                android:layout_width="@dimen/medium_button_size"
+                                android:layout_height="@dimen/medium_button_size"
+                                android:background="@android:color/transparent"
+                                android:layout_toRightOf="@id/withnotags_search_button"
+                                android:scaleType="fitXY"
+                                android:src="@drawable/searchclear"/>
+
                             <RatingBar
                                 android:id="@+id/ratingBarInSearch"
                                 android:layout_width="wrap_content"

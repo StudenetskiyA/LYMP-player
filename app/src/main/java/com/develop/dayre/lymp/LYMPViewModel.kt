@@ -146,9 +146,9 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         andOr.set(model.getAndOrStatus())
         newSearch()
     }
-    fun setSearchRating(rating: Int) {
-        model.setSearchRating(rating)
-        newSearch()
+    fun setSearchRating(rating: Int, withoutNewSearch: Boolean = false) {
+        model.setSearchRating(rating, withoutNewSearch)
+        if (!withoutNewSearch) newSearch()
     }
 
     //Для восстановления из настроек
@@ -170,10 +170,16 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     }
 
     //Вызывается вью при новом поиске. TODO Добавить сюда остальные критерии поиска.
-    fun newSearch(tags: String = "") {
-        Log.i(TAG, "load songs")
+    fun newSearch(searchTags: String = "", clearSearch: Boolean = false) {
+        Log.i(TAG, "load songs, $searchTags , ${currentSearchTags.value}")
         isLoadingSongsList.set(true)
+        var tags = if (searchTags!="") searchTags
+        else currentSearchTags.value
+        if (clearSearch) {
+            tags = ";"
+        }
 
+        if (tags!=null)
         model.newSearch(tags)
             .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
@@ -259,7 +265,7 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     }
 
     //Используется, когда у нас будет меняться текущий выбранный трек и надо подгрузить информацию о новом.
-    public fun setCurrentSong() {
+    fun setCurrentSong() {
         model.getCurrentSong()
             .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
