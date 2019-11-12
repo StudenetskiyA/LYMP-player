@@ -25,12 +25,6 @@ class RealmHelper(context: Context) {
         }
     }
 
-//    private fun getLastID():Long {
-//        return if ( realm.where(Song::class.java).count()!=0.toLong()) {
-//            realm.where(Song::class.java).max("ID").toLong()
-//        } else 0
-//    }
-
     fun getSongsFromDBToCurrentSongsList(
         tags: List<String>,
         andOrFlag: AndOrState = AndOrState.Or,
@@ -38,16 +32,20 @@ class RealmHelper(context: Context) {
         searchName: String = "",
         minRating: Int = 0
     ): ArrayList<Song> {
-        var result: List<Song>? = if (tags.isNotEmpty()) {
-            if (andOrFlag == AndOrState.Or)
-                getAllSongsFileExist().filter {
-                    it.tags.split(SPACE_IN_LINK).intersect(tags.asIterable()).isNotEmpty()
-                }
-            else
-                getAllSongsFileExist().filter {
-                    it.tags.split(SPACE_IN_LINK).toMutableList().containsAll(tags)
-                }
-        } else getAllSongsFileExist()
+        var result: List<Song>? = if (!tags.contains("#без_тегов")) {
+            if (tags.isNotEmpty()) {
+                if (andOrFlag == AndOrState.Or)
+                    getAllSongsFileExist().filter {
+                        it.tags.split(SPACE_IN_LINK).intersect(tags.asIterable()).isNotEmpty()
+                    }
+                else
+                    getAllSongsFileExist().filter {
+                        it.tags.split(SPACE_IN_LINK).toMutableList().containsAll(tags)
+                    }
+            } else getAllSongsFileExist()
+        } else    getAllSongsFileExist().filter {
+            it.tags.length<2
+        }
 
         result = result?.filter { it.name.contains(searchName) }
         result = result?.filter { it.rating>=minRating }
@@ -99,12 +97,12 @@ class RealmHelper(context: Context) {
     }
 
 
-    fun initRealm(context: Context): Realm {
+    private fun initRealm(context: Context): Realm {
         //Инициализируем движок Realm
         Realm.init(context)
         val config = RealmConfiguration.Builder()
             .name("lymp.realm")
-            .schemaVersion(4)
+            .schemaVersion(5)
             .deleteRealmIfMigrationNeeded() // todo remove for production
             .build()
         Realm.setDefaultConfiguration(config)

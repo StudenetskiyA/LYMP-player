@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Handler
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.inputmethod.InputMethodManager
@@ -44,17 +45,6 @@ fun getFilesListInFolderAndSubFolder(path : File,endWith : String) : ArrayList<S
     return find
 }
 
-////Возвращает лист из всех файлов в папке и подпапках в парах имя/путь(включая имя)
-//fun getFilesListInFolderAndSubFolder(path : File,endWith : String) : ArrayList<Pair<String,String>>{
-//    val find = ArrayList<Pair<String,String>>()
-//    File(path.canonicalPath).walk().forEach {
-//        if ( it.name.endsWith(".$endWith")) //TODO Change to supported music
-//            find.add(Pair(it.name,it.canonicalPath))
-//    }
-//    return find
-//}
-
-
 fun getStringFromList(list : ArrayList<String>) : String{
     var result = "$SPACE_IN_LINK"
     for (i in list)
@@ -62,8 +52,11 @@ fun getStringFromList(list : ArrayList<String>) : String{
     return result
 }
 
-fun getListFromString(text:String) : List<String> {
+fun getListFromString(text:String, ignoreSuperTags: Boolean = false) : List<String> {
+    if (!ignoreSuperTags)
     return text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }
+    else
+        return text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }.filter { !it.startsWith("#") }
 }
 
 fun getShuffledListOfInt (size: Int) : ArrayList<Int> {
@@ -75,20 +68,27 @@ fun getShuffledListOfInt (size: Int) : ArrayList<Int> {
     return result
 }
 
-fun getNextPositionInList(shuffledList: ArrayList<Int>, currentPosition: Int, shuffleStatus: Boolean):Int {
-    return if (!shuffleStatus) {
-        if (currentPosition+1<shuffledList.size){
-            currentPosition+1
+fun getNextPositionInList(shuffledList: ArrayList<Int>, additionList: ArrayList<Int>, currentPosition: Int, shuffleStatus: Boolean):Int {
+    val TAG = "$APP_TAG/utils"
+    Log.i(TAG,"getNextPosition, addList = ${additionList.toString()}")
+
+    return if (additionList.isEmpty()) {
+        if (!shuffleStatus) {
+            if (currentPosition + 1 < shuffledList.size) {
+                currentPosition + 1
+            } else {
+                0
+            }
         } else {
-            0
+            val cp = shuffledList.indexOfFirst { it == currentPosition }
+            if (cp + 1 < shuffledList.size) {
+                shuffledList[cp + 1]
+            } else {
+                shuffledList[0]
+            }
         }
     } else {
-        val cp = shuffledList.indexOfFirst {it == currentPosition}
-        if (cp+1<shuffledList.size){
-            shuffledList[cp+1]
-        } else {
-            shuffledList[0]
-        }
+        additionList[0]
     }
 }
 

@@ -33,6 +33,8 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         Song() //У нас бывают ситуации, когда текущий трек не в текущем листе.
     private var currentSongsList = ArrayList<Song>()
     private var currentSongsShuffledListNumber = ArrayList<Int>()
+    private var currentSongsAditionListNumber = ArrayList<Int>()
+
     private var helper: RealmHelper = RealmHelper(App.instance.context)
     private var searchTags = ";"
     private var shuffleStatus: Boolean = false
@@ -184,10 +186,19 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             }
 
             currentSongPositionInList = getNextPositionInList(
-                currentSongsShuffledListNumber,
+                currentSongsShuffledListNumber, currentSongsAditionListNumber,
                 currentSongPositionInList,
                 shuffleStatus
             )
+            if (currentSongsAditionListNumber.isNotEmpty()) {
+                for (position in currentSongsAditionListNumber) {
+                    val s = currentSongsList[position].copy()
+                    s.order = s.order - 1
+                    helper.writeSong(s)
+                }
+                currentSongsAditionListNumber.removeAt(0)
+            }
+
             Log.i(
                 TAG, "Next track ${currentSong?.name} / ${currentSong?.tags}"
             )
@@ -490,6 +501,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             App.instance.context, getMediaSessionToken()
         )
 
+        helper.clearDataBase()
         browseFolderForFiles()
         createCurrentList()
     }
@@ -513,6 +525,20 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     fun jumpToPosition(position: Int) {
         Log.i(TAG, "Seek to position $position")
         exoPlayer.seekTo(position)
+    }
+
+    fun addSongToAdditionList(position: Int) {
+        if (currentSongPositionInList!=position) {
+            val s = currentSongsList[position].copy()
+            if (!currentSongsAditionListNumber.contains(position)) {
+                currentSongsAditionListNumber.add(position)
+                s.order = currentSongsAditionListNumber.size
+            } else {
+                currentSongsAditionListNumber.remove(position)
+                s.order = 0
+            }
+            helper.writeSong(s)
+        }
     }
 
     private val metadataBuilder = MediaMetadataCompat.Builder()

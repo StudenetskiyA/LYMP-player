@@ -21,6 +21,7 @@ class SongListAdapter(dataSet: ArrayList<Song>, mContext: Context) : ArrayAdapte
     private class ViewHolder {
         internal var txtName: TextView? = null
         internal var tatLength: TextView? = null
+        internal var orderField: TextView? = null
     }
 
     override fun getView(position: Int, view: View?, parent: ViewGroup): View {
@@ -35,6 +36,7 @@ class SongListAdapter(dataSet: ArrayList<Song>, mContext: Context) : ArrayAdapte
             viewHolder = ViewHolder()
             val inflater = LayoutInflater.from(context)
             convertView = inflater.inflate(R.layout.song_in_list, parent, false)
+            viewHolder.orderField = convertView!!.findViewById(R.id.list_order) as TextView
             viewHolder.txtName = convertView!!.findViewById(R.id.list_item) as TextView
             viewHolder.tatLength = convertView.findViewById(R.id.list_item_lenght) as TextView
             convertView.tag = viewHolder
@@ -44,6 +46,8 @@ class SongListAdapter(dataSet: ArrayList<Song>, mContext: Context) : ArrayAdapte
 
         lastPosition = position
 
+        if (dataModel?.order==0) viewHolder.orderField!!.visibility = View.GONE
+        viewHolder.orderField!!.text = dataModel?.order.toString()
         viewHolder.txtName!!.text = dataModel?.name
         viewHolder.tatLength!!.text = dataModel?.lenght.toString()
         // Return the completed view to render on screen

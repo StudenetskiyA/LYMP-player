@@ -324,4 +324,9 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     fun setAllTagsFromSettings(t: String) {
         model.setAllTagsFromSettings(t)
     }
+
+    fun songInListLongPress(position: Int) {
+        model.addSongToAdditionList(position)
+        newSearch()
+    }
 }

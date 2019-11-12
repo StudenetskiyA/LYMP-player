@@ -119,7 +119,6 @@ class MainActivity : AppCompatActivity() {
             Log.i(TAG, "stop button pressed")
             viewModel.stopPress()
         }
-
         clear_search_button.setOnClickListener {
             Log.i(TAG, "clear search button pressed")
             ratingBarInSearch.rating=0f
@@ -129,7 +128,6 @@ class MainActivity : AppCompatActivity() {
             App.instance.context
                 .toast("Clear search")
         }
-
         shufflebutton.setOnClickListener {
             Log.i(TAG, "shuffle button pressed")
             viewModel.shufflePress()
@@ -161,7 +159,7 @@ class MainActivity : AppCompatActivity() {
         tagView.setOnTagClickListener { position, _ ->
             val cs = viewModel.currentSong.value?.copy()
             if (cs != null) {
-                val tagClicked = getListFromString(viewModel.getAllTags())[position]
+                val tagClicked = getListFromString(viewModel.getAllTags(),ignoreSuperTags = true)[position]
                 val list = ArrayList(getListFromString(cs.tags))
                 if (list.contains(tagClicked)) {
                     list.remove(tagClicked)
@@ -212,6 +210,11 @@ class MainActivity : AppCompatActivity() {
         }
         current_list.setOnItemClickListener { parent, view, position, id ->
             viewModel.songInListPress(position)
+        }
+        current_list.setOnItemLongClickListener { parent, view, position, id ->
+            Log.i(TAG, "Long click on list element")
+            viewModel.songInListLongPress(position)
+            true
         }
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
@@ -416,6 +419,7 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this@MainActivity, LYMPService::class.java)
         bindService(intent, myConnection, Context.BIND_AUTO_CREATE)
         startService(intent)
+
     }
 
     private fun buildSearchField() {
@@ -439,7 +443,7 @@ class MainActivity : AppCompatActivity() {
     private fun buildLinkField() {
         tagView.removeAllTags()
         if (viewModel.currentSong.value != null) {
-            for (word in getListFromString(viewModel.getAllTags())) {
+            for (word in getListFromString(viewModel.getAllTags(),ignoreSuperTags = true)) {
                 val tag = Tag(word)
                 tag.tagTextColor = Color.BLACK
                 tag.layoutBorderSize = 2f
@@ -460,7 +464,9 @@ class MainActivity : AppCompatActivity() {
         //Я решил хранить все теги в настроках, не в БД. Пока так кажется проще, может потом передумаю.
         if (settings.contains(APP_PREFERENCES_ALL_TAGS)) {
             val t = settings.getString(APP_PREFERENCES_ALL_TAGS, "")
-            viewModel.setAllTagsFromSettings(t)
+            var list = getListFromString(t)
+            list = list.sorted()
+            viewModel.setAllTagsFromSettings(getStringFromList(ArrayList(list)))
         }
 
         if (settings.contains(APP_PREFERENCES_SELECT_SONG)) {

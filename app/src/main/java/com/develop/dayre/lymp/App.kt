@@ -19,7 +19,7 @@ class App : Application() {
     }
 
     fun setViewModel(am : AudioManager) {
-        viewModel= LYMPViewModel( am)
+        viewModel= LYMPViewModel(am)
     }
 
     fun setAppContext(_context: Context) {

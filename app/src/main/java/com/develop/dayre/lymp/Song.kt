@@ -17,7 +17,8 @@ open class Song(
     var tags : String = "",
     var added : String = "01.01.1000 00:00",
     var listenedTimes : Double = 0.0,
-    var isFileExist: Boolean = true
+    var isFileExist: Boolean = true,
+    var order: Int = 0
 )  : RealmModel {
 
     fun setTagsFromList(list : ArrayList<String>) {
@@ -28,7 +29,7 @@ open class Song(
     }
 
     fun copy() : Song {
-        return Song(this.ID, this.path, this.name,this.lenght,this.rating,this.tags,this.added,this.listenedTimes,this.isFileExist)
+        return Song(this.ID, this.path, this.name,this.lenght,this.rating,this.tags,this.added,this.listenedTimes,this.isFileExist,this.order)
     }
 
     override fun toString(): String {
