@@ -170,7 +170,7 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     }
 
     //Вызывается вью при новом поиске. TODO Добавить сюда остальные критерии поиска.
-    fun newSearch(searchTags: String = "", clearSearch: Boolean = false) {
+    fun newSearch(searchTags: String = "", clearSearch: Boolean = false, fromAdditionList: Boolean = false) {
         Log.i(TAG, "load songs, $searchTags , ${currentSearchTags.value}")
         isLoadingSongsList.set(true)
         var tags = if (searchTags!="") searchTags
@@ -180,7 +180,7 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         }
 
         if (tags!=null)
-        model.newSearch(tags)
+        model.newSearch(tags, fromAdditionList)
             .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : Observer<ArrayList<Song>> {
@@ -327,6 +327,6 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
 
     fun songInListLongPress(position: Int) {
         model.addSongToAdditionList(position)
-        newSearch()
+        newSearch(fromAdditionList = true)
     }
 }

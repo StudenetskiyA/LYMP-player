@@ -13,12 +13,13 @@ import android.widget.EditText
 import android.widget.Toast
 import java.io.File
 import org.apache.commons.codec.digest.DigestUtils
+import org.jaudiotagger.audio.AudioFileIO
 
-fun getHashFromNameAndSize(name: String, size : Long) : String{
+fun getHashFromNameAndSize(name: String, size: Long): String {
     return DigestUtils.md5Hex("$name , $size")
 }
 
-fun getFileSize(path : String) : Long {
+fun getFileSize(path: String): Long {
     val file = File(path)
     return file.length()
 }
@@ -30,36 +31,58 @@ fun Context.toast(message: CharSequence) {
     toast.show()
 }
 
-fun String.getNameFromPath() : String  {
-    val nd = this.substring(this.lastIndexOf("/"),this.length)
-    return nd.substring(1,nd.lastIndexOf("."))
+fun String.getNameFromPath(): String {
+    val nd = this.substring(this.lastIndexOf("/"), this.length)
+    return nd.substring(1, nd.lastIndexOf("."))
 }
 
 //Возвращает лист из всех файлов в папке и подпапках в парах имя/путь(включая имя)
-fun getFilesListInFolderAndSubFolder(path : File,endWith : String) : ArrayList<String>{
+fun getFilesListInFolderAndSubFolder(path: File, endWith: String): ArrayList<String> {
     val find = ArrayList<String>()
     File(path.canonicalPath).walk().forEach {
-        if ( it.name.endsWith(".$endWith")) //TODO Change to supported music
+        if (it.name.endsWith(".$endWith")) //TODO Change to supported music
             find.add(it.canonicalPath)
     }
     return find
 }
 
-fun getStringFromList(list : ArrayList<String>) : String{
+fun getStringFromList(list: ArrayList<String>): String {
     var result = "$SPACE_IN_LINK"
     for (i in list)
         result = result + i + SPACE_IN_LINK
     return result
 }
 
-fun getListFromString(text:String, ignoreSuperTags: Boolean = false) : List<String> {
+fun getListFromString(text: String, ignoreSuperTags: Boolean = false): List<String> {
     if (!ignoreSuperTags)
-    return text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }
+        return text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }
     else
-        return text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }.filter { !it.startsWith("#") }
+        return text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }
+            .filter { !it.startsWith("#") }
 }
 
-fun getShuffledListOfInt (size: Int) : ArrayList<Int> {
+fun getAudioFileDuration(path: String): Int {
+    return try {
+        val audioFile = AudioFileIO.read(File(path))
+        audioFile.audioHeader.trackLength
+    } catch (e: Exception) {
+        0
+    }
+}
+
+fun getTimeFromSeconds(seconds : Int) : String {
+    val h:Int = seconds/3600
+    val m:Int = seconds/60 - h*60
+    val s:Int = seconds%60
+    var result:String=""
+    if (h!=0) result="$h:"
+    if (m!=0 && m>9) result+="$m:"
+    else if (m!=0 && m<10) result+="0$m:"
+    if (s<9) result+="0"
+    return result+"$s"
+}
+
+fun getShuffledListOfInt(size: Int): ArrayList<Int> {
     val result = ArrayList<Int>()
     for (i in 0 until size) {
         result.add(i)
@@ -68,9 +91,14 @@ fun getShuffledListOfInt (size: Int) : ArrayList<Int> {
     return result
 }
 
-fun getNextPositionInList(shuffledList: ArrayList<Int>, additionList: ArrayList<Int>, currentPosition: Int, shuffleStatus: Boolean):Int {
+fun getNextPositionInList(
+    shuffledList: ArrayList<Int>,
+    additionList: ArrayList<Int>,
+    currentPosition: Int,
+    shuffleStatus: Boolean
+): Int {
     val TAG = "$APP_TAG/utils"
-    Log.i(TAG,"getNextPosition, addList = ${additionList.toString()}")
+    Log.i(TAG, "getNextPosition, addList = ${additionList.toString()}")
 
     return if (additionList.isEmpty()) {
         if (!shuffleStatus) {
@@ -92,19 +120,23 @@ fun getNextPositionInList(shuffledList: ArrayList<Int>, additionList: ArrayList<
     }
 }
 
-fun getPrevPositionInList(shuffledList: ArrayList<Int>, currentPosition: Int, shuffleStatus: Boolean):Int {
+fun getPrevPositionInList(
+    shuffledList: ArrayList<Int>,
+    currentPosition: Int,
+    shuffleStatus: Boolean
+): Int {
     return if (!shuffleStatus) {
-        if (currentPosition==0){
-            shuffledList.size-1
+        if (currentPosition == 0) {
+            shuffledList.size - 1
         } else {
-            currentPosition-1
+            currentPosition - 1
         }
     } else {
-        val cp = shuffledList.indexOfFirst {it == currentPosition}
-        if (cp==0){
-            shuffledList[ shuffledList.size-1]
+        val cp = shuffledList.indexOfFirst { it == currentPosition }
+        if (cp == 0) {
+            shuffledList[shuffledList.size - 1]
         } else {
-            shuffledList[cp-1]
+            shuffledList[cp - 1]
         }
     }
 }

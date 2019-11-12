@@ -11,6 +11,14 @@ class UtilsTests {
     val n = ObservableField<Int>(0)
 
     @Test
+    fun getTimeFromSecondsTest() {
+        var seconds = 85
+        assertEquals("1:25",getTimeFromSeconds(seconds))
+        seconds = 3600+85
+        assertEquals("1:1:25",getTimeFromSeconds(seconds))
+    }
+
+    @Test
     fun changeVarInFunTest() {
 
         fun change(b:ObservableField<Int>) {
@@ -41,9 +49,9 @@ class UtilsTests {
 
         for (l in shuffleList) print("$l ")
 
-        println("$tag , next ${getNextPositionInList(shuffleList,2,true)}")
-        println("$tag , next ${getNextPositionInList(shuffleList,5,true)}")
-        println("$tag , next ${getNextPositionInList(shuffleList,0,true)}")
+        println("$tag , next ${getNextPositionInList(shuffleList, ArrayList(),2,true)}")
+        println("$tag , next ${getNextPositionInList(shuffleList, ArrayList(),5,true)}")
+        println("$tag , next ${getNextPositionInList(shuffleList, ArrayList(),0,true)}")
     }
     @Test
     fun getPrevPositionInListTest() {

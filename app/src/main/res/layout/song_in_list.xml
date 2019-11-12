@@ -14,27 +14,31 @@
         android:minHeight="@dimen/list_element_size"
         android:paddingStart="@dimen/border_of_all"
         android:textAppearance="?android:attr/textAppearanceListItemSmall" />
+
     <TextView
-        android:text="Song name"
+        tools:text="99:99"
+        android:id="@+id/list_item_lenght"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical|end"
+        android:layout_alignParentEnd="true"
+        android:paddingStart="5dp"
+        android:minHeight="@dimen/list_element_size"
+        android:paddingEnd="@dimen/border_of_all"
+        android:textAppearance="?android:attr/textAppearanceListItemSmall" />
+    <TextView
+        tools:text="Very long-long-long-long-long-long-long-long-long Song name"
         android:layout_toEndOf="@id/list_order"
         android:id="@+id/list_item"
         android:singleLine="true"
+        android:layout_toStartOf="@id/list_item_lenght"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:minHeight="@dimen/list_element_size"
-        android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
         android:paddingStart="5dp"
+        android:paddingEnd="5dp"
+        android:ellipsize="end"
         android:textAppearance="?android:attr/textAppearanceListItemSmall" />
 
-    <TextView
-        android:text="99:99"
-        android:id="@+id/list_item_lenght"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical|end"
-        android:minHeight="@dimen/list_element_size"
-        android:paddingEnd="@dimen/border_of_all"
-        android:paddingStart="?android:attr/listPreferredItemPaddingStart"
-        android:textAppearance="?android:attr/textAppearanceListItemSmall" />
 </com.develop.dayre.lymp.CheckableRelativeLayout>

@@ -119,26 +119,28 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
                         name = f.getNameFromPath(),
                         path = f,
                         isFileExist = true,
-                        added = dateTime
+                        added = dateTime,
+                        lenght = getAudioFileDuration(f)
                     )
                 )
             }
             if (s != null && !s.isFileExist) {
                 songsRestored++
+                val dateTime = SimpleDateFormat("dd/M/yyyy hh:mm:ss").format(Date())
                 s.isFileExist = true
                 s.path = f
+                s.added = dateTime
                 helper.writeSong(s)
             }
         }
         //И уведомление с результатами
-        //Вообще, наверное, не правильно в модели использовать контекст активити. Но пока сделаю так.
-        // if (songsRestored!=0 || newSongFound!=0 || deletedSong!=0)
+        if (songsRestored!=0 || newSongFound!=0 || deletedSong!=0)
+            App.instance.context
+                .toast("Новых песен найдено - $newSongFound \r\nУдалено песен - $deletedSong \r\nВосстановленно удаленных - $songsRestored")
         Log.i(
             TAG,
             "Новых песен найдено - $newSongFound \r\nУдалено песен - $deletedSong \r\nВосстановленно удаленных - $songsRestored"
         )
-        App.instance.context
-            .toast("Новых песен найдено - $newSongFound \r\nУдалено песен - $deletedSong \r\nВосстановленно удаленных - $songsRestored")
         //  return Observable.just(true).delay(5, TimeUnit.SECONDS)
         return Observable.just(true)
     }
@@ -165,9 +167,11 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         }
     }
 
-    fun newSearch(tags: String = ""): Observable<ArrayList<Song>> {
+    fun newSearch(tags: String = "", fromAdditionList:Boolean = false): Observable<ArrayList<Song>> {
         Log.i(TAG, "new search")
         searchTags = tags
+        if (!fromAdditionList)
+        clearAdditionList()
         createCurrentList()
         return Observable.just(currentSongsList)
     }
@@ -501,9 +505,17 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             App.instance.context, getMediaSessionToken()
         )
 
-        helper.clearDataBase()
         browseFolderForFiles()
         createCurrentList()
+    }
+
+    private fun clearAdditionList() {
+        for (position in currentSongsAditionListNumber) {
+            val s = currentSongsList[position].copy()
+            s.order=0
+            helper.writeSong(s)
+        }
+        currentSongsAditionListNumber = ArrayList()
     }
 
     //Private

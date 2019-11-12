@@ -49,7 +49,10 @@ class SongListAdapter(dataSet: ArrayList<Song>, mContext: Context) : ArrayAdapte
         if (dataModel?.order==0) viewHolder.orderField!!.visibility = View.GONE
         viewHolder.orderField!!.text = dataModel?.order.toString()
         viewHolder.txtName!!.text = dataModel?.name
-        viewHolder.tatLength!!.text = dataModel?.lenght.toString()
+        val length = if (dataModel!=null)
+            getTimeFromSeconds(dataModel.lenght)
+        else ""
+        viewHolder.tatLength!!.text = length
         // Return the completed view to render on screen
         return convertView
     }
