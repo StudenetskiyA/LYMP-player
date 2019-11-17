@@ -29,8 +29,6 @@ import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
-
-
     private val TAG = "$APP_TAG/view"
 
     var serv: LYMPService? = null
@@ -199,7 +197,21 @@ class MainActivity : AppCompatActivity() {
         searchTagView.setOnTagClickListener { position, _ ->
             val cs = viewModel.currentSearchTags.value!!
             val tagClicked = getListFromString(viewModel.getAllTags())[position]
-            val list = ArrayList(getListFromString(cs))
+            var list = ArrayList(getListFromString(cs))
+            //Supertags
+            val copyList = ArrayList(list)
+            if (tagClicked.startsWith("#")) {
+                for (item in list) {
+                    if (!item.startsWith("#")) copyList.remove(item)
+                }
+            } else {
+                //Remove all supertags
+                for (item in list) {
+                    if (item.startsWith("#")) copyList.remove(item)
+                }
+            }
+            list = copyList
+
             if (list.contains(tagClicked)) {
                 list.remove(tagClicked)
             } else {
@@ -465,6 +477,10 @@ class MainActivity : AppCompatActivity() {
         if (settings.contains(APP_PREFERENCES_ALL_TAGS)) {
             val t = settings.getString(APP_PREFERENCES_ALL_TAGS, "")
             var list = getListFromString(t)
+            list = list.sorted()
+            viewModel.setAllTagsFromSettings(getStringFromList(ArrayList(list)))
+        } else {
+            var list = listOf("#недавние","#без_тегов","блюз")
             list = list.sorted()
             viewModel.setAllTagsFromSettings(getStringFromList(ArrayList(list)))
         }

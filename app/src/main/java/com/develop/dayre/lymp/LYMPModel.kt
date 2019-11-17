@@ -87,6 +87,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         var newSongFound = 0
         var songsRestored = 0
         var deletedSong = 0
+        val dateTime = SimpleDateFormat("dd/M/yyyy HH:mm").format(Date())
         //Получаем список всех файлов в папке и подпапках
         //TODO Поменять путь на недефолтный при загрузке из настроек.
         val allFiles = getFilesListInFolderAndSubFolder(
@@ -109,7 +110,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             val s = helper.getSongByID(getHashFromNameAndSize(f.getNameFromPath(), getFileSize(f)))
             if (s == null) {
                 newSongFound++
-                val dateTime = SimpleDateFormat("dd/M/yyyy hh:mm:ss").format(Date())
                 helper.writeSong(
                     Song(
                         ID = getHashFromNameAndSize(
@@ -126,7 +126,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             }
             if (s != null && !s.isFileExist) {
                 songsRestored++
-                val dateTime = SimpleDateFormat("dd/M/yyyy hh:mm:ss").format(Date())
                 s.isFileExist = true
                 s.path = f
                 s.added = dateTime
@@ -141,7 +140,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             TAG,
             "Новых песен найдено - $newSongFound \r\nУдалено песен - $deletedSong \r\nВосстановленно удаленных - $songsRestored"
         )
-        //  return Observable.just(true).delay(5, TimeUnit.SECONDS)
         return Observable.just(true)
     }
 

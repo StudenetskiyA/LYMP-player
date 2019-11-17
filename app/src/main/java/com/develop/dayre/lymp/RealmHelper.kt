@@ -7,6 +7,7 @@ import io.realm.RealmConfiguration
 
 import com.develop.dayre.lymp.SortState.*
 
+
 class RealmHelper(context: Context) {
     private val tag = "$APP_TAG/realm"
     var realm: Realm = initRealm(context)
@@ -32,8 +33,7 @@ class RealmHelper(context: Context) {
         searchName: String = "",
         minRating: Int = 0
     ): ArrayList<Song> {
-        var result: List<Song>? = if (!tags.contains("#без_тегов")) {
-            if (tags.isNotEmpty()) {
+        var result: List<Song>? = if (tags.isNotEmpty() && !tags[0].startsWith("#")) {
                 if (andOrFlag == AndOrState.Or)
                     getAllSongsFileExist().filter {
                         it.tags.split(SPACE_IN_LINK).intersect(tags.asIterable()).isNotEmpty()
@@ -42,13 +42,25 @@ class RealmHelper(context: Context) {
                     getAllSongsFileExist().filter {
                         it.tags.split(SPACE_IN_LINK).toMutableList().containsAll(tags)
                     }
-            } else getAllSongsFileExist()
-        } else    getAllSongsFileExist().filter {
-            it.tags.length<2
+        } else if (tags.isEmpty()) getAllSongsFileExist()
+        else { //supertags
+            var result:List<Song> = getAllSongsFileExist()
+            if (tags.contains("#без_тегов")) {
+                    result = result.filter {
+                        it.tags.length < 2
+                    }
+                }
+            if (tags.contains("#недавние")) {
+                val lastDate = getLastDate()
+                result = result.filter {
+                    it.added == lastDate
+                }
+            }
+            result
         }
 
         result = result?.filter { it.name.contains(searchName) }
-        result = result?.filter { it.rating>=minRating }
+        result = result?.filter { it.rating >= minRating }
 
 
         result = when (sort) {
@@ -64,7 +76,12 @@ class RealmHelper(context: Context) {
             return ArrayList(result)
         }
         //Возвращаем пустой лист
-        return ArrayList<Song>()
+        return ArrayList()
+    }
+
+    fun getLastDate(): String {
+        val list = getAllSongsFileExist().sortedByDescending { it.added }
+        return if (list.isEmpty()) "" else list[0].added
     }
 
     fun getAllSongsFileExist(): ArrayList<Song> {

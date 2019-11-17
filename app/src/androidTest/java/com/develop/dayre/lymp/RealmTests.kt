@@ -66,6 +66,11 @@ class RealmTests {
     }
 
     @Test
+    fun getLastDateTest() {
+        Log.d("lymp/tests",helper.getLastDate())
+    }
+
+    @Test
     fun getSongByNameNoResultTest() {
         val result = helper.getSongByName("jsgdfhsgfhgrhgrgrhtb")
 
