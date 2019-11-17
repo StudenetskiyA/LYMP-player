@@ -503,8 +503,8 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             App.instance.context, getMediaSessionToken()
         )
 
-        browseFolderForFiles()
-        createCurrentList()
+      //  browseFolderForFiles()
+      //  createCurrentList()
     }
 
     private fun clearAdditionList() {

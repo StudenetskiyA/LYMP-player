@@ -292,7 +292,7 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     fun startBrowseFolderForFiles() {
         Log.i(TAG, "load files list")
         isLoadingFilesList.set(true)
-        model. browseFolderForFiles()
+        model.browseFolderForFiles()
             .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : Observer<Boolean> {

@@ -362,7 +362,6 @@ class MainActivity : AppCompatActivity() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
             != PackageManager.PERMISSION_GRANTED
         ) {
-
             // Permission is not granted
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(
@@ -380,13 +379,10 @@ class MainActivity : AppCompatActivity() {
                     arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
                     MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE
                 )
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
             }
         } else {
             Log.i(TAG, "Permission has already been granted")
+            viewModel.startBrowseFolderForFiles()
         }
     }
 
@@ -401,7 +397,9 @@ class MainActivity : AppCompatActivity() {
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
+                    viewModel.startBrowseFolderForFiles()
                 } else {
+                    //TODO
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                 }
@@ -425,13 +423,12 @@ class MainActivity : AppCompatActivity() {
         createControl()
         createObservers()
         grantPermission()
-
+        //continue after grant/not grant permission
         readSettings()
 
         val intent = Intent(this@MainActivity, LYMPService::class.java)
         bindService(intent, myConnection, Context.BIND_AUTO_CREATE)
         startService(intent)
-
     }
 
     private fun buildSearchField() {
