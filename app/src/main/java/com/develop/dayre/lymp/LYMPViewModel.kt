@@ -20,12 +20,7 @@ interface ILYMPViewModel {
     fun repeatPress()
     fun clearTagPress()
 
-    fun onTrackInListPress(nTrack: Int)
     fun onTrackInListLongPress(nTrack: Int)
-    fun tagInSearchPress(tag: String)
-    fun tagInEditPress(tag: String)
-    fun ratingInSearchPress(rating: Int)
-    fun ratingInEditPress(rating: Int)
     fun currentSongEdit(song: Song)
 
     fun testPress()
@@ -42,6 +37,7 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     val isLoadingFilesList = ObservableField<Boolean>(false)
     var currentSong = MutableLiveData<Song>()
     var currentSearchTags = MutableLiveData<String>()
+    var currentAntiSearchTags = MutableLiveData<String>()
     val shuffle = ObservableField<Boolean>()
     val repeat = ObservableField<RepeatState>()
     val sort = ObservableField<SortState>()
@@ -169,18 +165,22 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         andOr.set(model.getAndOrStatus())
     }
 
-    //Вызывается вью при новом поиске. TODO Добавить сюда остальные критерии поиска.
-    fun newSearch(searchTags: String = "", clearSearch: Boolean = false, fromAdditionList: Boolean = false) {
+    //Вызывается вью при новом поиске.
+    fun newSearch(searchTags: String = "", antiSearchTags: String = "", searchName: String  = "", clearSearch: Boolean = false, fromAdditionList: Boolean = false) {
         Log.i(TAG, "load songs, $searchTags , ${currentSearchTags.value}")
         isLoadingSongsList.set(true)
         var tags = if (searchTags!="") searchTags
         else currentSearchTags.value
+        var antiTags = if (antiSearchTags!="") antiSearchTags
+        else currentAntiSearchTags.value
+
         if (clearSearch) {
             tags = ";"
+            antiTags = ";"
         }
 
-        if (tags!=null)
-        model.newSearch(tags, fromAdditionList)
+        if (tags!=null && antiTags!=null)
+        model.newSearch(tags, antiTags, searchName, fromAdditionList)
             .subscribeOn(Schedulers.newThread())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : Observer<ArrayList<Song>> {
@@ -216,27 +216,7 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         setCurrentSong()
     }
 
-    override fun onTrackInListPress(nTrack: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
     override fun onTrackInListLongPress(nTrack: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun tagInSearchPress(tag: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun tagInEditPress(tag: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun ratingInSearchPress(rating: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun ratingInEditPress(rating: Int) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
@@ -257,6 +237,26 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
                 override fun onNext(data: String) {
                     Log.i(TAG, "current song update")
                     currentSearchTags.value = data
+                }
+
+                override fun onComplete() {
+                }
+            })
+        model.getCurrentAntiSearchTags()
+            .subscribeOn(Schedulers.newThread())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : Observer<String> {
+                override fun onSubscribe(d: Disposable) {
+                    //todo
+                }
+
+                override fun onError(e: Throwable) {
+                    //todo
+                }
+
+                override fun onNext(data: String) {
+                    Log.i(TAG, "current song update")
+                    currentAntiSearchTags.value = data
                 }
 
                 override fun onComplete() {

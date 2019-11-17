@@ -121,7 +121,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="start"
-
                         android:stepSize="1" />
                     <!--android:numStars="@{viewmodel.getCurrentSong().rating}" - doesn't work            -->
 
@@ -211,14 +210,6 @@
                             android:orientation="horizontal"
                             android:visibility="gone">
                             <ImageButton
-                                android:id="@+id/test_saved_search_button"
-                                android:layout_width="@dimen/medium_button_size"
-                                android:layout_height="@dimen/medium_button_size"
-                                android:background="@android:color/transparent"
-                                android:layout_toRightOf="@+id/clear_search_button"
-                                android:scaleType="fitXY"
-                                android:src="@drawable/samplefilter" />
-                            <ImageButton
                                 android:id="@+id/add_new_search_button"
                                 android:layout_width="@dimen/medium_button_size"
                                 android:layout_height="@dimen/medium_button_size"
@@ -227,12 +218,20 @@
                                 android:layout_alignParentEnd="true"
                                 android:src="@drawable/addnewtag" />
                         </RelativeLayout>
+                        <EditText
+                            android:id="@+id/search_by_name_enter_field"
+                            android:layout_height="wrap_content"
+                            android:layout_width="match_parent"
+                            tools:text = "enter name"
+                            android:hint = "enter name"
+                            android:singleLine="true"
+                            android:layout_marginTop="-8dp"/>
                         <com.develop.dayre.tagfield.TagView
                             android:id="@+id/search_track_tags"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginLeft="3dp"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="1dp"
                             android:layout_marginRight="3dp"
                             app:lineMargin="5dp"
                             app:tagMargin="3dp"

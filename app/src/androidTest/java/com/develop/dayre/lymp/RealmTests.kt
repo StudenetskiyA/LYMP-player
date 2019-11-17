@@ -3,9 +3,7 @@ package com.develop.dayre.ormtests
 import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.develop.dayre.lymp.APP_TAG
-import com.develop.dayre.lymp.RealmHelper
-import com.develop.dayre.lymp.Song
+import com.develop.dayre.lymp.*
 import io.realm.Realm
 
 import org.junit.Test
@@ -66,8 +64,30 @@ class RealmTests {
     }
 
     @Test
+    fun antiTagsTest() {
+        val tagsString = ";"
+        val antiTagsString = ";блюз;"
+        val tags = getListFromString(tagsString)
+        val antiTags = getListFromString(antiTagsString)
+        val resultAll: List<Song> = helper.getAllSongsFileExist()
+//            .filter { it.tags.split(SPACE_IN_LINK).intersect(tags.asIterable()).isNotEmpty() }
+        val result = resultAll
+            .filter { it.tags.split(SPACE_IN_LINK).intersect(tags.asIterable()).isNotEmpty() }
+           // .filter { it.tags.split(SPACE_IN_LINK).intersect(antiTags.asIterable()).isEmpty() }
+
+//        var item = resultAll[0]
+//        val inter = item.tags.split(SPACE_IN_LINK).intersect(antiTags.asIterable())
+//
+//        Log.d("lymp/tests" , item.toString())
+//        Log.d("lymp/tests" , inter.toString())
+        for (item in result) {
+            Log.d("lymp/tests", item.toString())
+        }
+    }
+
+    @Test
     fun getLastDateTest() {
-        Log.d("lymp/tests",helper.getLastDate())
+       // Log.d("lymp/tests",helper.getLastDate())
     }
 
     @Test
@@ -81,7 +101,7 @@ class RealmTests {
     fun printAllBase() {
         val dataRead = realm.where(Song::class.java).findAll()
         for (data in  dataRead) {
-            Log.i(tag, data.toString())
+         //   Log.i(tag, data.toString())
         }
     }
 }

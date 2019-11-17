@@ -27,7 +27,7 @@ class RealmHelper(context: Context) {
     }
 
     fun getSongsFromDBToCurrentSongsList(
-        tags: List<String>,
+        tags: List<String>, antiTags: List<String>,
         andOrFlag: AndOrState = AndOrState.Or,
         sort: SortState = ByName,
         searchName: String = "",
@@ -59,7 +59,9 @@ class RealmHelper(context: Context) {
             result
         }
 
-        result = result?.filter { it.name.contains(searchName) }
+        if (antiTags.isNotEmpty()) result = result?.filter{  it.tags.split(SPACE_IN_LINK).intersect(antiTags.asIterable()).isEmpty() }
+
+        result = result?.filter { it.name.toLowerCase().contains(searchName.toLowerCase()) }
         result = result?.filter { it.rating >= minRating }
 
 

@@ -3,6 +3,7 @@ package com.develop.dayre.lymp
 import io.realm.RealmModel
 import io.realm.annotations.PrimaryKey
 import io.realm.annotations.RealmClass
+import java.lang.Integer.min
 
 class SongOrNull(var song:Song, var isNull:Boolean=false)
 
@@ -33,6 +34,6 @@ open class Song(
     }
 
     override fun toString(): String {
-        return "$ID / $path / $name / ${this.lenght} / $rating / $tags / $added / $listenedTimes / $isFileExist"
+        return "${ID.substring(min(ID.length,5))} / $name / ${this.lenght} / $rating / $tags / $added / $listenedTimes / $isFileExist"
     }
 }

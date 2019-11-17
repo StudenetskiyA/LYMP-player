@@ -37,6 +37,8 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
 
     private var helper: RealmHelper = RealmHelper(App.instance.context)
     private var searchTags = ";"
+    private var antiSearchTags = ";"
+    private var searchName = ""
     private var shuffleStatus: Boolean = false
     private var repeatStatus = RepeatState.All
     private var sortStatus = SortState.ByName
@@ -80,6 +82,9 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     }
     fun getCurrentSearchTags(): Observable<String> {
         return Observable.just(searchTags)
+    }
+    fun getCurrentAntiSearchTags(): Observable<String> {
+        return Observable.just(antiSearchTags)
     }
 
     //Действия
@@ -165,11 +170,12 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         }
     }
 
-    fun newSearch(tags: String = "", fromAdditionList:Boolean = false): Observable<ArrayList<Song>> {
+    fun newSearch(tags: String = "", antiTags: String = "", searchName: String = "", fromAdditionList:Boolean = false): Observable<ArrayList<Song>> {
         Log.i(TAG, "new search")
         searchTags = tags
-        if (!fromAdditionList)
-        clearAdditionList()
+        antiSearchTags = antiTags
+        this.searchName = searchName
+        if (!fromAdditionList) clearAdditionList()
         createCurrentList()
         return Observable.just(currentSongsList)
     }
@@ -521,7 +527,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         currentSongsList =
             ArrayList(
                 helper.getSongsFromDBToCurrentSongsList(
-                    getListFromString(searchTags),
+                    getListFromString(searchTags), getListFromString(antiSearchTags), searchName = searchName,
                     sort = sortStatus, minRating = searchMinRating, andOrFlag = andOrStatus
                 )
             )

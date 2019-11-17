@@ -23,6 +23,11 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.content.Intent
 import android.os.Handler
 import android.os.SystemClock
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.KeyEvent
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
@@ -119,9 +124,10 @@ class MainActivity : AppCompatActivity() {
         }
         clear_search_button.setOnClickListener {
             Log.i(TAG, "clear search button pressed")
-            ratingBarInSearch.rating=0f
+            ratingBarInSearch.rating = 0f
+            search_by_name_enter_field.setText("")
             viewModel.setSearchRating(0, true)
-            viewModel.newSearch(clearSearch = true)
+            viewModel.newSearch(clearSearch = true, searchName = "")
 
             App.instance.context
                 .toast("Clear search")
@@ -157,7 +163,8 @@ class MainActivity : AppCompatActivity() {
         tagView.setOnTagClickListener { position, _ ->
             val cs = viewModel.currentSong.value?.copy()
             if (cs != null) {
-                val tagClicked = getListFromString(viewModel.getAllTags(),ignoreSuperTags = true)[position]
+                val tagClicked =
+                    getListFromString(viewModel.getAllTags(), ignoreSuperTags = true)[position]
                 val list = ArrayList(getListFromString(cs.tags))
                 if (list.contains(tagClicked)) {
                     list.remove(tagClicked)
@@ -198,6 +205,9 @@ class MainActivity : AppCompatActivity() {
             val cs = viewModel.currentSearchTags.value!!
             val tagClicked = getListFromString(viewModel.getAllTags())[position]
             var list = ArrayList(getListFromString(cs))
+            val csAnti = viewModel.currentAntiSearchTags.value!!
+            var listAnti = ArrayList(getListFromString(csAnti))
+
             //Supertags
             val copyList = ArrayList(list)
             if (tagClicked.startsWith("#")) {
@@ -211,15 +221,84 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             list = copyList
+            val copyAntiList = ArrayList(listAnti)
+            if (tagClicked.startsWith("#")) {
+                for (item in listAnti) {
+                    if (!item.startsWith("#")) copyAntiList.remove(item)
+                }
+            } else {
+                //Remove all supertags
+                for (item in listAnti) {
+                    if (item.startsWith("#")) copyAntiList.remove(item)
+                }
+            }
+            listAnti = copyAntiList
+
+
+            if (listAnti.contains(tagClicked)) listAnti.remove(tagClicked)
 
             if (list.contains(tagClicked)) {
                 list.remove(tagClicked)
             } else {
                 list.add(tagClicked)
             }
-            Log.i(TAG, "Current search tags is ${getStringFromList(list)}")
-            viewModel.newSearch(getStringFromList(list))
+            Log.i(
+                TAG,
+                "Current search tags is ${getStringFromList(list)}, antitags is ${getStringFromList(
+                    listAnti
+                )} "
+            )
+            viewModel.newSearch(getStringFromList(list), getStringFromList(listAnti))
         }
+        searchTagView.setOnTagLongClickListener { position, _ ->
+            Log.d(TAG, "long click on search tag")
+            val cs = viewModel.currentSearchTags.value!!
+            var list = ArrayList(getListFromString(cs))
+            val csAnti = viewModel.currentAntiSearchTags.value!!
+            val tagClicked = getListFromString(viewModel.getAllTags())[position]
+            var listAnti = ArrayList(getListFromString(csAnti))
+
+            //Supertags
+            val copyList = ArrayList(list)
+            if (tagClicked.startsWith("#")) {
+                for (item in list) {
+                    if (!item.startsWith("#")) copyList.remove(item)
+                }
+            } else {
+                //Remove all supertags
+                for (item in list) {
+                    if (item.startsWith("#")) copyList.remove(item)
+                }
+            }
+            list = copyList
+            val copyAntiList = ArrayList(listAnti)
+            if (tagClicked.startsWith("#")) {
+                for (item in listAnti) {
+                    if (!item.startsWith("#")) copyAntiList.remove(item)
+                }
+            } else {
+                //Remove all supertags
+                for (item in listAnti) {
+                    if (item.startsWith("#")) copyAntiList.remove(item)
+                }
+            }
+            listAnti = copyAntiList
+
+            if (list.contains(tagClicked)) list.remove(tagClicked)
+            if (listAnti.contains(tagClicked)) {
+                listAnti.remove(tagClicked)
+            } else {
+                listAnti.add(tagClicked)
+            }
+            Log.i(
+                TAG,
+                "Current search tags is ${getStringFromList(list)}, antitags is ${getStringFromList(
+                    listAnti
+                )} "
+            )
+            viewModel.newSearch(getStringFromList(list), getStringFromList(listAnti))
+        }
+
         current_list.setOnItemClickListener { parent, view, position, id ->
             viewModel.songInListPress(position)
         }
@@ -259,6 +338,24 @@ class MainActivity : AppCompatActivity() {
             RatingBar.OnRatingBarChangeListener { _, rating, _ ->
                 viewModel.setSearchRating(rating.toInt())
             }
+        search_by_name_enter_field.setOnClickListener {
+            footer.visibility = View.GONE
+        }
+        search_by_name_enter_field.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
+                //Perform Code
+                viewModel.newSearch(searchName = search_by_name_enter_field.text.toString())
+                val imm = this.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(this.currentFocus.windowToken, 0)
+                search_by_name_enter_field.isCursorVisible = false
+                settings.edit()
+                    .putString(APP_PREFERENCES_CURRENT_SEARCH_NAME, search_by_name_enter_field.text.toString())
+                    .apply()
+                footer.visibility = View.VISIBLE
+                return@OnKeyListener true
+            }
+            false
+        })
     }
 
     private fun createView() {
@@ -334,6 +431,20 @@ class MainActivity : AppCompatActivity() {
                 Log.i(TAG, "current search tags updated, ${viewModel.currentSearchTags.value}")
                 settings.edit()
                     .putString(APP_PREFERENCES_CURRENT_SEARCH, viewModel.currentSearchTags.value)
+                    .apply()
+                buildSearchField()
+            })
+        viewModel.currentAntiSearchTags.observe(this,
+            Observer<String> {
+                Log.i(
+                    TAG,
+                    "current search antitags updated, ${viewModel.currentAntiSearchTags.value}"
+                )
+                settings.edit()
+                    .putString(
+                        APP_PREFERENCES_CURRENT_SEARCH_ANTITAGS,
+                        viewModel.currentAntiSearchTags.value
+                    )
                     .apply()
                 buildSearchField()
             })
@@ -444,6 +555,10 @@ class MainActivity : AppCompatActivity() {
                 )
             )
                 tag.layoutColor = Color.YELLOW
+            else if (viewModel.currentAntiSearchTags.value != null && getListFromString(viewModel.currentAntiSearchTags.value!!).contains(
+                    word
+                )
+            ) tag.layoutColor = Color.RED
             else tag.layoutColor = Color.TRANSPARENT
             searchTagView.addTag(tag)
         }
@@ -452,7 +567,7 @@ class MainActivity : AppCompatActivity() {
     private fun buildLinkField() {
         tagView.removeAllTags()
         if (viewModel.currentSong.value != null) {
-            for (word in getListFromString(viewModel.getAllTags(),ignoreSuperTags = true)) {
+            for (word in getListFromString(viewModel.getAllTags(), ignoreSuperTags = true)) {
                 val tag = Tag(word)
                 tag.tagTextColor = Color.BLACK
                 tag.layoutBorderSize = 2f
@@ -477,7 +592,7 @@ class MainActivity : AppCompatActivity() {
             list = list.sorted()
             viewModel.setAllTagsFromSettings(getStringFromList(ArrayList(list)))
         } else {
-            var list = listOf("#недавние","#без_тегов","блюз")
+            var list = listOf("#недавние", "#без_тегов", "блюз")
             list = list.sorted()
             viewModel.setAllTagsFromSettings(getStringFromList(ArrayList(list)))
         }
@@ -490,7 +605,15 @@ class MainActivity : AppCompatActivity() {
         if (settings.contains(APP_PREFERENCES_CURRENT_SEARCH)) {
             search = settings.getString(APP_PREFERENCES_CURRENT_SEARCH, "")!!
         }
-
+        var antiSearch = ""
+        if (settings.contains(APP_PREFERENCES_CURRENT_SEARCH_ANTITAGS)) {
+            antiSearch = settings.getString(APP_PREFERENCES_CURRENT_SEARCH_ANTITAGS, "")!!
+        }
+        var searchName = ""
+        if (settings.contains(APP_PREFERENCES_CURRENT_SEARCH_NAME)) {
+            searchName = settings.getString(APP_PREFERENCES_CURRENT_SEARCH_NAME, "")!!
+            search_by_name_enter_field.setText(searchName)
+        }
         if (settings.contains(APP_PREFERENCES_SHUFFLE)) {
             val shuffle = settings.getBoolean(APP_PREFERENCES_SHUFFLE, false)
             if (shuffle) viewModel.setShuffle(true)
@@ -520,7 +643,7 @@ class MainActivity : AppCompatActivity() {
             viewModel.setSearchRating(r)
             ratingBarInSearch.rating = r.toFloat()
         }
-        viewModel.newSearch(search)
+        viewModel.newSearch(search, antiSearch, searchName)
     }
 
     //For SeekBar
