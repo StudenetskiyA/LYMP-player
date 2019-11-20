@@ -8,7 +8,6 @@
         <import type="com.develop.dayre.lymp.RepeatState" />
         <import type="com.develop.dayre.lymp.SortState" />
         <import type="com.develop.dayre.lymp.AndOrState" />
-        <import type="com.develop.dayre.lymp.PlayState" />
 
 
         <variable

@@ -13,10 +13,10 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 
 
-class LYMPViewModel(audioManager: AudioManager) : ViewModel() {
+class LYMPViewModel : ViewModel() {
     private val TAG = "$APP_TAG/viewmodel"
 
-    private var model = LYMPModel(audioManager)
+    private var model = LYMPModel()
 
     var currentSongsList =
         MutableLiveData<ArrayList<Song>>() //Локальный список, потом будет урезанная версия.

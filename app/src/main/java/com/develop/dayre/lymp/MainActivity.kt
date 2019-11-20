@@ -562,7 +562,6 @@ class MainActivity : AppCompatActivity() {
         App.instance.setApp(
             applicationContext,
             this,
-            getSystemService(Context.AUDIO_SERVICE) as AudioManager,
             getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE)
         )
 
