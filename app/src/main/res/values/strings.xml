@@ -16,5 +16,6 @@
     <string name="enter_new_tag_message">Введите название нового тега.</string>
     <string name="delete_tag_alert_title">Удаление тега</string>
     <string name="delete_tag_alert">Вы действительно хотите удалить тег</string>
+    <string name="enter_name_in_search">enter name</string>
 
 </resources>

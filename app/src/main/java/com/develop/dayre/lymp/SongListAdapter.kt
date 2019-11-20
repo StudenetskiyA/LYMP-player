@@ -37,7 +37,7 @@ class SongListAdapter(dataSet: ArrayList<Song>, mContext: Context) : ArrayAdapte
             val inflater = LayoutInflater.from(context)
             convertView = inflater.inflate(R.layout.song_in_list, parent, false)
             viewHolder.orderField = convertView!!.findViewById(R.id.list_order) as TextView
-            viewHolder.txtName = convertView!!.findViewById(R.id.list_item) as TextView
+            viewHolder.txtName = convertView.findViewById(R.id.list_item) as TextView
             viewHolder.tatLength = convertView.findViewById(R.id.list_item_lenght) as TextView
             convertView.tag = viewHolder
         } else {

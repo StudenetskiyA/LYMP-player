@@ -12,7 +12,6 @@ import androidx.core.app.NotificationCompat
 import android.graphics.Color
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.Observer
 import androidx.core.content.ContextCompat
@@ -41,8 +40,8 @@ class LYMPService : LifecycleService() {
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        Log.i(TAG, "Init service")
-        viewModel.setMediaSessonCallback(mediaSessionCallback)
+        Log.i(TAG, "Service started")
+        viewModel.setMediaSessionCallback(mediaSessionCallback)
 
         if (intent.hasExtra(SERVICE_COMMAND)) {
             val command = intent.getSerializableExtra(SERVICE_COMMAND) as ServiceCommand
@@ -65,12 +64,9 @@ class LYMPService : LifecycleService() {
 
     override fun onCreate() {
         super.onCreate()
-        val application = application
-        if (application !is App) {
-            throw RuntimeException("Application in not implemented IModulePlayer.Application")
-        }
+        Log.d(TAG, "service created")
 
-        viewModel = App.instance.viewModel
+        viewModel = App.viewModel
     }
 
     private fun createObservers() {

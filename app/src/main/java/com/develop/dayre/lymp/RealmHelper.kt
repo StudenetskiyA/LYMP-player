@@ -81,6 +81,14 @@ class RealmHelper(context: Context) {
         return ArrayList()
     }
 
+    fun getAllSongs() : ArrayList<Song> {
+        val result = ArrayList<Song>()
+        for (r in realm.where(Song::class.java).findAll()) {
+            result.add(r)
+        }
+        return result
+    }
+
     fun getLastDate(): String {
         val list = getAllSongsFileExist().sortedByDescending { it.added }
         return if (list.isEmpty()) "" else list[0].added
@@ -95,12 +103,6 @@ class RealmHelper(context: Context) {
             result.add(r)
         }
         return result
-    }
-
-    fun getSongByPath(fullPath: String): Song? {
-        return if (realm.where(Song::class.java).equalTo("path", fullPath).count() > 0)
-            realm.where(Song::class.java).equalTo("path", fullPath).findFirst()
-        else null
     }
 
     fun getSongByName(songName: String): Song? {

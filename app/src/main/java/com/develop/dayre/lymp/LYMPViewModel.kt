@@ -1,5 +1,6 @@
 package com.develop.dayre.lymp
 
+import android.content.Context
 import android.media.AudioManager
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
@@ -42,10 +43,11 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     val repeat = ObservableField<RepeatState>()
     val sort = ObservableField<SortState>()
     val andOr = ObservableField<AndOrState>()
+    val playStatus = ObservableField<PlayState>(PlayState.Stop)
     var isShowMore = ObservableField<Boolean>(false)
 
-    fun startModel() {
-        model.initialize()
+    fun startModel(context: Context) {
+        model.initialize(context)
         startBrowseFolderForFiles()
     }
 
@@ -81,6 +83,10 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         model.jumpToPosition(position)
     }
 
+    fun getModel(): LYMPModel {
+        return model
+    }
+
     override fun nextPress() {
         Log.i(TAG, "nextPress")
         model.nextSong()
@@ -109,15 +115,16 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     }
     override fun playPress() {
         Log.i(TAG, "playPress")
-            model.play()
+        model.play()
+        playStatus.set(model.getPlayState())
     }
 
     fun stopPress() {
         Log.i(TAG, "stopPress")
         model.stop()
+        playStatus.set(model.getPlayState())
     }
-
-    fun setMediaSessonCallback(mediaSessionCallback : MediaSessionCompat.Callback) {
+    fun setMediaSessionCallback(mediaSessionCallback : MediaSessionCompat.Callback) {
         model.setMediaSessonCallback(mediaSessionCallback)
     }
     fun setMediaControllerCallback(mediaControllerCallback: MediaControllerCompat.Callback) {

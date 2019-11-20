@@ -8,6 +8,7 @@
         <import type="com.develop.dayre.lymp.RepeatState" />
         <import type="com.develop.dayre.lymp.SortState" />
         <import type="com.develop.dayre.lymp.AndOrState" />
+        <import type="com.develop.dayre.lymp.PlayState" />
 
 
         <variable
@@ -19,6 +20,7 @@
     </data>
 
     <LinearLayout
+        android:id="@+id/main_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -61,8 +63,8 @@
 
                     <ImageButton
                         android:id="@+id/showmorebutton"
-                        android:layout_width="@dimen/medium_button_size"
-                        android:layout_height="@dimen/medium_button_size"
+                        android:layout_width="@dimen/small_button_size"
+                        android:layout_height="@dimen/small_button_size"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
                         android:background="@android:color/transparent"
@@ -211,8 +213,8 @@
                             android:visibility="gone">
                             <ImageButton
                                 android:id="@+id/add_new_search_button"
-                                android:layout_width="@dimen/medium_button_size"
-                                android:layout_height="@dimen/medium_button_size"
+                                android:layout_width="@dimen/small_button_size"
+                                android:layout_height="@dimen/small_button_size"
                                 android:background="@android:color/transparent"
                                 android:scaleType="fitXY"
                                 android:layout_alignParentEnd="true"
@@ -223,7 +225,10 @@
                             android:layout_height="wrap_content"
                             android:layout_width="match_parent"
                             tools:text = "enter name"
-                            android:hint = "enter name"
+                            android:focusable="true"
+                            android:clickable="true"
+                            android:hint = "@string/enter_name_in_search"
+                            android:inputType="text"
                             android:singleLine="true"
                             android:layout_marginTop="-8dp"/>
                         <com.develop.dayre.tagfield.TagView
@@ -246,24 +251,24 @@
                             android:orientation="horizontal">
                             <ImageButton
                                 android:id="@+id/andor_search_button"
-                                android:layout_width="@dimen/medium_button_size"
-                                android:layout_height="@dimen/medium_button_size"
+                                android:layout_width="@dimen/small_button_size"
+                                android:layout_height="@dimen/small_button_size"
                                 android:background="@android:color/transparent"
                                 android:layout_alignParentStart="true"
                                 android:scaleType="fitXY"
                                 android:src="@{viewmodel.andOr==AndOrState.Or ? @drawable/andoror : @drawable/andorand}"/>
                             <ImageButton
                                 android:id="@+id/sort_search_button"
-                                android:layout_width="@dimen/medium_button_size"
-                                android:layout_height="@dimen/medium_button_size"
+                                android:layout_width="@dimen/small_button_size"
+                                android:layout_height="@dimen/small_button_size"
                                 android:background="@android:color/transparent"
                                 android:layout_toRightOf="@id/andor_search_button"
                                 android:scaleType="fitXY"
                                 android:src="@{viewmodel.sort==SortState.ByName ? @drawable/sortbyname : viewmodel.sort==SortState.ByListened ? @drawable/sortbylistened : @drawable/sortbydate}"/>
                             <ImageButton
                                 android:id="@+id/clear_search_button"
-                                android:layout_width="@dimen/medium_button_size"
-                                android:layout_height="@dimen/medium_button_size"
+                                android:layout_width="@dimen/small_button_size"
+                                android:layout_height="@dimen/small_button_size"
                                 android:background="@android:color/transparent"
                                 android:layout_toRightOf="@id/sort_search_button"
                                 android:scaleType="fitXY"
@@ -311,7 +316,6 @@
                     android:id="@+id/footer"
                     android:layout_width="match_parent"
                     android:layout_height="120dp"
-
                     android:layout_alignParentBottom="true"
                     android:gravity="bottom"
                     android:orientation="vertical">
@@ -342,20 +346,31 @@
                         android:orientation="vertical">
 
                         <ImageButton
-                            android:id="@+id/stopbutton"
-                            android:layout_width="@dimen/medium_button_size"
-                            android:layout_height="@dimen/medium_button_size"
+                            android:id="@+id/settings_bn"
+                            android:layout_width="@dimen/small_button_size"
+                            android:layout_height="@dimen/small_button_size"
                             android:layout_alignParentStart="true"
                             android:layout_centerVertical="true"
                             android:layout_marginStart="10dp"
                             android:background="@android:color/transparent"
                             android:scaleType="fitXY"
+                            android:src="@drawable/settings_bn" />
+
+                        <ImageButton
+                            android:id="@+id/stopbutton"
+                            android:layout_width="@dimen/small_button_size"
+                            android:layout_height="@dimen/small_button_size"
+                            android:layout_centerVertical="true"
+                            android:background="@android:color/transparent"
+                            android:scaleType="fitXY"
+                            android:layout_toRightOf="@id/settings_bn"
                             android:src="@drawable/stopbutton" />
 
                         <ImageButton
                             android:id="@+id/prevbutton"
-                            android:layout_width="@dimen/big_button_size"
-                            android:layout_height="@dimen/big_button_size"
+                            android:layout_width="@dimen/medium_button_size"
+                            android:layout_height="@dimen/medium_button_size"
+                            android:layout_centerVertical="true"
                             android:layout_toStartOf="@+id/playbutton"
                             android:background="@android:color/transparent"
                             android:scaleType="fitXY"
@@ -368,37 +383,38 @@
                             android:layout_centerInParent="true"
                             android:background="@android:color/transparent"
                             android:scaleType="fitXY"
-                            android:src="@drawable/playbutton" />
+                            android:src="@{viewmodel.playStatus==PlayState.Play ? @drawable/pause_bn : @drawable/play_bn}"/>
 
                         <ImageButton
                             android:id="@+id/nextbutton"
-                            android:layout_width="@dimen/big_button_size"
-                            android:layout_height="@dimen/big_button_size"
-                            android:layout_toRightOf="@id/playbutton"
+                            android:layout_width="@dimen/medium_button_size"
+                            android:layout_height="@dimen/medium_button_size"
+                            android:layout_centerVertical="true"
+                            android:layout_toEndOf="@id/playbutton"
                             android:background="@android:color/transparent"
                             android:scaleType="fitXY"
                             android:src="@drawable/nextbutton" />
 
                         <ImageButton
                             android:id="@+id/repeatbutton"
-                            android:layout_width="@dimen/medium_button_size"
-                            android:layout_height="@dimen/medium_button_size"
+                            android:layout_width="@dimen/small_button_size"
+                            android:layout_height="@dimen/small_button_size"
                             android:layout_centerVertical="true"
-                            android:layout_toLeftOf="@+id/shufflebutton"
+                            android:layout_toStartOf="@+id/shufflebutton"
                             android:background="@android:color/transparent"
                             android:scaleType="fitXY"
-                            android:src="@{viewmodel.repeat==RepeatState.All ? @drawable/repeatall : viewmodel.repeat==RepeatState.One ? @drawable/repeatone : @drawable/repeatstop}" />
+                            android:src="@{viewmodel.repeat==RepeatState.All ? @drawable/repeat_all_bn : viewmodel.repeat==RepeatState.One ? @drawable/repeat_one_bn : @drawable/repeat_no_bn}" />
 
                         <ImageButton
                             android:id="@+id/shufflebutton"
-                            android:layout_width="@dimen/medium_button_size"
-                            android:layout_height="@dimen/medium_button_size"
+                            android:layout_width="@dimen/small_button_size"
+                            android:layout_height="@dimen/small_button_size"
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
-                            android:layout_marginStart="10dp"
+                            android:layout_marginEnd="10dp"
                             android:background="@android:color/transparent"
                             android:scaleType="fitXY"
-                            android:src="@{viewmodel.shuffle ? @drawable/shufflebutton : @drawable/noshufflebutton}" />
+                            android:src="@{viewmodel.shuffle ? @drawable/shuffle_on_bn : @drawable/shuffle_off_bn}" />
                     </RelativeLayout>
                 </RelativeLayout>
 

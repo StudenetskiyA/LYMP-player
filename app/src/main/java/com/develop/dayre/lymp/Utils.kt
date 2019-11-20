@@ -54,10 +54,10 @@ fun getStringFromList(list: ArrayList<String>): String {
 }
 
 fun getListFromString(text: String, ignoreSuperTags: Boolean = false): List<String> {
-    if (!ignoreSuperTags)
-        return text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }
+    return if (!ignoreSuperTags)
+        text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }
     else
-        return text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }
+        text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }
             .filter { !it.startsWith("#") }
 }
 

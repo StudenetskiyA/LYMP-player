@@ -4,29 +4,41 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.media.AudioManager
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 
 class App : Application() {
     companion object {
         val instance = App()
+        lateinit var viewModel : LYMPViewModel
+        lateinit var realmHelper : RealmHelper
+        lateinit var appSettings: SharedPreferences
     }
 
-    lateinit var viewModel : LYMPViewModel
-    lateinit var context : Context
-    lateinit var appSettings: SharedPreferences
-
-    fun getAppViewModel() : LYMPViewModel {
-        return viewModel
+    fun setApp(context: Context, activity : AppCompatActivity, audioManager: AudioManager, sharedPreferences: SharedPreferences) {
+        setRealmHelper(context)
+        setSettings(sharedPreferences)
+        setViewModel(audioManager, activity)
     }
 
-    fun setViewModel(am : AudioManager) {
-        viewModel= LYMPViewModel(am)
+    class MyViewModelFactory(private val audioManager: AudioManager) : ViewModelProvider.Factory {
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            return modelClass.getConstructor(AudioManager::class.java).newInstance(audioManager)
+        }
     }
 
-    fun setAppContext(_context: Context) {
-        context = _context
+    private fun setViewModel(am : AudioManager, activity : AppCompatActivity) {
+        val viewModelFactory = MyViewModelFactory(am)
+        viewModel = ViewModelProviders.of(activity, viewModelFactory).get(LYMPViewModel::class.java)
     }
 
-    fun setSettings(sp : SharedPreferences) {
+    private fun setRealmHelper (context: Context) {
+        realmHelper = RealmHelper(context)
+    }
+
+    private fun setSettings(sp : SharedPreferences) {
         appSettings = sp
     }
 }

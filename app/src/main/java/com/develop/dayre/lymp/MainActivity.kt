@@ -1,6 +1,7 @@
 package com.develop.dayre.lymp
 
 import android.Manifest
+import android.app.Activity
 import android.app.AlertDialog
 import com.develop.dayre.tagfield.TagView
 import android.graphics.Color
@@ -23,9 +24,8 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.content.Intent
 import android.os.Handler
 import android.os.SystemClock
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
@@ -44,6 +44,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: SongListAdapter
     private lateinit var listView: ListView
     private lateinit var seekBar: SeekBar
+    private lateinit var searchByNameEnterField: EditText
+    private lateinit var footerBar: RelativeLayout
 
 
     private lateinit var settings: SharedPreferences
@@ -72,8 +74,13 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var viewModel: LYMPViewModel
 
-    private fun createControl() {
+    private fun createControl(context: Context) {
         Log.i(TAG, "createControl")
+
+        settings_bn.setOnClickListener {
+            val intent = Intent(this, SettingsActivity::class.java)
+             startActivity(intent)
+        }
         addnewtagbutton.setOnClickListener {
             //Show enter field
             val input = EditText(this)
@@ -126,11 +133,13 @@ class MainActivity : AppCompatActivity() {
             Log.i(TAG, "clear search button pressed")
             ratingBarInSearch.rating = 0f
             search_by_name_enter_field.setText("")
+            settings.edit()
+                .putString(APP_PREFERENCES_CURRENT_SEARCH_NAME, "")
+                .apply()
             viewModel.setSearchRating(0, true)
             viewModel.newSearch(clearSearch = true, searchName = "")
 
-            App.instance.context
-                .toast("Clear search")
+            context.toast("Clear search")
         }
         shufflebutton.setOnClickListener {
             Log.i(TAG, "shuffle button pressed")
@@ -139,14 +148,12 @@ class MainActivity : AppCompatActivity() {
         sort_search_button.setOnClickListener {
             Log.i(TAG, "sort button pressed")
             viewModel.sortPress()
-            App.instance.context
-                .toast("Sort status set ${viewModel.sort.get()}")
+            context.toast("Sort status set ${viewModel.sort.get()}")
         }
         andor_search_button.setOnClickListener {
             Log.i(TAG, "andOr button pressed")
             viewModel.andOrPress()
-            App.instance.context
-                .toast("AndOr status set ${viewModel.andOr.get()}")
+            context.toast("AndOr status set ${viewModel.andOr.get()}")
         }
         showmorebutton.setOnClickListener {
             Log.i(TAG, "showmore button pressed")
@@ -338,43 +345,38 @@ class MainActivity : AppCompatActivity() {
             RatingBar.OnRatingBarChangeListener { _, rating, _ ->
                 viewModel.setSearchRating(rating.toInt())
             }
-        search_by_name_enter_field.setOnClickListener {
-            footer.visibility = View.GONE
-        }
-        search_by_name_enter_field.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
+
+        searchByNameEnterField.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
                 //Perform Code
                 viewModel.newSearch(searchName = search_by_name_enter_field.text.toString())
-                val imm = this.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.hideSoftInputFromWindow(this.currentFocus.windowToken, 0)
-                search_by_name_enter_field.isCursorVisible = false
+                hideKeyboard(v)
                 settings.edit()
-                    .putString(APP_PREFERENCES_CURRENT_SEARCH_NAME, search_by_name_enter_field.text.toString())
+                    .putString(
+                        APP_PREFERENCES_CURRENT_SEARCH_NAME,
+                        search_by_name_enter_field.text.toString()
+                    )
                     .apply()
-                footer.visibility = View.VISIBLE
                 return@OnKeyListener true
             }
             false
         })
     }
 
-    private fun createView() {
+    private fun createView(context :Context) {
         Log.i(TAG, "createView")
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         //Получаем инстанс, а не создаем новый - актуально при перезапуске приложения, повороте экрана и т.д.
-        val application = application
-        if (application !is App) {
-            throw RuntimeException("Application in not implemented IModulePlayer.Application")
-        }
 
-        App.instance.setAppContext(this)
-        App.instance.setViewModel(getSystemService(Context.AUDIO_SERVICE) as AudioManager)
-        viewModel = App.instance.getAppViewModel()
-        viewModel.startModel()
+        // App.instance.setViewModel(getSystemService(Context.AUDIO_SERVICE) as AudioManager)
+        viewModel = App.viewModel
+        viewModel.startModel(context)
         binding.viewmodel = viewModel
         binding.executePendingBindings()
 
         listView = findViewById(R.id.current_list)
+        footerBar = findViewById(R.id.footer)
+        searchByNameEnterField = findViewById(R.id.search_by_name_enter_field)
         tagView = findViewById(R.id.current_track_tags)
         searchTagView = findViewById(R.id.search_track_tags)
         seekBar = findViewById(R.id.seek_bar)
@@ -454,11 +456,8 @@ class MainActivity : AppCompatActivity() {
                 Log.i(TAG, "PlayState changed.")
                 mLastPlaybackStatePosition = state.position.toInt()
                 mLastPlaybackStatePositionTime = SystemClock.elapsedRealtime().toInt()
+                //TODO And stop schedule
                 scheduleSeekbarUpdate()
-                if (state.state == PlaybackStateCompat.STATE_PLAYING)
-                    playbutton.setImageResource(R.drawable.pause_inbar)
-                else
-                    playbutton.setImageResource(R.drawable.playbutton)
             }
         })
     }
@@ -497,11 +496,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE -> {
                 // If request is cancelled, the result arrays are empty.
@@ -528,10 +523,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.i(TAG, "onCreate")
-        App.instance.setSettings(getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE))
-        settings = App.instance.appSettings
-        createView()
-        createControl()
+        App.instance.setApp(applicationContext, this,
+            getSystemService(Context.AUDIO_SERVICE) as AudioManager, getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE))
+
+        settings = App.appSettings
+        createView(applicationContext)
+        createControl(applicationContext)
         createObservers()
         grantPermission()
         //continue after grant/not grant permission
@@ -655,10 +652,10 @@ class MainActivity : AppCompatActivity() {
         }
         seekBar.max = viewModel.getCurrentTrackDuration()
         seekBar.progress = currentPosition
-        Log.i(TAG, "Update seekbar $currentPosition / ${viewModel.getCurrentTrackDuration()}")
+        //Log.i(TAG, "Update seekbar $currentPosition / ${viewModel.getCurrentTrackDuration()}")
     }
 
-    fun scheduleSeekbarUpdate() {
+    private fun scheduleSeekbarUpdate() {
         stopSeekbarUpdate()
         if (!mExecutorService.isShutdown) {
             Log.i(TAG, "sheduleSeekbarUpdate")
@@ -684,4 +681,22 @@ class MainActivity : AppCompatActivity() {
 
     private var mScheduleFuture: ScheduledFuture<*>? = null
 
+    private fun hideKeyboard(view: View) {
+        val inputMethodManager =
+            this.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+        searchByNameEnterField.isCursorVisible = false
+        footerBar.visibility = View.VISIBLE
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        val v = currentFocus
+        if (v != null &&
+            (ev.action == MotionEvent.ACTION_UP || ev.action == MotionEvent.ACTION_MOVE) &&
+            v is EditText
+        ) {
+            hideKeyboard(this.window.decorView)
+        }
+        return super.dispatchTouchEvent(ev)
+    }
 }

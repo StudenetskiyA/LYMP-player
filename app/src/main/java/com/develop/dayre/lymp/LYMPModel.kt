@@ -1,6 +1,7 @@
 package com.develop.dayre.lymp
 
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
 import android.net.Uri
@@ -35,7 +36,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     private var currentSongsShuffledListNumber = ArrayList<Int>()
     private var currentSongsAditionListNumber = ArrayList<Int>()
 
-    private var helper: RealmHelper = RealmHelper(App.instance.context)
+    var helper: RealmHelper = App.realmHelper
     private var searchTags = ";"
     private var antiSearchTags = ";"
     private var searchName = ""
@@ -58,6 +59,11 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     val duration = ObservableField<Int>()
     var isPlaying = PlayState.Stop
     var allTags = ""
+    lateinit var context: Context
+
+    init {
+        Log.d(TAG,"model init")
+    }
 
     //Методы для обсерверов
     fun getShuffleStatus(): Boolean {
@@ -72,7 +78,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     fun getAndOrStatus(): AndOrState {
         return andOrStatus
     }
-
+    fun getPlayState(): PlayState { return isPlaying}
     fun getCurrentSong(): Observable<SongOrNull> {
         return if (currentSongPositionInList < currentSongsList.size && currentSongPositionInList >= 0)
             Observable.just(SongOrNull(currentSongsList[currentSongPositionInList]))
@@ -139,7 +145,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         }
         //И уведомление с результатами
         if (songsRestored!=0 || newSongFound!=0 || deletedSong!=0)
-            App.instance.context
+            context
                 .toast("Новых песен найдено - $newSongFound \r\nУдалено песен - $deletedSong \r\nВосстановленно удаленных - $songsRestored")
         Log.i(
             TAG,
@@ -261,7 +267,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         // Загружаем URL аудио-файла в Player
         if (currentSong != null && currentSong?.path != "") {
             exoPlayer =
-                MediaPlayer.create(App.instance.context, Uri.parse(currentSong?.path))
+                MediaPlayer.create(context, Uri.parse(currentSong?.path))
             duration.set(exoPlayer.duration)
             exoPlayer.setOnCompletionListener {
                 Log.i(TAG, "Track complete")
@@ -270,19 +276,21 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
                     cs.listenedTimes++
                     helper.writeSong(cs)
                 }
+
+                //TODO Модель не должна знать о вью-модели!
                 when (repeatStatus) {
                     RepeatState.All -> {
                         nextSong(true)
-                        App.instance.viewModel.setCurrentSong()
+                        App.viewModel.setCurrentSong()
                     }
                     RepeatState.One -> {
                         stop()
                         play()
-                        App.instance.viewModel.setCurrentSong()
+                        App.viewModel.setCurrentSong()
                     }
                     RepeatState.Stop -> {
                         stop()
-                        App.instance.viewModel.setCurrentSong()
+                        App.viewModel.setCurrentSong()
                     }
                 }
             }
@@ -358,7 +366,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         }
     }
 
-    fun play() {
+    fun play()  {
         Log.i(TAG, "Play, isPlaying =  $isPlaying")
         if (isPlaying == PlayState.Play) {
             doWithMedia("pause")
@@ -374,7 +382,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     fun changeShuffle() {
         shuffleStatus = !shuffleStatus
         currentSongsShuffledListNumber = getShuffledListOfInt(currentSongsList.size)
-        App.instance.appSettings.edit()
+        App.appSettings.edit()
             .putBoolean(APP_PREFERENCES_SHUFFLE, shuffleStatus)
             .apply()
         Log.i(TAG, "Now shuffle is $shuffleStatus")
@@ -395,7 +403,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
                 repeatStatus = RepeatState.All
             }
         }
-        App.instance.appSettings.edit()
+        App.appSettings.edit()
             .putInt(APP_PREFERENCES_REPEAT, rs)
             .apply()
         Log.i(TAG, "Now repeat is $repeatStatus")
@@ -416,7 +424,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
                 sortStatus = SortState.ByName
             }
         }
-        App.instance.appSettings.edit()
+        App.appSettings.edit()
             .putInt(APP_PREFERENCES_SORT, ss)
             .apply()
         createCurrentList()
@@ -432,7 +440,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
                 AndOrState.Or
             }
         }
-        App.instance.appSettings.edit()
+        App.appSettings.edit()
             .putInt(APP_PREFERENCES_ANDOR, andOrStatus.ordinal)
             .apply()
         createCurrentList()
@@ -454,7 +462,7 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     }
     fun setSearchRating(rating: Int, withoutNewSearch: Boolean = false) {
         searchMinRating = rating
-        App.instance.appSettings.edit()
+        App.appSettings.edit()
             .putInt(APP_PREFERENCES_SEARCH_MIN_RATING, searchMinRating)
             .apply()
         if (!withoutNewSearch) createCurrentList()
@@ -477,10 +485,11 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         mediaController?.registerCallback(mediaControllerCallback)
     }
 
-    fun initialize() {
+    fun initialize(context: Context) {
         Log.i(TAG, "initialization")
 
-        mediaSession = MediaSessionCompat(App.instance.context, "LYMPService")
+        this.context = context
+        mediaSession = MediaSessionCompat(context, "LYMPService")
         // FLAG_HANDLES_MEDIA_BUTTONS - хотим получать события от аппаратных кнопок
         // (например, гарнитуры)
         // FLAG_HANDLES_TRANSPORT_CONTROLS - хотим получать события от кнопок
@@ -489,28 +498,24 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         val mediaButtonIntent = Intent(
             Intent.ACTION_MEDIA_BUTTON,
             null,
-            App.instance.context,
+            context,
             MediaButtonReceiver::class.java
         )
         mediaSession.setMediaButtonReceiver(
-            PendingIntent.getBroadcast(App.instance.context, 0, mediaButtonIntent, 0)
+            PendingIntent.getBroadcast(context, 0, mediaButtonIntent, 0)
         )
         // Укажем activity, которую запустит система, если пользователь
         // заинтересуется подробностями данной сессии
         mediaSession.setSessionActivity(
             PendingIntent.getActivity(
-                App.instance.context,
+                context,
                 0,
-                Intent(App.instance.context, MainActivity::class.java),
+                Intent(context, MainActivity::class.java),
                 PendingIntent.FLAG_UPDATE_CURRENT
             )
         )
-        mediaController = MediaControllerCompat(
-            App.instance.context, getMediaSessionToken()
+        mediaController = MediaControllerCompat(context, getMediaSessionToken()
         )
-
-      //  browseFolderForFiles()
-      //  createCurrentList()
     }
 
     private fun clearAdditionList() {

@@ -22,6 +22,16 @@ open class Song(
     var order: Int = 0
 )  : RealmModel {
 
+
+    companion object {
+        fun getSongFromString(songString: String): Song {
+            val splited = songString.split("/")
+            return Song(splited[0],"",splited[1],splited[2].toInt(),splited[3].toInt(),splited[4],"",
+                0.0, false, 0
+            )
+        }
+    }
+
     fun setTagsFromList(list : ArrayList<String>) {
         var result = "$SPACE_IN_LINK"
         for (i in list)
@@ -34,6 +44,7 @@ open class Song(
     }
 
     override fun toString(): String {
-        return "${ID.substring(min(ID.length,5))} / $name / ${this.lenght} / $rating / $tags / $added / $listenedTimes / $isFileExist"
+        return "$ID/$name/${this.lenght}/$rating/$tags/$added/$listenedTimes/$isFileExist"
     }
+
 }
