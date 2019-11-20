@@ -3,7 +3,6 @@ package com.develop.dayre.lymp
 import io.realm.RealmModel
 import io.realm.annotations.PrimaryKey
 import io.realm.annotations.RealmClass
-import java.lang.Integer.min
 
 class SongOrNull(var song:Song, var isNull:Boolean=false)
 

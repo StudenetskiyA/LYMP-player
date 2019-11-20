@@ -78,14 +78,17 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     fun getAndOrStatus(): AndOrState {
         return andOrStatus
     }
-    fun getPlayState(): PlayState { return isPlaying}
-    fun getCurrentSong(): Observable<SongOrNull> {
-        return if (currentSongPositionInList < currentSongsList.size && currentSongPositionInList >= 0)
-            Observable.just(SongOrNull(currentSongsList[currentSongPositionInList]))
 
+    fun getCurrentSong(): Observable<SongOrNull> {
+        return if (currentSong!=null)
+            Observable.just(SongOrNull(currentSong!!))
         //In Rx2 I can't do Observable.just(null)!
         else Observable.just(SongOrNull(Song(), true))
     }
+    fun getCurrentSongNew(): Song? {
+        return currentSong
+    }
+
     fun getCurrentSearchTags(): Observable<String> {
         return Observable.just(searchTags)
     }
@@ -162,9 +165,13 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         }
         prepareTrackForPlayer()
     }
+
     fun setPositionInList(position: Int) {
         currentSongPositionInList = position
-        if (isPlaying == PlayState.Play) doWithMedia("next")
+        App.appSettings.edit().putString(
+            APP_PREFERENCES_SELECT_SONG,
+            currentSong?.ID
+        ).apply()
     }
 
     fun clearTag() {
@@ -189,6 +196,54 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
     fun saveSongToDB(song: Song) {
         helper.writeSong(song)
         Log.i(TAG, "Song with name ${song.name}, tags ${song.tags} and rating ${song.rating} saved to DB")
+    }
+
+    fun getNextSong(): Song? {
+        if (currentSongsList.isNotEmpty()) {
+            currentSongPositionInList = getNextPositionInList(
+                currentSongsShuffledListNumber, currentSongsAditionListNumber,
+                currentSongPositionInList,
+                shuffleStatus
+            )
+            if (currentSongsAditionListNumber.isNotEmpty()) {
+                for (position in currentSongsAditionListNumber) {
+                    val s = currentSongsList[position].copy()
+                    s.order = s.order - 1
+                    helper.writeSong(s)
+                }
+                currentSongsAditionListNumber.removeAt(0)
+            }
+
+            return currentSong
+        }
+        return null
+    }
+
+    fun getPreviousSong(): Song? {
+        if (currentSongsList.isNotEmpty()) {
+            currentSongPositionInList = getNextPositionInList(
+                currentSongsShuffledListNumber, currentSongsAditionListNumber,
+                currentSongPositionInList,
+                shuffleStatus
+            )
+            if (currentSongsAditionListNumber.isNotEmpty()) {
+                for (position in currentSongsAditionListNumber) {
+                    val s = currentSongsList[position].copy()
+                    s.order = s.order - 1
+                    helper.writeSong(s)
+                }
+                currentSongsAditionListNumber.removeAt(0)
+            }
+
+            return currentSong
+        }
+        return null
+    }
+
+    fun increaseListenedTimeOfCurrentTrack() {
+        val cs = currentSong!!.copy()
+        cs.listenedTimes += 0.5
+        helper.writeSong(cs)
     }
 
     fun nextSong(doNotIncreaseListenedTimes: Boolean = false) {
@@ -467,7 +522,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             .apply()
         if (!withoutNewSearch) createCurrentList()
     }
-
 
     fun testAction() {
         Log.i(TAG, "testAction")

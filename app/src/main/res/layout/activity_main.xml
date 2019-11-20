@@ -383,7 +383,7 @@
                             android:layout_centerInParent="true"
                             android:background="@android:color/transparent"
                             android:scaleType="fitXY"
-                            android:src="@{viewmodel.playStatus==PlayState.Play ? @drawable/pause_bn : @drawable/play_bn}"/>
+                            android:src="@drawable/play_bn"/>
 
                         <ImageButton
                             android:id="@+id/nextbutton"

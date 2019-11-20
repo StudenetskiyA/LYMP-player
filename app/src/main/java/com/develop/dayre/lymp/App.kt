@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
+import com.google.android.exoplayer2.SimpleExoPlayer
 
 class App : Application() {
     companion object {
@@ -15,6 +16,7 @@ class App : Application() {
         lateinit var viewModel : LYMPViewModel
         lateinit var realmHelper : RealmHelper
         lateinit var appSettings: SharedPreferences
+        lateinit var exoPlayer: SimpleExoPlayer
     }
 
     fun setApp(context: Context, activity : AppCompatActivity, audioManager: AudioManager, sharedPreferences: SharedPreferences) {

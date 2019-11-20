@@ -13,21 +13,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 
-interface ILYMPViewModel {
-    fun nextPress()
-    fun prevPress()
-    fun playPress()
-    fun shufflePress()
-    fun repeatPress()
-    fun clearTagPress()
 
-    fun onTrackInListLongPress(nTrack: Int)
-    fun currentSongEdit(song: Song)
-
-    fun testPress()
-}
-
-class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
+class LYMPViewModel(audioManager: AudioManager) : ViewModel() {
     private val TAG = "$APP_TAG/viewmodel"
 
     private var model = LYMPModel(audioManager)
@@ -43,7 +30,6 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     val repeat = ObservableField<RepeatState>()
     val sort = ObservableField<SortState>()
     val andOr = ObservableField<AndOrState>()
-    val playStatus = ObservableField<PlayState>(PlayState.Stop)
     var isShowMore = ObservableField<Boolean>(false)
 
     fun startModel(context: Context) {
@@ -55,16 +41,11 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         return model.allTags
     }
 
-    override fun testPress() {
-        Log.i(TAG, "testPress")
-        model.testAction()
-    }
-
-    fun getCurrentTrackDuration() : Int{
+    fun getCurrentTrackDuration(): Int {
         return model.duration.get()!!
     }
 
-    override fun currentSongEdit(song: Song) {
+    fun currentSongEdit(song: Song) {
         model.saveSongToDB(song)
         setCurrentSong()
         newSearch()
@@ -72,14 +53,14 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
 
     fun showMorePress() {
         Log.i(TAG, "showMorePress")
-        if (isShowMore.get()==false) {
+        if (isShowMore.get() == false) {
             if (currentSong.value != null) {
                 isShowMore.set(true)
             }
-        } else  isShowMore.set(false)
+        } else isShowMore.set(false)
     }
 
-    fun jumpToPosition(position : Int){
+    fun jumpToPosition(position: Int) {
         model.jumpToPosition(position)
     }
 
@@ -87,98 +68,91 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
         return model
     }
 
-    override fun nextPress() {
-        Log.i(TAG, "nextPress")
-        model.nextSong()
-        setCurrentSong()
+    fun getNextSong(): Song? {
+        return model.getNextSong()
+    }
+    fun getPreviousSong(): Song? {
+        return model.getPreviousSong()
     }
 
-    override fun prevPress() {
-        Log.i(TAG, "prevPress")
-        model.prevSong()
-        setCurrentSong()
+    fun increaseListenedTimeOfCurrentTrack() {
+        model.increaseListenedTimeOfCurrentTrack()
     }
 
-    override fun clearTagPress() {
+    fun clearTagPress() {
         Log.i(TAG, "clearTagPress")
         model.clearTag()
     }
 
-    fun getIsPlaying() : PlayState {
+    fun getIsPlaying(): PlayState {
         return model.isPlaying
     }
-    fun getCallBackAwaited() : Boolean {
-        return model.callBackAwaited
-    }
-    fun setCallBackAwaited(value :Boolean) {
-        model.callBackAwaited = value
-    }
-    override fun playPress() {
-        Log.i(TAG, "playPress")
-        model.play()
-        playStatus.set(model.getPlayState())
-    }
 
-    fun stopPress() {
-        Log.i(TAG, "stopPress")
-        model.stop()
-        playStatus.set(model.getPlayState())
-    }
-    fun setMediaSessionCallback(mediaSessionCallback : MediaSessionCompat.Callback) {
-        model.setMediaSessonCallback(mediaSessionCallback)
-    }
     fun setMediaControllerCallback(mediaControllerCallback: MediaControllerCompat.Callback) {
         model.setMediaControllerCallback(mediaControllerCallback)
     }
 
-    override fun shufflePress() {
+    fun shufflePress() {
         model.changeShuffle()
         shuffle.set(model.getShuffleStatus())
     }
-    override fun repeatPress() {
+
+    fun repeatPress() {
         model.changeRepeat()
         repeat.set(model.getRepeatStatus())
     }
+
     fun sortPress() {
         model.changeSort()
         sort.set(model.getSortStatus())
         newSearch()
     }
+
     fun andOrPress() {
         model.changeAndOr()
         andOr.set(model.getAndOrStatus())
         newSearch()
     }
+
     fun setSearchRating(rating: Int, withoutNewSearch: Boolean = false) {
         model.setSearchRating(rating, withoutNewSearch)
         if (!withoutNewSearch) newSearch()
     }
 
     //Для восстановления из настроек
-    fun setShuffle(newShuffleStatus : Boolean) {
+    fun setShuffle(newShuffleStatus: Boolean) {
         model.setShuffleStatus(newShuffleStatus)
         shuffle.set(model.getShuffleStatus())
     }
-    fun setRepeat(newRepeatStatus : RepeatState) {
+
+    fun setRepeat(newRepeatStatus: RepeatState) {
         model.setRepeatStatus(newRepeatStatus)
         repeat.set(model.getRepeatStatus())
     }
-    fun setSort(newSortStatus : SortState) {
+
+    fun setSort(newSortStatus: SortState) {
         model.setSortStatus(newSortStatus)
         sort.set(model.getSortStatus())
     }
-    fun setAndOr(newAndOrStatus : AndOrState) {
+
+    fun setAndOr(newAndOrStatus: AndOrState) {
         model.setAndOrStatus(newAndOrStatus)
         andOr.set(model.getAndOrStatus())
     }
 
     //Вызывается вью при новом поиске.
-    fun newSearch(searchTags: String = "", antiSearchTags: String = "", searchName: String  = "", clearSearch: Boolean = false, fromAdditionList: Boolean = false) {
+    fun newSearch(
+        searchTags: String = "",
+        antiSearchTags: String = "",
+        searchName: String = "",
+        clearSearch: Boolean = false,
+        fromAdditionList: Boolean = false
+    ) {
         Log.i(TAG, "load songs, $searchTags , ${currentSearchTags.value}")
         isLoadingSongsList.set(true)
-        var tags = if (searchTags!="") searchTags
+        var tags = if (searchTags != "") searchTags
         else currentSearchTags.value
-        var antiTags = if (antiSearchTags!="") antiSearchTags
+        var antiTags = if (antiSearchTags != "") antiSearchTags
         else currentAntiSearchTags.value
 
         if (clearSearch) {
@@ -186,28 +160,28 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
             antiTags = ";"
         }
 
-        if (tags!=null && antiTags!=null)
-        model.newSearch(tags, antiTags, searchName, fromAdditionList)
-            .subscribeOn(Schedulers.newThread())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(object : Observer<ArrayList<Song>> {
-                override fun onSubscribe(d: Disposable) {
-                    //todo
-                }
+        if (tags != null && antiTags != null)
+            model.newSearch(tags, antiTags, searchName, fromAdditionList)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(object : Observer<ArrayList<Song>> {
+                    override fun onSubscribe(d: Disposable) {
+                        //todo
+                    }
 
-                override fun onError(e: Throwable) {
-                    //todo
-                }
+                    override fun onError(e: Throwable) {
+                        //todo
+                    }
 
-                override fun onNext(data: ArrayList<Song>) {
-                    currentSongsList.value = data
-                }
+                    override fun onNext(data: ArrayList<Song>) {
+                        currentSongsList.value = data
+                    }
 
-                override fun onComplete() {
-                    Log.i(TAG, "songs list updated complite")
-                    isLoadingSongsList.set(false)
-                }
-            })
+                    override fun onComplete() {
+                        Log.i(TAG, "songs list updated complite")
+                        isLoadingSongsList.set(false)
+                    }
+                })
         setCurrentSearchTags()
     }
 
@@ -221,10 +195,6 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
     fun songSelectByID(songID: String) {
         model.setCurrentSongByID(songID)
         setCurrentSong()
-    }
-
-    override fun onTrackInListLongPress(nTrack: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     //Локальный метод. Вызывается при обновлении текущих тегов поиска.
@@ -269,6 +239,10 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
                 override fun onComplete() {
                 }
             })
+    }
+
+    fun getCurrentSong(): Song? {
+        return model.getCurrentSongNew()
     }
 
     //Используется, когда у нас будет меняться текущий выбранный трек и надо подгрузить информацию о новом.
@@ -321,10 +295,11 @@ class LYMPViewModel(audioManager: AudioManager) : ILYMPViewModel, ViewModel() {
             })
     }
 
-    fun getMediaSessionToken() : MediaSessionCompat.Token{
+    fun getMediaSessionToken(): MediaSessionCompat.Token {
         return model.getMediaSessionToken()
     }
-    fun getMediaSession() : MediaSessionCompat{
+
+    fun getMediaSession(): MediaSessionCompat {
         return model.mediaSession
     }
 
