@@ -70,7 +70,7 @@ class SettingsActivity : AppCompatActivity() {
             // directory exists or already created
             val file = File(sdMain, "export.lma")
             try {
-                val allSongs = App.viewModel.getModel().helper.getAllSongs()
+                val allSongs = App.realmHelper.getAllSongs()
                 Log.d(TAG, "size = ${allSongs.size}")
                 PrintWriter(file).use { out ->
                     for (song in allSongs) out.println(song.toString())

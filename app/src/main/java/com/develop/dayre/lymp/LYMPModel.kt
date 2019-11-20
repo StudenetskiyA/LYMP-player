@@ -274,25 +274,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
             doWithMedia("next")
         }
     }
-    fun prevSong() {
-        if (currentSongsList.isNotEmpty()) {
-            if (currentSong != null && (exoPlayer.currentPosition * 2) > exoPlayer.duration) {
-                val cs = currentSong!!.copy()
-                cs.listenedTimes += 0.5
-                helper.writeSong(cs)
-            }
-            currentSongPositionInList = getPrevPositionInList(
-                currentSongsShuffledListNumber,
-                currentSongPositionInList,
-                shuffleStatus
-            )
-            Log.i(
-                TAG, "New track ${currentSong?.name} / ${currentSong?.tags}"
-            )
-
-            doWithMedia("next")
-        }
-    }
 
     private fun prepareTrackForPlayer() {
         val metadata = metadataBuilder
@@ -523,20 +504,8 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
         if (!withoutNewSearch) createCurrentList()
     }
 
-    fun testAction() {
-        Log.i(TAG, "testAction")
-    }
-
     fun getMediaSessionToken(): MediaSessionCompat.Token {
         return mediaSession.sessionToken
-    }
-
-    fun setMediaSessonCallback(mediaSessionCallback: MediaSessionCompat.Callback) {
-        mediaSession.setCallback(mediaSessionCallback)
-    }
-
-    fun setMediaControllerCallback(mediaControllerCallback: MediaControllerCompat.Callback) {
-        mediaController?.registerCallback(mediaControllerCallback)
     }
 
     fun initialize(context: Context) {
@@ -595,11 +564,6 @@ class LYMPModel(private val audioManager: AudioManager) : BaseObservable() {
 
     fun setAllTagsFromSettings(t: String) {
         allTags = t
-    }
-
-    fun jumpToPosition(position: Int) {
-        Log.i(TAG, "Seek to position $position")
-        exoPlayer.seekTo(position)
     }
 
     fun addSongToAdditionList(position: Int) {

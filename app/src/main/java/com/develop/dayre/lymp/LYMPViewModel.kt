@@ -2,7 +2,6 @@ package com.develop.dayre.lymp
 
 import android.content.Context
 import android.media.AudioManager
-import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.databinding.ObservableField
@@ -41,10 +40,6 @@ class LYMPViewModel(audioManager: AudioManager) : ViewModel() {
         return model.allTags
     }
 
-    fun getCurrentTrackDuration(): Int {
-        return model.duration.get()!!
-    }
-
     fun currentSongEdit(song: Song) {
         model.saveSongToDB(song)
         setCurrentSong()
@@ -58,14 +53,6 @@ class LYMPViewModel(audioManager: AudioManager) : ViewModel() {
                 isShowMore.set(true)
             }
         } else isShowMore.set(false)
-    }
-
-    fun jumpToPosition(position: Int) {
-        model.jumpToPosition(position)
-    }
-
-    fun getModel(): LYMPModel {
-        return model
     }
 
     fun getNextSong(): Song? {
@@ -82,14 +69,6 @@ class LYMPViewModel(audioManager: AudioManager) : ViewModel() {
     fun clearTagPress() {
         Log.i(TAG, "clearTagPress")
         model.clearTag()
-    }
-
-    fun getIsPlaying(): PlayState {
-        return model.isPlaying
-    }
-
-    fun setMediaControllerCallback(mediaControllerCallback: MediaControllerCompat.Callback) {
-        model.setMediaControllerCallback(mediaControllerCallback)
     }
 
     fun shufflePress() {
@@ -293,14 +272,6 @@ class LYMPViewModel(audioManager: AudioManager) : ViewModel() {
                     Log.i(TAG, "initial load complete.")
                 }
             })
-    }
-
-    fun getMediaSessionToken(): MediaSessionCompat.Token {
-        return model.getMediaSessionToken()
-    }
-
-    fun getMediaSession(): MediaSessionCompat {
-        return model.mediaSession
     }
 
     fun setAllTagsFromSettings(t: String) {
