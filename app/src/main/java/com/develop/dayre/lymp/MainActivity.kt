@@ -3,7 +3,6 @@ package com.develop.dayre.lymp
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
-import com.develop.dayre.tagfield.TagView
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
@@ -17,7 +16,6 @@ import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import android.support.v4.media.session.MediaControllerCompat
-import android.media.AudioManager
 import android.support.v4.media.session.PlaybackStateCompat
 import android.content.Intent
 import android.os.*
@@ -34,21 +32,12 @@ import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "$APP_TAG/view"
+    private val MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 0
 
-    private lateinit var tagView: TagView
-    private lateinit var searchTagView: TagView
-
+    private lateinit var viewModel: LYMPViewModel
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: SongListAdapter
-    private lateinit var listView: ListView
-    private lateinit var seekBar: SeekBar
-    private lateinit var searchByNameEnterField: EditText
-    private lateinit var footerBar: RelativeLayout
-
-
     private lateinit var settings: SharedPreferences
-    private var mLastPlaybackStatePosition: Int = 0
-    private var mLastPlaybackStatePositionTime: Int = 0
 
     //Service
     private var statePlaying = PlaybackStateCompat.STATE_STOPPED
@@ -58,16 +47,17 @@ class MainActivity : AppCompatActivity() {
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             if (state == null) return
             statePlaying = state.state
+            Log.d(TAG+"/playback","state = $statePlaying")
             if (statePlaying == PlaybackStateCompat.STATE_PLAYING) {
                 playbutton.setImageResource(R.drawable.pause_bn)
-                mLastPlaybackStatePosition = exoPlayer.currentPosition.toInt()
-                mLastPlaybackStatePositionTime = SystemClock.elapsedRealtime().toInt()
+                viewModel.mLastPlaybackStatePosition = exoPlayer.currentPosition.toInt()
+                viewModel.mLastPlaybackStatePositionTime = SystemClock.elapsedRealtime().toInt()
                 scheduleSeekbarUpdate()
             } else {
                 playbutton.setImageResource(R.drawable.play_bn)
                 stopSeekbarUpdate()
                 if (statePlaying == PlaybackStateCompat.STATE_STOPPED) {
-                    seekBar.progress = 0
+                    seek_bar.progress = 0
                 }
             }
         }
@@ -97,10 +87,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
-    private val MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 0
-
-    lateinit var viewModel: LYMPViewModel
 
     private fun createControl(context: Context) {
         Log.i(TAG, "createControl")
@@ -143,18 +129,24 @@ class MainActivity : AppCompatActivity() {
         }
         nextbutton.setOnClickListener {
             Log.i(TAG, "next button pressed")
+            seek_bar.progress = 0
+            viewModel.mLastPlaybackStatePosition = 0
+            viewModel.mLastPlaybackStatePositionTime = SystemClock.elapsedRealtime().toInt()
             if (mediaController != null) {
                 mediaController!!.transportControls.skipToNext()
                 if (statePlaying != PlaybackStateCompat.STATE_PLAYING)
-                    mediaController!!.transportControls.pause()
+                    mediaController!!.transportControls.stop()
             }
         }
         prevbutton.setOnClickListener {
             Log.i(TAG, "prev button pressed")
+            seek_bar.progress = 0
+            viewModel.mLastPlaybackStatePosition = 0
+            viewModel.mLastPlaybackStatePositionTime = SystemClock.elapsedRealtime().toInt()
             if (mediaController != null) {
                 mediaController!!.transportControls.skipToPrevious()
                 if (statePlaying != PlaybackStateCompat.STATE_PLAYING)
-                    mediaController!!.transportControls.pause()
+                    mediaController!!.transportControls.stop()
             }
         }
         playbutton.setOnClickListener {
@@ -206,7 +198,7 @@ class MainActivity : AppCompatActivity() {
             Log.i(TAG, "clear tag button pressed")
             viewModel.clearTagPress()
         }
-        tagView.setOnTagClickListener { position, _ ->
+        current_track_tags.setOnTagClickListener { position, _ ->
             val cs = viewModel.currentSong.value?.copy()
             if (cs != null) {
                 val tagClicked =
@@ -222,7 +214,7 @@ class MainActivity : AppCompatActivity() {
                 viewModel.currentSongEdit(cs)
             }
         }
-        tagView.setOnTagLongClickListener { position, tag ->
+        current_track_tags.setOnTagLongClickListener { position, tag ->
             //Show enter field
             val alert = AlertDialog.Builder(this)
             with(alert) {
@@ -247,7 +239,7 @@ class MainActivity : AppCompatActivity() {
 
             dialog.show()
         }
-        searchTagView.setOnTagClickListener { position, _ ->
+        search_track_tags.setOnTagClickListener { position, _ ->
             val cs = viewModel.currentSearchTags.value!!
             val tagClicked = getListFromString(viewModel.getAllTags())[position]
             var list = ArrayList(getListFromString(cs))
@@ -296,7 +288,7 @@ class MainActivity : AppCompatActivity() {
             )
             viewModel.newSearch(getStringFromList(list), getStringFromList(listAnti))
         }
-        searchTagView.setOnTagLongClickListener { position, _ ->
+        search_track_tags.setOnTagLongClickListener { position, _ ->
             Log.d(TAG, "long click on search tag")
             val cs = viewModel.currentSearchTags.value!!
             var list = ArrayList(getListFromString(cs))
@@ -357,7 +349,7 @@ class MainActivity : AppCompatActivity() {
             viewModel.songInListLongPress(position)
             true
         }
-        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        seek_bar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
             }
 
@@ -372,8 +364,8 @@ class MainActivity : AppCompatActivity() {
                     //Вот так не работает, приходится держать плеер глобальной переменной
                     //mediaController!!.transportControls.seekTo((progress*1000).toLong())
 
-                    mLastPlaybackStatePosition = progress*1000
-                    mLastPlaybackStatePositionTime = SystemClock.elapsedRealtime().toInt()
+                    viewModel.mLastPlaybackStatePosition = progress*1000
+                    viewModel.mLastPlaybackStatePositionTime = SystemClock.elapsedRealtime().toInt()
                 }
             }
         })
@@ -388,7 +380,7 @@ class MainActivity : AppCompatActivity() {
             RatingBar.OnRatingBarChangeListener { _, rating, _ ->
                 viewModel.setSearchRating(rating.toInt())
             }
-        searchByNameEnterField.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
+        search_by_name_enter_field.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
                 //Perform Code
                 viewModel.newSearch(searchName = search_by_name_enter_field.text.toString())
@@ -404,26 +396,16 @@ class MainActivity : AppCompatActivity() {
             false
         })
     }
-
-    private fun createView(context: Context) {
+    private fun createView() {
         Log.i(TAG, "createView")
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        //Получаем инстанс, а не создаем новый - актуально при перезапуске приложения, повороте экрана и т.д.
 
-        // App.instance.setViewModel(getSystemService(Context.AUDIO_SERVICE) as AudioManager)
         viewModel = App.viewModel
-        viewModel.startModel(context)
+       // viewModel.startModel(context)
         binding.viewmodel = viewModel
         binding.executePendingBindings()
 
-        listView = findViewById(R.id.current_list)
-        footerBar = findViewById(R.id.footer)
-        searchByNameEnterField = findViewById(R.id.search_by_name_enter_field)
-        tagView = findViewById(R.id.current_track_tags)
-        searchTagView = findViewById(R.id.search_track_tags)
-        seekBar = findViewById(R.id.seek_bar)
     }
-
     private fun createObservers() {
         Log.i(TAG, "createObservers")
         adapter = SongListAdapter(ArrayList(listOf(Song())), this)
@@ -433,7 +415,7 @@ class MainActivity : AppCompatActivity() {
             Observer<ArrayList<Song>> {
                 Log.i(TAG, "songs list updated")
                 adapter = SongListAdapter(it, this)
-                listView.adapter = adapter
+                current_list.adapter = adapter
                 val s = "${resources.getText(R.string.tracks_found)}  ${it.size}"
                 tracks_found.text = s
                 if (viewModel.currentSongsList.value != null && viewModel.currentSongsList.value!!.contains(
@@ -441,11 +423,11 @@ class MainActivity : AppCompatActivity() {
                     )
                 ) {
                     val n = viewModel.currentSongsList.value!!.indexOf(viewModel.currentSong.value)
-                    listView.setItemChecked(n, true)
-                    listView.smoothScrollToPosition(n)
+                    current_list.setItemChecked(n, true)
+                    current_list.smoothScrollToPosition(n)
                 } else {
-                    listView.setItemChecked(current_list.checkedItemPosition, false)
-                    listView.smoothScrollToPosition(0)
+                    current_list.setItemChecked(current_list.checkedItemPosition, false)
+                    current_list.smoothScrollToPosition(0)
                 }
             })
 
@@ -465,8 +447,8 @@ class MainActivity : AppCompatActivity() {
                 ) {
                     val n = viewModel.currentSongsList.value!!.indexOf(viewModel.currentSong.value)
                     Log.i(TAG, "current song index in list $n")
-                    listView.setItemChecked(n, true)
-                    listView.smoothScrollToPosition(n)
+                    current_list.setItemChecked(n, true)
+                    current_list.smoothScrollToPosition(n)
                 }
                 buildLinkField()
             })
@@ -499,6 +481,39 @@ class MainActivity : AppCompatActivity() {
         Log.i(TAG, "onResume")
         readSettings()
     }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.i(TAG, "onCreate")
+        App.instance.setApp(
+            applicationContext,
+            this,
+            getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE)
+        )
+
+        settings = App.appSettings
+        createView()
+        createControl(applicationContext)
+        createObservers()
+        grantPermission()
+        //continue after grant/not grant permission
+        readSettings()
+
+        val intent = Intent(this@MainActivity, PlayerService::class.java)
+        bindService(
+            intent,
+            serviceConnection,
+            Context.BIND_AUTO_CREATE
+        )
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        playerServiceBinder = null
+        if (mediaController != null) {
+            mediaController!!.unregisterCallback(callback)
+            mediaController = null
+        }
+        unbindService(serviceConnection)
+    }
 
     private fun grantPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -524,22 +539,19 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             Log.i(TAG, "Permission has already been granted")
-            viewModel.startBrowseFolderForFiles()
+            viewModel.startModel(applicationContext)
+            //viewModel.startBrowseFolderForFiles()
         }
     }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE -> {
                 // If request is cancelled, the result arrays are empty.
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
-                    viewModel.startBrowseFolderForFiles()
+                    viewModel.startModel(applicationContext)
+                   // viewModel.startBrowseFolderForFiles()
                 } else {
                     //TODO
                     // permission denied, boo! Disable the
@@ -556,33 +568,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        Log.i(TAG, "onCreate")
-        App.instance.setApp(
-            applicationContext,
-            this,
-            getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE)
-        )
-
-        settings = App.appSettings
-        createView(applicationContext)
-        createControl(applicationContext)
-        createObservers()
-        grantPermission()
-        //continue after grant/not grant permission
-        readSettings()
-
-        val intent = Intent(this@MainActivity, PlayerService::class.java)
-        bindService(
-            intent,
-            serviceConnection,
-            Context.BIND_AUTO_CREATE
-        )
-    }
-
     private fun buildSearchField() {
-        searchTagView.removeAllTags()
+        search_track_tags.removeAllTags()
         for (word in getListFromString(viewModel.getAllTags())) {
             val tag = Tag(word)
             tag.tagTextColor = Color.BLACK
@@ -599,12 +586,11 @@ class MainActivity : AppCompatActivity() {
                 )
             ) tag.layoutColor = Color.RED
             else tag.layoutColor = Color.TRANSPARENT
-            searchTagView.addTag(tag)
+            search_track_tags.addTag(tag)
         }
     }
-
     private fun buildLinkField() {
-        tagView.removeAllTags()
+        current_track_tags.removeAllTags()
         if (viewModel.currentSong.value != null) {
             for (word in getListFromString(viewModel.getAllTags(), ignoreSuperTags = true)) {
                 val tag = Tag(word)
@@ -618,7 +604,7 @@ class MainActivity : AppCompatActivity() {
                 )
                     tag.layoutColor = Color.YELLOW
                 else tag.layoutColor = Color.TRANSPARENT
-                tagView.addTag(tag)
+                current_track_tags.addTag(tag)
             }
         }
     }
@@ -638,7 +624,7 @@ class MainActivity : AppCompatActivity() {
 
         if (settings.contains(APP_PREFERENCES_SELECT_SONG)) {
             val t = settings.getString(APP_PREFERENCES_SELECT_SONG, "0")
-            viewModel.songSelectByID(t)
+            viewModel.setSelectedSongById(t)
         }
         var search = ""
         if (settings.contains(APP_PREFERENCES_CURRENT_SEARCH)) {
@@ -685,7 +671,10 @@ class MainActivity : AppCompatActivity() {
         viewModel.newSearch(search, antiSearch, searchName)
     }
 
-
+    //For SeekBar
+    private val mHandler = Handler()
+    private val mExecutorService = Executors.newSingleThreadScheduledExecutor()
+    private var mScheduleFuture: ScheduledFuture<*>? = null
     private fun scheduleSeekbarUpdate() {
         stopSeekbarUpdate()
         if (!mExecutorService.isShutdown) {
@@ -693,50 +682,30 @@ class MainActivity : AppCompatActivity() {
             mScheduleFuture = mExecutorService.scheduleAtFixedRate(
                 {
                     mHandler.post {
-                        var currentPosition: Int = mLastPlaybackStatePosition
+                        var currentPosition: Int = viewModel.mLastPlaybackStatePosition
                         val timeDelta =
-                            SystemClock.elapsedRealtime() - mLastPlaybackStatePositionTime
+                            SystemClock.elapsedRealtime() - viewModel.mLastPlaybackStatePositionTime
                         currentPosition += (timeDelta * 1).toInt()
-                        seekBar.max = (App.exoPlayer.duration / 1000).toInt()
-                        seekBar.progress = currentPosition/1000
+                        seek_bar.max = (App.exoPlayer.duration / 1000).toInt()
+                        seek_bar.progress = currentPosition/1000
                     }
                 }, PROGRESS_UPDATE_INITIAL_INTERVAL,
                 PROGRESS_UPDATE_INTERNAL, TimeUnit.MILLISECONDS
             )
         }
     }
-
     private fun stopSeekbarUpdate() {
         if (mScheduleFuture != null) {
             mScheduleFuture!!.cancel(false)
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        playerServiceBinder = null
-        if (mediaController != null) {
-            mediaController!!.unregisterCallback(callback)
-            mediaController = null
-        }
-        unbindService(serviceConnection)
-    }
-
-    private val mHandler = Handler()
-
-    private val mExecutorService =
-        Executors.newSingleThreadScheduledExecutor()
-
-    private var mScheduleFuture: ScheduledFuture<*>? = null
-
     private fun hideKeyboard(view: View) {
         val inputMethodManager =
             this.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
-        searchByNameEnterField.isCursorVisible = false
-        footerBar.visibility = View.VISIBLE
+        search_by_name_enter_field.isCursorVisible = false
     }
-
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         val v = currentFocus
         if (v != null &&

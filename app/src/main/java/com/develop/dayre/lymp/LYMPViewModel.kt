@@ -1,8 +1,6 @@
 package com.develop.dayre.lymp
 
 import android.content.Context
-import android.media.AudioManager
-import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.databinding.ObservableField
 import androidx.lifecycle.MutableLiveData
@@ -31,6 +29,9 @@ class LYMPViewModel : ViewModel() {
     val andOr = ObservableField<AndOrState>()
     var isShowMore = ObservableField<Boolean>(false)
 
+    var mLastPlaybackStatePosition: Int = 0
+    var mLastPlaybackStatePositionTime: Int = 0
+
     fun startModel(context: Context) {
         model.initialize(context)
         startBrowseFolderForFiles()
@@ -55,6 +56,9 @@ class LYMPViewModel : ViewModel() {
         } else isShowMore.set(false)
     }
 
+    fun getAfterSong(): Song? {
+        return model.getAfterSong()
+    }
     fun getNextSong(): Song? {
         return model.getNextSong()
     }
@@ -62,37 +66,37 @@ class LYMPViewModel : ViewModel() {
         return model.getPreviousSong()
     }
 
-    fun increaseListenedTimeOfCurrentTrack() {
-        model.increaseListenedTimeOfCurrentTrack()
+    fun increaseListenedTimeOfCurrentTrack(n: Double) {
+        model.increaseListenedTimeOfCurrentTrack(n)
     }
 
+    //Press
+    fun songInListLongPress(position: Int) {
+        model.addSongToAdditionList(position)
+        newSearch(fromAdditionList = true)
+    }
     fun clearTagPress() {
         Log.i(TAG, "clearTagPress")
         model.clearTag()
     }
-
     fun shufflePress() {
         model.changeShuffle()
         shuffle.set(model.getShuffleStatus())
     }
-
     fun repeatPress() {
         model.changeRepeat()
         repeat.set(model.getRepeatStatus())
     }
-
     fun sortPress() {
         model.changeSort()
         sort.set(model.getSortStatus())
         newSearch()
     }
-
     fun andOrPress() {
         model.changeAndOr()
         andOr.set(model.getAndOrStatus())
         newSearch()
     }
-
     fun setSearchRating(rating: Int, withoutNewSearch: Boolean = false) {
         model.setSearchRating(rating, withoutNewSearch)
         if (!withoutNewSearch) newSearch()
@@ -103,20 +107,24 @@ class LYMPViewModel : ViewModel() {
         model.setShuffleStatus(newShuffleStatus)
         shuffle.set(model.getShuffleStatus())
     }
-
     fun setRepeat(newRepeatStatus: RepeatState) {
         model.setRepeatStatus(newRepeatStatus)
         repeat.set(model.getRepeatStatus())
     }
-
     fun setSort(newSortStatus: SortState) {
         model.setSortStatus(newSortStatus)
         sort.set(model.getSortStatus())
     }
-
     fun setAndOr(newAndOrStatus: AndOrState) {
         model.setAndOrStatus(newAndOrStatus)
         andOr.set(model.getAndOrStatus())
+    }
+    fun setAllTagsFromSettings(t: String) {
+        model.setAllTagsFromSettings(t)
+    }
+    fun setSelectedSongById(songID: String) {
+        model.setCurrentSongByID(songID)
+        setCurrentSong()
     }
 
     //Вызывается вью при новом поиске.
@@ -167,12 +175,6 @@ class LYMPViewModel : ViewModel() {
     //Выбор песни из текущего листа по номеру в листе. Например, при нажатии на трек в списке.
     fun songInListPress(positionInList: Int) {
         model.setPositionInList(positionInList)
-        setCurrentSong()
-    }
-
-    //Используется для выбора песни не из текущего листа. Например, при загрузке из настроек.
-    fun songSelectByID(songID: String) {
-        model.setCurrentSongByID(songID)
         setCurrentSong()
     }
 
@@ -249,7 +251,7 @@ class LYMPViewModel : ViewModel() {
             })
     }
 
-    fun startBrowseFolderForFiles() {
+    private fun startBrowseFolderForFiles() {
         Log.i(TAG, "load files list")
         isLoadingFilesList.set(true)
         model.browseFolderForFiles()
@@ -272,14 +274,5 @@ class LYMPViewModel : ViewModel() {
                     Log.i(TAG, "initial load complete.")
                 }
             })
-    }
-
-    fun setAllTagsFromSettings(t: String) {
-        model.setAllTagsFromSettings(t)
-    }
-
-    fun songInListLongPress(position: Int) {
-        model.addSongToAdditionList(position)
-        newSearch(fromAdditionList = true)
     }
 }

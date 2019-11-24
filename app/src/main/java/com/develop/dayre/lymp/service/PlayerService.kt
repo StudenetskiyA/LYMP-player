@@ -13,9 +13,7 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.net.Uri
-import android.os.Binder
-import android.os.Build
-import android.os.IBinder
+import android.os.*
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
@@ -162,8 +160,8 @@ class PlayerService : Service() {
             }
 
             override fun onSkipToNext() {
-                if ((exoPlayer!!.currentPosition * 2) > exoPlayer!!.duration)
-                    App.viewModel.increaseListenedTimeOfCurrentTrack()
+                if ((exoPlayer.currentPosition * 2) > exoPlayer.duration)
+                    App.viewModel.increaseListenedTimeOfCurrentTrack(0.5)
 
                 val track = musicRepository.getNextSong() ?: return
                 updateMetadataFromTrack(track)
@@ -173,7 +171,24 @@ class PlayerService : Service() {
                 prepareToPlay(track.path)
             }
 
+            override fun onCustomAction(action: String?, extras: Bundle?) {
+                //At end of track
+                App.viewModel.mLastPlaybackStatePosition = 0
+                App.viewModel.mLastPlaybackStatePositionTime = SystemClock.elapsedRealtime().toInt()
+                App.viewModel.increaseListenedTimeOfCurrentTrack(1.0)
+
+                val track = musicRepository.getAfterSong() ?: return
+                updateMetadataFromTrack(track)
+
+                refreshNotificationAndForegroundStatus(currentState)
+
+                prepareToPlay(track.path)
+            }
+
             override fun onSkipToPrevious() {
+                if ((exoPlayer.currentPosition * 2) > exoPlayer.duration)
+                    App.viewModel.increaseListenedTimeOfCurrentTrack(0.5)
+
                 val track = musicRepository.getPreviousSong() ?: return
                 updateMetadataFromTrack(track)
 
@@ -184,7 +199,7 @@ class PlayerService : Service() {
 
             private fun prepareToPlay(url: String) {
                 val uri = Uri.parse(url)
-                if (uri != currentUri || currentState == PlaybackStateCompat.STATE_STOPPED ) {
+             //   if (uri != currentUri || currentState == PlaybackStateCompat.STATE_STOPPED ) {
                     currentUri = uri
                     val dataSourceFactory =  if (url.startsWith("http"))
                         DefaultHttpDataSourceFactory(
@@ -200,8 +215,8 @@ class PlayerService : Service() {
                     val extractorsFactory = DefaultExtractorsFactory().setConstantBitrateSeekingEnabled(true)
                     val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory,extractorsFactory)
                         .createMediaSource(uri)
-                    exoPlayer!!.prepare(mediaSource)
-                }
+                    exoPlayer.prepare(mediaSource)
+             //   }
             }
 
             private fun updateMetadataFromTrack(track: Song) {
@@ -249,8 +264,7 @@ class PlayerService : Service() {
 
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
             if (playWhenReady && playbackState == ExoPlayer.STATE_ENDED) {
-                App.viewModel.increaseListenedTimeOfCurrentTrack()
-                mediaSessionCallback.onSkipToNext()
+                mediaSessionCallback.onCustomAction("",null)
             }
         }
 
@@ -318,7 +332,7 @@ class PlayerService : Service() {
             DefaultTrackSelector(),
             DefaultLoadControl()
         )
-        exoPlayer!!.addListener(exoPlayerListener)
+        exoPlayer.addListener(exoPlayerListener)
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -416,14 +430,12 @@ class PlayerService : Service() {
                 .setMediaSession(mediaSession!!.sessionToken)
         ) // setMediaSession требуется для Android Wear
         builder.setSmallIcon(R.mipmap.ic_launcher)
-        builder.setColor(
-            ContextCompat.getColor(
-                this,
-                R.color.colorPrimaryDark
-            )
+        builder.color = ContextCompat.getColor(
+            this,
+            R.color.colorPrimaryDark
         ) // The whole background (in MediaStyle), not just icon background
         builder.setShowWhen(false)
-        builder.setPriority(NotificationCompat.PRIORITY_HIGH)
+        builder.priority = NotificationCompat.PRIORITY_HIGH
         builder.setOnlyAlertOnce(true)
         builder.setChannelId(NOTIFICATION_DEFAULT_CHANNEL_ID)
 

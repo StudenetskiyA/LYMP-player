@@ -5,9 +5,9 @@ import android.os.Environment
 import android.util.Log
 import androidx.databinding.BaseObservable
 import io.reactivex.Observable
-import kotlin.collections.ArrayList
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 
 enum class RepeatState { All, One, Stop }
 enum class SortState { ByName, ByAdded, ByListened }
@@ -19,7 +19,7 @@ class LYMPModel : BaseObservable() {
         Song() //У нас бывают ситуации, когда текущий трек не в текущем листе.
     private var currentSongsList = ArrayList<Song>()
     private var currentSongsShuffledListNumber = ArrayList<Int>()
-    private var currentSongsAditionListNumber = ArrayList<Int>()
+    private var currentSongsAdditionListNumber = ArrayList<Int>()
 
     var helper: RealmHelper = App.realmHelper
     private var searchTags = ";"
@@ -39,7 +39,6 @@ class LYMPModel : BaseObservable() {
                 currentSong = currentSongsList[currentSongPositionInList]
             }
         }
-    //lateinit var mediaSession: MediaSessionCompat
 
     var allTags = ""
     lateinit var context: Context
@@ -64,6 +63,7 @@ class LYMPModel : BaseObservable() {
         //In Rx2 I can't do Observable.just(null)!
         else Observable.just(SongOrNull(Song(), true))
     }
+
     fun getCurrentSongNew(): Song? {
         return currentSong
     }
@@ -176,41 +176,66 @@ class LYMPModel : BaseObservable() {
         Log.i(TAG, "Song with name ${song.name}, tags ${song.tags} and rating ${song.rating} saved to DB")
     }
 
-    fun getNextSong(): Song? {
-        if (currentSongsList.isNotEmpty()) {
-            currentSongPositionInList = getNextPositionInList(
-                currentSongsShuffledListNumber, currentSongsAditionListNumber,
-                currentSongPositionInList,
-                shuffleStatus
-            )
-            if (currentSongsAditionListNumber.isNotEmpty()) {
-                for (position in currentSongsAditionListNumber) {
-                    val s = currentSongsList[position].copy()
-                    s.order = s.order - 1
-                    helper.writeSong(s)
+    fun getAfterSong(): Song? {
+        if (repeatStatus==RepeatState.Stop) return null
+        else if (repeatStatus==RepeatState.One) return currentSong
+        else {
+            if (currentSongsList.isNotEmpty()) {
+                currentSongPositionInList = getNextPositionInList(
+                    currentSongsShuffledListNumber, currentSongsAdditionListNumber,
+                    currentSongPositionInList,
+                    shuffleStatus
+                )
+                if (currentSongsAdditionListNumber.isNotEmpty()) {
+                    for (position in currentSongsAdditionListNumber) {
+                        val s = currentSongsList[position].copy()
+                        s.order = s.order - 1
+                        helper.writeSong(s)
+                    }
+                    currentSongsAdditionListNumber.removeAt(0)
                 }
-                currentSongsAditionListNumber.removeAt(0)
-            }
 
-            return currentSong
+                return currentSong
+            }
         }
+        return null
+    }
+
+    fun getNextSong(): Song? {
+            if (currentSongsList.isNotEmpty()) {
+                currentSongPositionInList = getNextPositionInList(
+                    currentSongsShuffledListNumber, currentSongsAdditionListNumber,
+                    currentSongPositionInList,
+                    shuffleStatus
+                )
+                if (currentSongsAdditionListNumber.isNotEmpty()) {
+                    for (position in currentSongsAdditionListNumber) {
+                        val s = currentSongsList[position].copy()
+                        s.order = s.order - 1
+                        helper.writeSong(s)
+                    }
+                    currentSongsAdditionListNumber.removeAt(0)
+                }
+
+                return currentSong
+            }
         return null
     }
 
     fun getPreviousSong(): Song? {
         if (currentSongsList.isNotEmpty()) {
-            currentSongPositionInList = getNextPositionInList(
-                currentSongsShuffledListNumber, currentSongsAditionListNumber,
+            currentSongPositionInList = getPrevPositionInList(
+                currentSongsShuffledListNumber,
                 currentSongPositionInList,
                 shuffleStatus
             )
-            if (currentSongsAditionListNumber.isNotEmpty()) {
-                for (position in currentSongsAditionListNumber) {
+            if (currentSongsAdditionListNumber.isNotEmpty()) {
+                for (position in currentSongsAdditionListNumber) {
                     val s = currentSongsList[position].copy()
                     s.order = s.order - 1
                     helper.writeSong(s)
                 }
-                currentSongsAditionListNumber.removeAt(0)
+                currentSongsAdditionListNumber.removeAt(0)
             }
 
             return currentSong
@@ -218,40 +243,11 @@ class LYMPModel : BaseObservable() {
         return null
     }
 
-    fun increaseListenedTimeOfCurrentTrack() {
+    fun increaseListenedTimeOfCurrentTrack(n: Double) {
         val cs = currentSong!!.copy()
-        cs.listenedTimes += 0.5
+        cs.listenedTimes += n
         helper.writeSong(cs)
     }
-
-//    fun nextSong(doNotIncreaseListenedTimes: Boolean = false) {
-//        if (currentSongsList.isNotEmpty()) {
-//            if (!doNotIncreaseListenedTimes && currentSong != null && (exoPlayer.currentPosition * 2) > exoPlayer.duration) {
-//                val cs = currentSong!!.copy()
-//                cs.listenedTimes += 0.5
-//                helper.writeSong(cs)
-//            }
-//
-//            currentSongPositionInList = getNextPositionInList(
-//                currentSongsShuffledListNumber, currentSongsAditionListNumber,
-//                currentSongPositionInList,
-//                shuffleStatus
-//            )
-//            if (currentSongsAditionListNumber.isNotEmpty()) {
-//                for (position in currentSongsAditionListNumber) {
-//                    val s = currentSongsList[position].copy()
-//                    s.order = s.order - 1
-//                    helper.writeSong(s)
-//                }
-//                currentSongsAditionListNumber.removeAt(0)
-//            }
-//
-//            Log.i(
-//                TAG, "Next track ${currentSong?.name} / ${currentSong?.tags}"
-//            )
-//            doWithMedia("next")
-//        }
-//    }
 
     fun changeShuffle() {
         shuffleStatus = !shuffleStatus
@@ -342,22 +338,18 @@ class LYMPModel : BaseObservable() {
         if (!withoutNewSearch) createCurrentList()
     }
 
-//    fun getMediaSessionToken(): MediaSessionCompat.Token {
-//        return mediaSession.sessionToken
-//    }
-
     fun initialize(context: Context) {
         Log.i(TAG, "initialization")
         this.context = context
     }
 
     private fun clearAdditionList() {
-        for (position in currentSongsAditionListNumber) {
+        for (position in currentSongsAdditionListNumber) {
             val s = currentSongsList[position].copy()
             s.order=0
             helper.writeSong(s)
         }
-        currentSongsAditionListNumber = ArrayList()
+        currentSongsAdditionListNumber = ArrayList()
     }
 
     //Private
@@ -379,11 +371,11 @@ class LYMPModel : BaseObservable() {
     fun addSongToAdditionList(position: Int) {
         if (currentSongPositionInList!=position) {
             val s = currentSongsList[position].copy()
-            if (!currentSongsAditionListNumber.contains(position)) {
-                currentSongsAditionListNumber.add(position)
-                s.order = currentSongsAditionListNumber.size
+            if (!currentSongsAdditionListNumber.contains(position)) {
+                currentSongsAdditionListNumber.add(position)
+                s.order = currentSongsAdditionListNumber.size
             } else {
-                currentSongsAditionListNumber.remove(position)
+                currentSongsAdditionListNumber.remove(position)
                 s.order = 0
             }
             helper.writeSong(s)

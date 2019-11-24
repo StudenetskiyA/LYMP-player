@@ -8,6 +8,10 @@ class MusicRepository {
         return App.viewModel.getNextSong()
     }
 
+    fun getAfterSong(): Song? {
+        return App.viewModel.getAfterSong()
+    }
+
     fun getPreviousSong(): Song? {
         return App.viewModel.getPreviousSong()
     }
