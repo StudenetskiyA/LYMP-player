@@ -17,6 +17,7 @@ import android.os.*
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -199,7 +200,7 @@ class PlayerService : Service() {
 
             private fun prepareToPlay(url: String) {
                 val uri = Uri.parse(url)
-             //   if (uri != currentUri || currentState == PlaybackStateCompat.STATE_STOPPED ) {
+                if (uri != currentUri || currentState == PlaybackStateCompat.STATE_STOPPED ) {
                     currentUri = uri
                     val dataSourceFactory =  if (url.startsWith("http"))
                         DefaultHttpDataSourceFactory(
@@ -216,7 +217,7 @@ class PlayerService : Service() {
                     val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory,extractorsFactory)
                         .createMediaSource(uri)
                     exoPlayer.prepare(mediaSource)
-             //   }
+                }
             }
 
             private fun updateMetadataFromTrack(track: Song) {
