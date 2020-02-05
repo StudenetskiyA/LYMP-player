@@ -76,11 +76,11 @@ fun getTimeFromSeconds(seconds : Int) : String {
     val h:Int = seconds/3600
     val m:Int = seconds/60 - h*60
     val s:Int = seconds%60
-    var result:String=""
+    var result = ""
     if (h!=0) result="$h:"
     if (m!=0 && m>9) result+="$m:"
     else if (m!=0 && m<10) result+="0$m:"
-    if (s<9) result+="0"
+    if (s<10) result+="0"
     return result+"$s"
 }
 
@@ -178,6 +178,5 @@ object UIHelper {
 }
 
 fun String.toLocalDateTime() : LocalDateTime  {
-    Log.d("$APP_TAG/model", "time = $this")
     return LocalDateTime.parse(this, DateTimeFormatter.ofPattern("d/M/yyyy HH:mm"))
 }
