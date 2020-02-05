@@ -198,27 +198,12 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:layout_alignParentBottom="true">
+                        android:layout_alignParentBottom="true"
+                        android:visibility="@{viewmodel.isShowMore ? View.GONE : View.VISIBLE}">
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
                             android:background="@android:color/black" />
-
-                        <RelativeLayout
-                            android:id="@+id/fast_search_bar"
-                            android:layout_height="wrap_content"
-                            android:layout_width="match_parent"
-                            android:orientation="horizontal"
-                            android:visibility="gone">
-                            <ImageButton
-                                android:id="@+id/add_new_search_button"
-                                android:layout_width="@dimen/small_button_size"
-                                android:layout_height="@dimen/small_button_size"
-                                android:background="@android:color/transparent"
-                                android:scaleType="fitXY"
-                                android:layout_alignParentEnd="true"
-                                android:src="@drawable/addnewtag" />
-                        </RelativeLayout>
                         <EditText
                             android:id="@+id/search_by_name_enter_field"
                             android:layout_height="wrap_content"

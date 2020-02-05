@@ -44,7 +44,7 @@ class LYMPViewModel : ViewModel() {
     fun currentSongEdit(song: Song) {
         model.saveSongToDB(song)
         setCurrentSong()
-        newSearch()
+        //newSearch()
     }
 
     fun showMorePress() {

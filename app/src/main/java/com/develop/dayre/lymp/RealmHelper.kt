@@ -69,7 +69,7 @@ class RealmHelper(context: Context) {
             ByName -> result?.sortedBy { it.name }
             ByListened -> result?.sortedByDescending { it.listenedTimes }
             else -> {
-                result?.sortedBy { it.added }
+                result?.sortedByDescending { it.added.toLocalDateTime() }
             }
         }
 
@@ -89,8 +89,8 @@ class RealmHelper(context: Context) {
         return result
     }
 
-    fun getLastDate(): String {
-        val list = getAllSongsFileExist().sortedByDescending { it.added }
+    private fun getLastDate(): String {
+        val list = getAllSongsFileExist().sortedByDescending { it.added.toLocalDateTime() }
         return if (list.isEmpty()) "" else list[0].added
     }
 

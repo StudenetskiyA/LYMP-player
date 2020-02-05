@@ -14,6 +14,8 @@ import android.widget.Toast
 import java.io.File
 import org.apache.commons.codec.digest.DigestUtils
 import org.jaudiotagger.audio.AudioFileIO
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 fun getHashFromNameAndSize(name: String, size: Long): String {
     return DigestUtils.md5Hex("$name , $size")
@@ -173,4 +175,9 @@ object UIHelper {
             inputMethodManager.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT)
         }, 50)
     }
+}
+
+fun String.toLocalDateTime() : LocalDateTime  {
+    Log.d("$APP_TAG/model", "time = $this")
+    return LocalDateTime.parse(this, DateTimeFormatter.ofPattern("d/M/yyyy HH:mm"))
 }
