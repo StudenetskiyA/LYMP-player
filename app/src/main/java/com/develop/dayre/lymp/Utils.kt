@@ -57,10 +57,10 @@ fun getStringFromList(list: ArrayList<String>): String {
 
 fun getListFromString(text: String, ignoreSuperTags: Boolean = false): List<String> {
     return if (!ignoreSuperTags)
-        text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }
+        text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }.distinct()
     else
         text.split(SPACE_IN_LINK).map { it.trim() }.filter { it != "" }
-            .filter { !it.startsWith("#") }
+            .filter { !it.startsWith("#") }.distinct()
 }
 
 fun getAudioFileDuration(path: String): Int {

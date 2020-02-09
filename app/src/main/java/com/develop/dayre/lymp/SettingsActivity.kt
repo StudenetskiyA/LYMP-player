@@ -44,12 +44,19 @@ class SettingsActivity : AppCompatActivity() {
             .setOpenDialogListener { fileName ->
                 val allSongs = ArrayList<Song>()
                 var songsImport = 0
+                //TODO Import tags
                 Files.lines(Paths.get(fileName))
-                    .use { stream -> stream.forEach(({
-                        songsImport++
-                        allSongs.add(Song.getSongFromString(it))
-                        Log.i(TAG,it)
-                    })) }
+                    .use { stream ->
+                        stream.forEach(({
+                            Log.i(TAG, it)
+                            if (songsImport == 0) {
+                                importTags(it)
+                            } else {
+                                importSong(Song.getSongFromString(it))
+                            }
+                            songsImport++
+                        }))
+                    }
                 Toast.makeText(
                     applicationContext,
                     "Songs found $songsImport",
@@ -70,9 +77,13 @@ class SettingsActivity : AppCompatActivity() {
             // directory exists or already created
             val file = File(sdMain, "export.lma")
             try {
+                //TODO Export tags
+                val allTags = App.viewModel.getAllTags()
+                Log.d(TAG, "all tags is $allTags")
                 val allSongs = App.realmHelper.getAllSongs()
                 Log.d(TAG, "size = ${allSongs.size}")
                 PrintWriter(file).use { out ->
+                    out.println(allTags)
                     for (song in allSongs) out.println(song.toString())
                 }
             } catch (e: Exception) {
@@ -111,7 +122,17 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    fun importSongs (songs: ArrayList<Song>) {
+    private fun importSong(song: Song) {
+        //song.isFileExist = true
+        App.viewModel.saveSong(song)
+        App.viewModel.startBrowseFolderForFiles()
+    }
 
+    private fun importTags(tags: String) {
+        val newTags = "${App.viewModel.getAllTags()}; $tags"
+        App.appSettings.edit()
+            .putString(APP_PREFERENCES_ALL_TAGS, newTags)
+            .apply()
+        App.viewModel.setAllTagsFromSettings(newTags)
     }
 }

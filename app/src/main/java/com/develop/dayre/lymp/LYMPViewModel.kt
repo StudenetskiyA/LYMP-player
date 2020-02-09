@@ -44,7 +44,10 @@ class LYMPViewModel : ViewModel() {
     fun currentSongEdit(song: Song) {
         model.saveSongToDB(song)
         setCurrentSong()
-        //newSearch()
+    }
+
+    fun saveSong(song: Song) {
+        model.saveSongToDB(song)
     }
 
     fun showMorePress() {
@@ -251,7 +254,7 @@ class LYMPViewModel : ViewModel() {
             })
     }
 
-    private fun startBrowseFolderForFiles() {
+    fun startBrowseFolderForFiles() {
         Log.i(TAG, "load files list")
         isLoadingFilesList.set(true)
         model.browseFolderForFiles()

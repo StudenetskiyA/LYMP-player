@@ -541,7 +541,6 @@ class MainActivity : AppCompatActivity() {
         } else {
             Log.i(TAG, "Permission has already been granted")
             viewModel.startModel(applicationContext)
-            //viewModel.startBrowseFolderForFiles()
         }
     }
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {

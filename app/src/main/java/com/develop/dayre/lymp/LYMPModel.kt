@@ -119,10 +119,11 @@ class LYMPModel : BaseObservable() {
             }
             if (s != null && !s.isFileExist) {
                 songsRestored++
-                s.isFileExist = true
-                s.path = f
-                s.added = dateTime
-                helper.writeSong(s)
+                val sCopy = s.copy()
+                sCopy.isFileExist = true
+                sCopy.path = f
+                sCopy.added = dateTime
+                helper.writeSong(sCopy)
             }
         }
         //И уведомление с результатами
