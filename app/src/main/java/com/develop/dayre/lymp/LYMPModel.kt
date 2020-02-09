@@ -377,7 +377,15 @@ class LYMPModel : BaseObservable() {
                 s.order = currentSongsAdditionListNumber.size
             } else {
                 currentSongsAdditionListNumber.remove(position)
+                val order = s.order
                 s.order = 0
+                //TODO change number
+                val songsWithGreaterOrder = helper.getAllSongsFileExist().filter { it.order > order }
+                for (songWithGreaterOrder in songsWithGreaterOrder) {
+                    val tmp = songWithGreaterOrder.copy()
+                    tmp.order--
+                    helper.writeSong(tmp)
+                }
             }
             helper.writeSong(s)
         }
